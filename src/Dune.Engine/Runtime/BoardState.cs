@@ -14,7 +14,10 @@ public sealed record AgentPlacement(int PlayerId, AgentKind Kind);
 
 public sealed record AllianceToken(Faction Faction, int? OwnerId);
 
-public sealed record MentatLocation(BoardSpaceId? Space, int? OwnerId);
+public sealed record MentatLocation(BoardSpaceId? Space, int? OwnerId)
+{
+    public int? ProtectedThroughRound { get; init; }
+}
 
 public sealed record ResourceBank(bool IsUnlimited);
 

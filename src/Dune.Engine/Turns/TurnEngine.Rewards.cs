@@ -169,6 +169,12 @@ public sealed partial class TurnEngine
                 case GainEffect { Resource: ResourceKind.VictoryPoints } gain:
                     ChangeVp(state, owner, gain.Amount, check: mandatory);
                     return effect;
+                case ConditionalEffect conditional:
+                    var conditionalState = state.Copy();
+                    var conditionalChild = conditional with
+                    { Effects = [.. conditional.Effects.Select(x => Expand(x, owner, conditionalState, depth + 1, mandatory))] };
+                    Merge(state, [state.Copy(), conditionalState]);
+                    return conditionalChild;
                 case SequenceEffect sequence: return sequence with { Effects = Children(sequence.Effects, owner) };
                 case PlayerOrderedEffect ordered:
                     CheckUnordered(ordered.Effects.Select(x => (x, owner)));
@@ -267,5 +273,236 @@ public sealed partial class TurnEngine
             ChoiceEffect choice => choice.Options.Min(option => option.Effects.Sum(x => Demand(x, owner))),
             _ => 0,
         };
+    }
+
+    private TurnDiagnostic? ValidateRetreatClosure(EffectContext context, int count)
+    {
+        if (_state.DecisionWindow?.Kind != DecisionWindowKind.Combat ||
+            _state.Players.Any(x => x.Units.TroopsInConflict - (x.Id == context.RecipientId ? count : 0) > 0)) return null;
+        // Original troop eligibility has no positive strength once all troops leave. Project before the
+        // chosen count changes units, frames or priority; preserve the shared outcome calculator.
+        var projected = CombatOutcome.Calculate([.. _state.Players.Select(x => new CombatParticipant(x.Id,
+            CombatStrength.Calculate([new("troop", 0, _rules.Strength.TroopStrength)], x.Temporary.Swords,
+                _rules.Strength.SwordStrength, _rules.Strength.RequiresDeployedUnits)))], _state.Players.Count);
+        if (!_rules.Strength.RequiresDeployedUnits && Pending.Any())
+            return Unsupported("combat-closure-order", "Nonstandard strength after retreat requires unsupported pending-work projection.");
+        return PreflightConflictRewards(projected);
+    }
+
+    private ConflictRule? RevealedConflict => _state.Conflict.Revealed.Cards.Count == 1
+        ? _rules.Lifecycle?.Conflicts.FirstOrDefault(x => x.Id == _state.Conflict.Revealed.Cards[0].Definition) : null;
+
+    private ImmutableArray<ConflictRewardRecipient> RewardRecipients(CombatOutcome outcome)
+    {
+        if (RevealedConflict is not { } conflict) return [];
+        return [.. outcome.Placements.Where(x => x.RewardTier is not null).SelectMany(placement =>
+            placement.PlayerIds.Select(id => new ConflictRewardRecipient(id, placement.RewardTier!.Value,
+                conflict.Rewards.Single(x => x.Tier == placement.RewardTier).Effects)))];
+    }
+
+    private TurnDiagnostic? PreflightConflictRewards(CombatOutcome outcome)
+    {
+        if (_lifecycleDefinitionError is { } invalid) return invalid;
+        if (outcome.Placements.IsEmpty) return null; // No positive strength means no mandatory awards.
+        if (RevealedConflict is null)
+            return Unsupported("conflict-reward-definition", "The revealed Conflict has no executable reward definition.");
+        var recipients = RewardRecipients(outcome);
+        foreach (var recipient in recipients)
+            if (ValidateContext(recipient.Effects, false, false, recipient.PlayerId) is { } error) return error;
+        foreach (var tied in outcome.Placements.Where(x => x.IsTie && x.RewardTier is not null))
+        {
+            var entries = recipients.Where(x => tied.PlayerIds.Contains(x.PlayerId)).ToArray();
+            // Canonical seat order is only an engineering schedule for independent awards. Never resolve
+            // a scarce target, competing Alliance, or foreign-role funding by inventing a priority rule.
+            if (entries.Any(x => RewardOrderingSensitive(x.Effects, x.PlayerId)))
+                return Unsupported("conflict-reward-order", "Tied cross-player or scarce awards require a sourced ordering ruling.");
+            var footprints = entries.SelectMany(x => x.Effects.SelectMany(effect => InfluenceFootprint(effect, x.PlayerId, 0))).ToArray();
+            foreach (var sharedFaction in footprints.GroupBy(x => x.Faction).Where(x => x.Select(i => i.Owner).Distinct().Count() > 1))
+            {
+                var independent = _state.Board.Alliances.Single(x => x.Faction == sharedFaction.Key).OwnerId is null &&
+                    entries.All(x => x.Effects.All(effect => SimplePositiveInfluenceWork(effect, x.PlayerId))) &&
+                    sharedFaction.All(x => x.Amount >= 0) &&
+                    sharedFaction.GroupBy(x => x.Owner).All(seat =>
+                        (long)Influence(Player(seat.Key), sharedFaction.Key) + seat.Sum(x => (long)x.Amount) < 4);
+                if (!independent)
+                    return Unsupported("conflict-reward-order", "Shared tied faction awards require independent positive tracks below four with no incumbent.");
+            }
+        }
+        (Effect Effect, int Owner)[] work = [(new SequenceEffect([.. recipients.Select(x => (Effect)new ForPlayerEffect(x.PlayerId, x.Effects))]), 0)];
+        return ValidateSpecialOperations(work) ?? ValidateAcquisitionStock(work) ??
+            ValidateResourceBounds(work) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
+    }
+
+    private bool SimplePositiveInfluenceWork(Effect effect, int owner) => effect switch
+    {
+        InfluenceEffect influence => influence.Amount >= 0,
+        SequenceEffect sequence => sequence.Effects.All(x => SimplePositiveInfluenceWork(x, owner)),
+        PlayerOrderedEffect ordered => ordered.Effects.All(x => SimplePositiveInfluenceWork(x, owner)),
+        // Choice/payment/acquisition/Signet children with Influence need branch or causal analysis.
+        _ => !InfluenceFootprint(effect, owner, 0).Any(),
+    };
+
+    private bool RewardOrderingSensitive(IEnumerable<Effect> effects, int owner) => effects.Any(effect => effect switch
+    {
+        TakeMentatEffect or ControlSpaceEffect or ForPlayerEffect => true,
+        SequenceEffect sequence => RewardOrderingSensitive(sequence.Effects, owner),
+        PlayerOrderedEffect ordered => RewardOrderingSensitive(ordered.Effects, owner),
+        OptionalPaymentEffect optional => optional.DecisionOwnerId is { } chooser && chooser != owner ||
+            optional.PayerId is { } payer && payer != owner || optional.RecipientId is { } recipient && recipient != owner ||
+            RewardOrderingSensitive(optional.Effects, owner),
+        ChoiceEffect choice => choice.Options.Any(x => RewardOrderingSensitive(x.Effects, owner)),
+        AcquireEffect acquire => RewardOrderingSensitive(_cards[acquire.Card].AcquireEffects, owner),
+        SignetEffect => RewardOrderingSensitive(_leaders[Player(owner).Leader].SignetEffects, owner),
+        _ => false,
+    });
+
+    private void BeginConflictRewards()
+    {
+        var recipients = RewardRecipients(_combatOutcome!);
+        _conflictRewards = new(_combatOutcome!, recipients, 0, [], [], null);
+        StartConflictRecipient();
+    }
+
+    private IEnumerable<(Effect Effect, int Owner)> FutureRewardWork() => _conflictRewards is { } progress
+        ? progress.Recipients.Skip(progress.CurrentRecipient + 1).Select(x => ((Effect)new PlayerOrderedEffect(x.Effects), x.PlayerId))
+        : [];
+
+    private void AdvanceConflictRecipient()
+    {
+        _conflictRewards = _conflictRewards! with { CurrentRecipient = _conflictRewards.CurrentRecipient + 1, RootFrameId = null };
+        StartConflictRecipient();
+    }
+
+    private void StartConflictRecipient()
+    {
+        var progress = _conflictRewards!;
+        if (progress.CurrentRecipient >= progress.Recipients.Length)
+        {
+            _state.DecisionOwnerId = null;
+            return; // Task 9 owns cleanup. Combat stays nonterminal until that continuation is implemented.
+        }
+        var recipient = progress.Recipients[progress.CurrentRecipient];
+        var winner = progress.Outcome.WinnerId == recipient.PlayerId;
+        if (winner)
+            OpenWindow(DecisionWindowKind.PostWinRewards, [recipient.PlayerId], new(ExecutionContinuationKind.ConflictRewards));
+        PushFrame(recipient.Effects, RootContext(recipient.PlayerId, null, RevealedConflict!.Id, null, EffectProvenance.Board),
+            EffectGroupMode.PlayerOrdered, new(ExecutionContinuationKind.ConflictRewards, recipient.PlayerId));
+        _conflictRewards = progress with { RootFrameId = _frames[^1].Id };
+        if (winner) _state.DecisionWindow = _state.DecisionWindow! with { RewardFrameId = _frames[^1].Id };
+        _state.DecisionOwnerId = recipient.PlayerId;
+    }
+
+    private void ApplyControl(BoardSpaceId space, PlayerState player)
+    {
+        var board = _state.Board.Spaces.Single(x => x.Definition.Id == space);
+        if (board.ControllerId == player.Id) return;
+        if (board.ControllerId is { } old)
+        {
+            var previous = Player(old);
+            previous.Units = previous.Units with { ControlMarkers = checked(previous.Units.ControlMarkers + 1) };
+        }
+        player.Units = player.Units with { ControlMarkers = player.Units.ControlMarkers - 1 };
+        board.ControllerId = player.Id;
+    }
+
+    private int? MatchingDefenseOwner() => RevealedConflict?.ControlSpace is { } space
+        ? _state.Board.Spaces.Single(x => x.Definition.Id == space).ControllerId : null;
+
+    private bool ConditionHolds(EndgameCondition condition, int owner)
+    {
+        int Count(int seat) => new[] { Player(seat).Deck, Player(seat).Hand, Player(seat).Discard, Player(seat).InPlay }
+            .Sum(zone => zone.Cards.Count(x => x.Definition.Value == "imperium:reserve:spice-must-flow:v1"));
+        var count = Count(owner);
+        return condition switch
+        {
+            EndgameCondition.OwnAtLeastTwoSpiceMustFlow => count >= 2,
+            EndgameCondition.OwnMoreSpiceMustFlowThanEachOpponent => _state.Players.Where(x => x.Id != owner).All(x => count > Count(x.Id)),
+            _ => throw new InvalidOperationException("Unsupported condition passed preflight."),
+        };
+    }
+
+    private TurnDiagnostic? ValidateSpecialOperations(IEnumerable<(Effect Effect, int Owner)> work)
+    {
+        var controls = new List<(BoardSpaceId Space, int Owner)>();
+        var mentats = new List<int>();
+        var agents = new Dictionary<int, long>();
+        TurnDiagnostic? error = null;
+        foreach (var (effect, owner) in work) Visit(effect, owner, 0);
+        if (error is not null) return error;
+        if (mentats.Count > 1 || mentats.Count > 0 && (_state.Board.Mentat.OwnerId is not null ||
+            _state.Board.Mentat.Space is null || _state.Board.Mentat.Space != _state.Board.Definition.InitialMentatSpace))
+            return Unsupported("mentat-unavailable", "Competing or already owned Mentat awards require an unresolved ruling.");
+        if (agents.Any(x => (long)Player(x.Key).Units.AvailableAgents + x.Value > int.MaxValue) ||
+            mentats.Count > 0 && _state.Round == int.MaxValue)
+            return Content("resource-bounds", "Mentat award exceeds Agent or lifetime bounds.");
+        if (controls.GroupBy(x => x.Space).Any(x => x.Select(i => i.Owner).Distinct().Count() > 1))
+            return Unsupported("control-order", "Competing control awards require an explicit sourced ordering.");
+        foreach (var (space, owner) in controls)
+            if (_state.Board.Spaces.Single(x => x.Definition.Id == space).ControllerId is { } old && old != owner &&
+                Player(old).Units.ControlMarkers == int.MaxValue)
+                return Content("resource-bounds", "Returning a control marker exceeds supply bounds.");
+        foreach (var owner in controls.Select(x => x.Owner).Distinct())
+        {
+            var demand = controls.Where(x => x.Owner == owner).Select(x => x.Space).Distinct()
+                .Count(space => _state.Board.Spaces.Single(x => x.Definition.Id == space).ControllerId != owner);
+            if (demand > Player(owner).Units.ControlMarkers)
+                return Unsupported("control-markers", "A mandatory control award has no available marker.");
+        }
+        return null;
+
+        void Visit(Effect effect, int owner, int depth)
+        {
+            if (depth > 32) { error ??= Content("effect-cycle", "Special reward graph is cyclic or too deep."); return; }
+            IEnumerable<Effect> children = [];
+            switch (effect)
+            {
+                case ControlSpaceEffect control:
+                    if (!_state.Board.Spaces.Any(x => x.Definition.Id == control.Space && x.Definition.Controllable))
+                        error ??= Content("control-space", "Control requires a controllable board space.");
+                    else controls.Add((control.Space, owner));
+                    return;
+                case TakeMentatEffect:
+                    mentats.Add(owner);
+                    agents[owner] = agents.GetValueOrDefault(owner) + 1;
+                    return;
+                case SwordmasterEffect:
+                    agents[owner] = agents.GetValueOrDefault(owner) + 1;
+                    return;
+                case DeployFromSupplyEffect deploy:
+                    if (_state.Phase != GamePhase.RoundStart || _frames.Count == 0 ||
+                        _frames[0].Continuation.Kind != ExecutionContinuationKind.RoundStart)
+                        error ??= Unsupported("supply-deployment-context", "Supply deployment requires the matching Conflict defense decision.");
+                    else if (deploy.Amount != 1 || Player(owner).Units.TroopsInSupply < deploy.Amount)
+                        error ??= Illegal("defense-supply", "The defense requires an available supply troop.");
+                    else if (!StrengthFits(Player(owner).Temporary.Swords, Player(owner).Units.TroopsInConflict + deploy.Amount))
+                        error ??= Content("resource-bounds", "Defense exceeds Combat strength bounds.");
+                    return;
+                case SequenceEffect sequence: children = sequence.Effects; break;
+                case PlayerOrderedEffect ordered: children = ordered.Effects; break;
+                case ForPlayerEffect player: owner = player.RecipientId ?? player.PlayerId; children = player.Effects; break;
+                // Optional special operations are checked at selection; a mandatory Choice involving a scarce
+                // operation is gated until branch-aware reservation can prove all continuations safe.
+                case OptionalPaymentEffect: return;
+                case ChoiceEffect choice:
+                    if (choice.Options.Any(x => x.Effects.Any(effect => Special(effect, owner))))
+                        error ??= Unsupported("special-choice", "Scarce awards inside mandatory choices require branch-aware reservation.");
+                    return;
+                case AcquireEffect acquire: children = _cards[acquire.Card].AcquireEffects; break;
+                case SignetEffect: children = _leaders[Player(owner).Leader].SignetEffects; break;
+            }
+            foreach (var child in children) Visit(child, owner, depth + 1);
+        }
+        bool Special(Effect effect, int owner, int depth = 0) => depth > 32 || (effect switch
+        {
+            ControlSpaceEffect or TakeMentatEffect or DeployFromSupplyEffect => true,
+            SequenceEffect sequence => sequence.Effects.Any(x => Special(x, owner, depth + 1)),
+            PlayerOrderedEffect ordered => ordered.Effects.Any(x => Special(x, owner, depth + 1)),
+            ForPlayerEffect player => player.Effects.Any(x => Special(x, player.RecipientId ?? player.PlayerId, depth + 1)),
+            OptionalPaymentEffect optional => optional.Effects.Any(x => Special(x, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, depth + 1)),
+            ChoiceEffect choice => choice.Options.Any(x => x.Effects.Any(child => Special(child, owner, depth + 1))),
+            AcquireEffect acquire => _cards[acquire.Card].AcquireEffects.Any(x => Special(x, owner, depth + 1)),
+            SignetEffect => _leaders[Player(owner).Leader].SignetEffects.Any(x => Special(x, owner, depth + 1)),
+            _ => false,
+        });
     }
 }

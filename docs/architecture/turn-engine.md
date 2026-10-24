@@ -164,3 +164,40 @@ tie reward positions while tied player IDs serialize in seat order. The engine
 continues to stop before rewards and cleanup. The added trusted field advances
 turn snapshot and replay schemas to v4, and turn support/preview semantics to v8;
 setup remains v3 and lifecycle authoring remains v5.
+
+### SLICE-004 Conflict rewards and control
+
+The engine now executes the frozen outcome through `ConflictRewardProgress`,
+which records ordered recipients, the current recipient, closed post-win
+opportunities and its root frame. Trusted snapshots include remaining execution
+work and the frozen outcome; no second ranking or effect executor is introduced.
+The final Combat pass preflights all mandatory recipients before committing it.
+Initial-Combat test seams need explicit revealed Conflict/reward definitions when
+any positive-strength recipient receives an award.
+
+The unique winner has one PostWinRewards window linked to an explicit
+PlayerOrdered reward root. Remaining root items and post-win cards can interleave.
+A card suspends that exact root/window and its child exclusively owns decisions;
+returning resumes the same root. Passing closes this opportunity once, after all
+mandatory root work, and starts lower recipients. Lower-recipient children use the
+same frame stack without a priority window. Preflight includes unfinished root
+and later recipients, so selected cards cannot exhaust their required resources,
+Intrigue or acquisition stock. Conditional gain safety is conservative and does
+not query opponent hidden owned counts; only actual execution evaluates the two
+existing Spice Must Flow predicates.
+
+Control belongs to `BoardSpaceState.ControllerId`, with marker supply changed
+only on actual controller replacement. Existing `BoardRule.ControlReward` remains
+the sole placement bonus definition. A Conflict's `ControlSpace` identifies
+matching defense; an explicit `ControlSpaceEffect` grants printed reward control.
+RoundStart defense uses the existing OptionalPayment/child-frame machinery and a
+typed RoundStart continuation before five-card draws. `DeployFromSupplyEffect`
+is reserved for that internal decision and does not enable Combat deployment or
+re-entry cards. A Conflict Mentat award records `ProtectedThroughRound` now;
+Task 9 owns Agent-kind provenance, recurring round transitions and Recall.
+
+This advances setup snapshots to v4, turn snapshots/replays to v5, turn
+preview/support to v9 and lifecycle authoring to v6. The official lifecycle
+registry remains partial and no authentic configuration becomes playable.
+Reward completion deliberately remains nonterminal Combat until Task 9 provides
+cleanup; Task 10 supplies terminal scoring/result behavior.

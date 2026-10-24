@@ -45,3 +45,8 @@ public sealed record CombatOutcome(ImmutableArray<CombatPlacement> Placements, i
         return new(placements.MoveToImmutable(), winnerId, [.. noReward.Order()]);
     }
 }
+
+/// <summary>Frozen, trusted reward scheduling. Remaining work is captured with its existing execution frames.</summary>
+public sealed record ConflictRewardRecipient(int PlayerId, int Tier, ImmutableArray<Effect> Effects);
+public sealed record ConflictRewardProgress(CombatOutcome Outcome, ImmutableArray<ConflictRewardRecipient> Recipients,
+    int CurrentRecipient, ImmutableArray<PendingEffect> RemainingRewardWork, ImmutableArray<int> ClosedPostWinOpportunities, int? RootFrameId);

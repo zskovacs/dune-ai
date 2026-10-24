@@ -37,6 +37,7 @@ public sealed class EffectGraphValidator
             {
                 case GainEffect gain when gain.Amount < 0 || !Enum.IsDefined(gain.Resource):
                 case RetreatEffect { Maximum: < 0 }:
+                case DeployFromSupplyEffect { Amount: < 0 }:
                 case DrawIntrigueEffect { Amount: < 0 }:
                 case ConditionalEffect conditional when !Enum.IsDefined(conditional.Condition):
                 case DrawEffect { Amount: < 0 }:
@@ -67,12 +68,11 @@ public sealed class EffectGraphValidator
                     break;
                 case ConditionalEffect conditional:
                     Visit(conditional.Effects, depth + 1, jsonDepth + 2, path, diagnostics);
-                    diagnostics.Add(new(StepStatus.Unsupported, "effect-support", "Conditional scoring is not implemented."));
                     break;
                 case UnsupportedEffect unsupported:
                     diagnostics.Add(new(StepStatus.Unsupported, "effect-support", unsupported.Reason));
                     break;
-                case RetreatEffect or GainEffect or DrawEffect or DrawIntrigueEffect or RecruitEffect or InfluenceEffect or TrashSelfEffect or AcquireEffect or
+                case ControlSpaceEffect or TakeMentatEffect or DeployFromSupplyEffect or RetreatEffect or GainEffect or DrawEffect or DrawIntrigueEffect or RecruitEffect or InfluenceEffect or TrashSelfEffect or AcquireEffect or
                     HighCouncilEffect or SwordmasterEffect or HarvestSpiceEffect or SignetEffect:
                     break;
                 default: diagnostics.Add(new(StepStatus.Unsupported, "effect-type", "This effect primitive is unsupported.")); break;

@@ -29,6 +29,9 @@ public sealed record ResourceCost(int Solari = 0, int Spice = 0, int Water = 0);
 [JsonDerivedType(typeof(RetreatEffect), "retreat")]
 [JsonDerivedType(typeof(DrawIntrigueEffect), "draw-intrigue")]
 [JsonDerivedType(typeof(ConditionalEffect), "conditional")]
+[JsonDerivedType(typeof(ControlSpaceEffect), "control-space")]
+[JsonDerivedType(typeof(DeployFromSupplyEffect), "deploy-from-supply")]
+[JsonDerivedType(typeof(TakeMentatEffect), "take-mentat")]
 public abstract record Effect;
 public sealed record GainEffect(ResourceKind Resource, int Amount) : Effect;
 public sealed record DrawEffect(int Amount) : Effect;
@@ -65,6 +68,9 @@ public sealed record RetreatEffect(int Maximum) : Effect;
 public sealed record DrawIntrigueEffect(int Amount) : Effect;
 public enum EndgameCondition { OwnAtLeastTwoSpiceMustFlow, OwnMoreSpiceMustFlowThanEachOpponent }
 public sealed record ConditionalEffect(EndgameCondition Condition, ImmutableArray<Effect> Effects) : Effect;
+public sealed record ControlSpaceEffect(BoardSpaceId Space) : Effect;
+public sealed record DeployFromSupplyEffect(int Amount) : Effect;
+public sealed record TakeMentatEffect(bool ForNextRound) : Effect;
 
 public sealed record CardRule(ContentId Id, ImmutableArray<AgentIcon> Icons,
     ImmutableArray<Effect> AgentEffects, ImmutableArray<Effect> RevealEffects,
@@ -90,5 +96,5 @@ public sealed record TurnRuleSet(string Version, ImmutableArray<CardRule> Cards,
 {
     public CombatStrengthRule Strength { get; init; } = new();
     public LifecycleRuleSet? Lifecycle { get; init; }
-    public string SupportVersion { get; init; } = "original-imperium-turn-support-v8";
+    public string SupportVersion { get; init; } = "original-imperium-turn-support-v9";
 }

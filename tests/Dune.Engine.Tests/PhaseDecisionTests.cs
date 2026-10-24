@@ -205,6 +205,8 @@ public sealed class PhaseDecisionTests
         Assert.Equal(2, engine.DecisionOwnerId);
         Assert.Contains(new PassPriorityAction(2), engine.LegalActions(2));
         Apply(engine, new PassPriorityAction(2));
+        if (engine.Observe(0).Game.Window?.Kind == DecisionWindowKind.PostWinRewards)
+            Apply(engine, new PassPriorityAction(engine.DecisionOwnerId!.Value));
         Assert.Null(engine.DecisionOwnerId);
         Assert.Equal(GamePhase.Combat, engine.Phase);
         Assert.False(state.IsCompleted);
@@ -248,6 +250,8 @@ public sealed class PhaseDecisionTests
         Assert.Equal(2, engine.DecisionOwnerId);
         Assert.Null(engine.CurrentPlayerId);
         Apply(engine, new PassPriorityAction(2));
+        if (engine.Observe(0).Game.Window?.Kind == DecisionWindowKind.PostWinRewards)
+            Apply(engine, new PassPriorityAction(engine.DecisionOwnerId!.Value));
         Assert.Null(engine.DecisionOwnerId);
         Assert.Null(engine.Observe(0).Game.Window);
         Assert.Equal(GamePhase.Combat, engine.Phase);
@@ -423,6 +427,7 @@ public sealed class PhaseDecisionTests
         var state = lifecycleInventory ? LifecycleFixture.CreateState() : CreateState();
         state.Phase = phase;
         state.Round = 1;
+        if (phase == GamePhase.Combat && !lifecycleInventory) state.Conflict.Deck.TryDrawTo(state.Conflict.Revealed);
         state.FirstPlayerId = 2;
         foreach (var player in state.Players)
             player.Units = player.Units with { TroopsInSupply = player.Units.TroopsInSupply - 1, TroopsInConflict = 1 };
@@ -438,7 +443,9 @@ public sealed class PhaseDecisionTests
         Rules(state) with
         {
             Lifecycle = new("synthetic-window-tests-v1", [new(state.Players[2].Intrigue.Cards[0].Definition, timing,
-                new(), effects, [new("Synthetic window fixture, not official content", 1, "Invented Intrigue effects")])]),
+                new(), effects, [new("Synthetic window fixture, not official content", 1, "Invented Intrigue effects")])],
+                Conflicts: [.. LifecycleFixture.LifecycleRules(state).Conflicts.Select(x => x with
+                    { Rewards = [new(1, []), new(2, []), new(3, [])] })]),
         };
 
     private static void Resolve<T>(TurnEngine engine) where T : Effect

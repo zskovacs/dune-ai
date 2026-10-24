@@ -10,14 +10,14 @@ namespace Dune.Engine.Turns;
 /// </summary>
 public static class OriginalImperiumTurnRules
 {
-    public const string Version = "imperium-2020-turn-preview-v8";
+    public const string Version = "imperium-2020-turn-preview-v9";
     private const string Rules = "DUNE_IMPERIUM_Rules_2020_10_26.pdf";
     private const string Aid = "DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf";
 
     public static TurnRuleSet Create() => new(Version, Cards(), Spaces(), []);
 
     /// <summary>Partial source authoring, not a complete inventory or a claim of lifecycle playability.</summary>
-    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v5",
+    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v6",
     [
         new(new("imperium:intrigue:ambush:v1"), IntrigueTiming.Combat, new(),
             [new GainEffect(ResourceKind.Swords, 4)], [new(Rules, 7, "Ambush complete face"), new(Rules, 12, "Combat Intrigue example")]),
@@ -96,7 +96,11 @@ public static class OriginalImperiumTurnRules
             int influence = 0, bool once = false, ResourceKind? control = null) =>
             new(new($"imperium:space:{name}:v1"), icon, cost ?? new(), effects,
                 combat, faction, influence, once, control)
-            { Sources = [new(Aid, 2, name + ": original Imperium Board Space Guide")] };
+            {
+                Sources = name is "carthag" or "conspire" or "heighliner"
+                ? [new(Rules, 17, name + ": complete original Board Space Guide"), new(Aid, 2, name + ": original Imperium Board Space Guide")]
+                : [new(Aid, 2, name + ": original Imperium Board Space Guide")]
+            };
 
         return
         [
@@ -108,6 +112,9 @@ public static class OriginalImperiumTurnRules
             Space("imperial-basin", AgentIcon.SpiceTrade, [new GainEffect(ResourceKind.Spice, 1), new HarvestSpiceEffect()], combat: true, control: ResourceKind.Spice),
             Space("rally-troops", AgentIcon.Landsraad, [new RecruitEffect(4)], new(Solari: 4)),
             Space("hardy-warriors", AgentIcon.Fremen, [new InfluenceEffect(Faction.Fremen), new RecruitEffect(2)], new(Water: 1), combat: true, faction: Faction.Fremen),
+            Space("carthag", AgentIcon.City, [new RecruitEffect(1), new DrawIntrigueEffect(1)], combat: true, control: ResourceKind.Solari),
+            Space("conspire", AgentIcon.Emperor, [new InfluenceEffect(Faction.Emperor), new GainEffect(ResourceKind.Solari, 5), new RecruitEffect(2), new DrawIntrigueEffect(1)], new(Spice: 4), faction: Faction.Emperor),
+            Space("heighliner", AgentIcon.SpacingGuild, [new InfluenceEffect(Faction.SpacingGuild), new RecruitEffect(5), new GainEffect(ResourceKind.Water, 2)], new(Spice: 6), combat: true, faction: Faction.SpacingGuild),
             Space("arrakeen", AgentIcon.City, [new RecruitEffect(1), new DrawEffect(1)], combat: true, control: ResourceKind.Solari),
             Space("sietch-tabr", AgentIcon.City, [new RecruitEffect(1), new GainEffect(ResourceKind.Water, 1)], combat: true, faction: Faction.Fremen, influence: 2),
             Space("high-council", AgentIcon.Landsraad, [new HighCouncilEffect()], new(Solari: 5), once: true),

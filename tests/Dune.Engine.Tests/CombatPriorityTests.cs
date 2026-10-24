@@ -35,6 +35,7 @@ public sealed class CombatPriorityTests
             Apply(engine, new PassPriorityAction(seat));
             Replay(engine, Create, rules);
         }
+        if (participants == 1) Apply(engine, new PassPriorityAction(0)); // Close the unique winner's empty PostWin opportunity.
         Assert.Null(engine.DecisionOwnerId);
         Assert.Null(engine.Observe(0).Game.Window);
         Assert.False(state.IsCompleted);
@@ -82,6 +83,8 @@ public sealed class CombatPriorityTests
         if (soleParticipant)
         {
             Apply(engine, new PassPriorityAction(0));
+            Assert.Equal(DecisionWindowKind.PostWinRewards, engine.Observe(0).Game.Window!.Kind);
+            Apply(engine, new PassPriorityAction(0));
             Assert.Null(engine.DecisionOwnerId);
             Replay(engine, Create, rules);
         }
@@ -119,6 +122,8 @@ public sealed class CombatPriorityTests
         Assert.Equal(0, engine.DecisionOwnerId);
         Replay(engine, Create, rules);
         Apply(engine, new PassPriorityAction(0));
+        Assert.Equal(DecisionWindowKind.PostWinRewards, engine.Observe(0).Game.Window!.Kind);
+        Apply(engine, new PassPriorityAction(1));
         Assert.Null(engine.DecisionOwnerId);
         Replay(engine, Create, rules);
     }
@@ -222,6 +227,8 @@ public sealed class CombatPriorityTests
         Replay(engine, Create, rules);
         Apply(engine, new PassPriorityAction(1));
         Apply(engine, new PassPriorityAction(0));
+        Apply(engine, new PassPriorityAction(1));
+        Assert.Equal(DecisionWindowKind.PostWinRewards, engine.Observe(0).Game.Window!.Kind);
         Apply(engine, new PassPriorityAction(1));
         var snapshot = engine.CaptureTrustedSnapshot();
         var outcome = snapshot.Data.CombatOutcome!;
@@ -360,13 +367,13 @@ public sealed class CombatPriorityTests
     }
 
     private static TurnRuleSet CombatRules(GameState state) => Rules(state) with
-    { Lifecycle = OriginalImperiumTurnRules.CreateLifecycleRules() with { Factions = [] } };
+    { Lifecycle = OriginalImperiumTurnRules.CreateLifecycleRules() with { Factions = [], Conflicts = EmptyConflictRewards(state) } };
 
     private static TurnRuleSet SyntheticRules(GameState state, ContentId id, ImmutableArray<Effect> effects) =>
         Rules(state) with
         {
             Lifecycle = new("synthetic-combat-tests-v1", [new(id, IntrigueTiming.Combat, new(), effects,
-            [new("Synthetic Combat fixture, not official content", 1, "Invented effects")])])
+            [new("Synthetic Combat fixture, not official content", 1, "Invented effects")])], Conflicts: EmptyConflictRewards(state))
         };
 
     private static GameState CombatState(int players = 3, int first = 0, int[]? deployed = null)
@@ -380,6 +387,7 @@ public sealed class CombatPriorityTests
         var state = new GameInitializer(composer).InitializeFixture(configuration, composer.Compose(configuration).Definition).State!;
         state.Phase = GamePhase.Combat;
         state.Round = 1;
+        state.Conflict.Deck.TryDrawTo(state.Conflict.Revealed);
         state.FirstPlayerId = first;
         foreach (var player in state.Players)
         {
@@ -388,6 +396,10 @@ public sealed class CombatPriorityTests
         }
         return state;
     }
+
+    private static ImmutableArray<ConflictRule> EmptyConflictRewards(GameState state) =>
+        [.. LifecycleFixture.LifecycleRules(state).Conflicts.Select(x => x with
+        { Rewards = [new(1, []), new(2, []), new(3, [])] })];
 
     private static ContentId Face(string name) => new("imperium:intrigue:" + name + ":v1");
     private static void GiveSynthetic(GameState state, int player) =>

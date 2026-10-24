@@ -31,7 +31,7 @@ public sealed class LifecycleDefinitionTests
     }
 
     [Fact]
-    public void CompleteMasterTacticianIsSupportedWhileIndependentCornerConditionsStayUnsupported()
+    public void CompleteMasterTacticianAndIndependentCornerConditionsHaveSupportedShapes()
     {
         var rules = OriginalImperiumTurnRules.CreateLifecycleRules();
         var tactician = rules.Intrigues.Single(x => x.Id.Value.Contains("master-tactician", StringComparison.Ordinal));
@@ -48,7 +48,7 @@ public sealed class LifecycleDefinitionTests
         Assert.All(corner.Effects.Cast<ConditionalEffect>(), x => Assert.Equal(new GainEffect(ResourceKind.VictoryPoints, 1), Assert.Single(x.Effects)));
         var graph = new EffectGraphValidator();
         Assert.Empty(graph.Validate(tactician.Effects));
-        Assert.Contains(graph.Validate(corner.Effects), x => x.Status == StepStatus.Unsupported);
+        Assert.Empty(graph.Validate(corner.Effects));
         foreach (var face in new[] { tactician, corner })
         {
             var json = JsonSerializer.Serialize(face, ConfigurationJson.Options);
@@ -79,7 +79,7 @@ public sealed class LifecycleDefinitionTests
         Assert.Equal(new ResourceCost(Spice: 1), plot.Cost);
         Assert.IsType<UnsupportedEffect>(Assert.Single(plot.Effects));
         Assert.Contains(plot.Sources, x => x.Page == 7 && x.Section.Contains("one-spice cost", StringComparison.Ordinal));
-        Assert.Equal("imperium-2020-lifecycle-authoring-v5", rules.Version);
+        Assert.Equal("imperium-2020-lifecycle-authoring-v6", rules.Version);
         Assert.Null(OriginalImperiumTurnRules.Create().Lifecycle);
         var result = new GameInitializer(RulesetComposer.CreateDefault()).Create(new GameConfiguration());
         Assert.False(result.IsSuccess);
@@ -109,7 +109,7 @@ public sealed class LifecycleDefinitionTests
     }
 
     [Fact]
-    public void MandatoryControlRewardStaysUnsupportedUntilItsRuntimeTask()
+    public void ControlConflictMetadataIsSupportedForRoundStartDefense()
     {
         var state = LifecycleFixture.CreateState();
         var rules = LifecycleFixture.Rules(state);
@@ -120,7 +120,9 @@ public sealed class LifecycleDefinitionTests
                 Conflicts = [.. rules.Lifecycle.Conflicts.Select(x => x with { ControlSpace = Space("arrakeen") })],
             }
         };
-        AssertRejectedUnchanged(new TurnEngine(state, rules), new StartRoundAction(), StepStatus.Unsupported);
+        var engine = new TurnEngine(state, rules);
+        Apply(engine, new StartRoundAction());
+        Assert.Equal(GamePhase.PlayerTurns, engine.Phase);
     }
 
     [Fact]
@@ -260,14 +262,24 @@ public sealed class LifecycleDefinitionTests
         Assert.DoesNotContain(engine.LegalActions(0), x => x is PlayIntrigueAction);
     }
 
-    [Theory]
-    [InlineData("corner-the-market", GamePhase.Endgame)]
-    public void UnavailableSourcedPrimitivesRejectEntireFaceBeforePlayingOrPaying(string name, GamePhase phase)
+    [Fact]
+    public void UnsupportedConditionalChildrenRejectEntireSyntheticFaceBeforePlayingOrPaying()
     {
-        var state = OfficialIntrigueState(name);
-        state.Phase = phase;
-        var engine = new TurnEngine(state, Rules(state) with { Lifecycle = OriginalImperiumTurnRules.CreateLifecycleRules() with { Factions = [] } });
-        AssertRejectedUnchanged(engine, new PlayIntrigueAction(0, Card(state.Players[0].Intrigue.Cards.Single())), StepStatus.Unsupported);
+        var state = LifecycleFixture.CreateState();
+        state.Phase = GamePhase.Endgame;
+        var card = state.Shared.IntrigueDeck.TryDrawTo(state.Players[0].Intrigue)!;
+        var rules = LifecycleFixture.Rules(state);
+        rules = rules with
+        {
+            Lifecycle = rules.Lifecycle! with
+            {
+                Intrigues = [.. rules.Lifecycle.Intrigues.Select(x => x.Id == card.Definition
+            ? x with { Timing = IntrigueTiming.Endgame, Effects = [new ConditionalEffect(EndgameCondition.OwnAtLeastTwoSpiceMustFlow,
+                [new DrawIntrigueEffect(1)])] } : x)]
+            }
+        };
+        var engine = new TurnEngine(state, rules);
+        AssertRejectedUnchanged(engine, new PlayIntrigueAction(0, Card(card)), StepStatus.Unsupported);
         Assert.DoesNotContain(engine.LegalActions(0), x => x is PlayIntrigueAction);
     }
 

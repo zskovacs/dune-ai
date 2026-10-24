@@ -44,6 +44,7 @@ public sealed partial class TurnEngine
     private int _recruited;
     private int _oldGarrison;
     private CombatOutcome? _combatOutcome;
+    private ConflictRewardProgress? _conflictRewards;
 
     public TurnEngine(GameState state, TurnRuleSet rules)
     {
@@ -238,13 +239,13 @@ public sealed partial class TurnEngine
         return new(StepStatus.Applied, []);
     }
 
-    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v4", _rulesIdentity, _initialHash,
+    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v5", _rulesIdentity, _initialHash,
         _state.CaptureTrustedSnapshot().Data, [.. _frames], _nextFrameId, _revealing, _deploying,
         _recruited, _oldGarrison, _nextEffectId,
         [.. _used.OrderBy(x => x.PlayerId).ThenBy(x => x.Space.Value, StringComparer.Ordinal)], [.. _history])
-    { Window = _state.DecisionWindow, NextWindowId = _nextWindowId, CombatOutcome = _combatOutcome });
+    { Window = _state.DecisionWindow, NextWindowId = _nextWindowId, CombatOutcome = _combatOutcome, ConflictRewards = _conflictRewards is { } progress ? progress with { RemainingRewardWork = [.. Pending] } : null });
 
-    public TurnReplay CaptureReplay() => new("dune-turn-replay-v4",
+    public TurnReplay CaptureReplay() => new("dune-turn-replay-v5",
         typeof(TurnEngine).Assembly.GetName().Version!.ToString(),
         System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
         _rulesIdentity, _state.Definition.Fingerprint, _state.ConfigurationIdentity, _state.ContentIdentity,
@@ -303,6 +304,11 @@ public sealed partial class TurnEngine
             foreach (var work in current.Remaining)
                 yield return new ResolveEffectAction(id, work.Id);
             if (IsRevealRoot) yield return new EndRevealAction(id);
+            if (IsPostWinRewardRoot)
+            {
+                foreach (var selector in Selectors(Player(id).Intrigue)) yield return new PlayIntrigueAction(id, selector);
+                yield return new PassPriorityAction(id);
+            }
             yield break;
         }
         if (_state.DecisionWindow is not null)
@@ -343,7 +349,8 @@ public sealed partial class TurnEngine
                 return Illegal("pending-decision", "Resolve the pending decision first.");
             if (frame.Effect is RetreatEffect retreat)
                 return choose.Option < 0 || choose.Option > RetreatMaximum(retreat, frame.Context)
-                    ? Illegal("retreat-count", "Retreat exceeds the permitted deployed troop count.") : ValidateRemaining();
+                    ? Illegal("retreat-count", "Retreat exceeds the permitted deployed troop count.") :
+                    ValidateRetreatClosure(frame.Context, choose.Option) ?? ValidateRemaining();
             if (frame.Effect is OptionalPaymentEffect && choose.Option == 0) return ValidateRemaining();
             var selected = frame.Effect switch
             {
@@ -362,7 +369,7 @@ public sealed partial class TurnEngine
             return work is null ? Illegal("effect", "This pending effect is unavailable.") :
                 Preflight([work.Effect], work.Context.RecipientId, work.Context.Space, payer: work.Context.PayerId) ?? ValidateRemaining();
         }
-        if (_frames.Count > 0 && !IsRevealRoot && !_deploying)
+        if (_frames.Count > 0 && !IsRevealRoot && !IsPostWinRewardRoot && !_deploying)
             return Illegal("child-effects", "Complete the current frame before continuing suspended work.");
         if (_frames.Count > 1 && (action is not ResolveEffectAction immediate ||
             !CurrentPending.Any(x => x.Id == immediate.EffectId)))
@@ -467,6 +474,8 @@ public sealed partial class TurnEngine
                     return Illegal("persuasion", "Insufficient Persuasion.");
                 (int Payer, ResourceKind Resource, int Amount)[] purchasePayments = [(active.Id, ResourceKind.Persuasion, purchase.Cost)];
                 return ValidateContext(purchase.AcquireEffects, cardSource: true, boardSource: false, active.Id) ??
+                    ValidateSpecialOperations(Pending.Select(x => (x.Effect, x.Context.RecipientId))
+                        .Concat(purchase.AcquireEffects.Select(x => (x, active.Id)))) ??
                     Preflight(purchase.AcquireEffects, active.Id, payments: purchasePayments) ??
                     ValidateResourceBounds(Pending.Select(x => (x.Effect, x.Context.RecipientId, x.Context.PayerId, x.Context.Space))
                         .Concat(purchase.AcquireEffects.Select(x => (x, active.Id, active.Id, (BoardSpaceId?)null))), purchasePayments, selected) ??
@@ -477,7 +486,10 @@ public sealed partial class TurnEngine
                     ValidateAcquisitionStock(Pending.Select(x => (x.Effect, x.Context.RecipientId))
                         .Concat(purchase.AcquireEffects.Select(x => (x, active.Id))), selected);
             case EndRevealAction:
-                return !IsRevealRoot || Pending.Any() ? Illegal("pending-effects", "Resolve all Reveal effects before ending Reveal.") : null;
+                if (!IsRevealRoot || Pending.Any()) return Illegal("pending-effects", "Resolve all Reveal effects before ending Reveal.");
+                return _rules.Lifecycle is not null && _state.Players.All(x => x.Id == active.Id || x.Temporary.HasRevealed) &&
+                    _state.Players.All(x => !CombatParticipation.IsEligible(_rules.Lifecycle.Participation, CombatUnits(x)))
+                    ? PreflightConflictRewards(CalculateCombatOutcome()) : null;
             default:
                 return Illegal("action", "This action is unavailable.");
         }
@@ -512,7 +524,8 @@ public sealed partial class TurnEngine
     {
         var materialized = effects.ToImmutableArray();
         // Executable boxes were checked with their actual source/role context before activation.
-        return ValidateAcquisitionStock(materialized.Select(x => (x, owner))) ??
+        return ValidateSpecialOperations(materialized.Select(x => (x, owner))) ??
+            ValidateAcquisitionStock(materialized.Select(x => (x, owner))) ??
             ValidateResourceBounds(materialized.Select(x => (x, owner)), space, payments, payer) ??
             ValidateInfluenceBounds(materialized.Select(x => (x, owner))) ??
             ValidatePermanentOperations(materialized.Select(x => (x, owner)));
@@ -536,6 +549,12 @@ public sealed partial class TurnEngine
                 HarvestSpiceEffect when !board => Content("effect-context", "Spice harvest requires a board space."),
                 RetreatEffect when !combatRetreat || _rules.Lifecycle?.Participation != CombatParticipationPolicy.OriginalTroops =>
                     Unsupported("retreat-context", "Retreat is supported only in original troop Combat Intrigues."),
+                DeployFromSupplyEffect => Unsupported("supply-deployment-context", "Supply deployment is reserved for the matching Conflict defense decision."),
+                ControlSpaceEffect control when !_state.Board.Spaces.Any(x => x.Definition.Id == control.Space && x.Definition.Controllable) =>
+                    Content("control-space", "Control requires a controllable board space."),
+                ConditionalEffect conditional => conditional.Effects.Any(x => x is not GainEffect)
+                    ? Unsupported("conditional-children", "Conditional children are limited to nonnegative resource awards.")
+                    : Support(conditional.Effects, owner, card, board, combatRetreat, depth + 1),
                 SequenceEffect sequence => Support(sequence.Effects, owner, card, board, combatRetreat, depth + 1),
                 PlayerOrderedEffect ordered => Support(ordered.Effects, owner, card, board, combatRetreat, depth + 1),
                 OptionalPaymentEffect optional => ValidateRoles(optional.DecisionOwnerId, optional.PayerId, optional.RecipientId) ??
@@ -571,9 +590,10 @@ public sealed partial class TurnEngine
                 { RecipientId = x.Context.RecipientId, PayerId = x.Context.PayerId })];
             children.Add(pendingFrame.Mode == EffectGroupMode.Sequence ? new SequenceEffect(effects) : new PlayerOrderedEffect(effects));
         }
+        children.AddRange(FutureRewardWork().Select(x => (Effect)new ForPlayerEffect(x.Owner, [x.Effect])));
         (Effect Effect, int Owner)[] work = [(new SequenceEffect([.. children]), 0)];
         var resources = work.Select(x => (x.Effect, x.Owner, 0, sourceSpace ?? Pending.Select(x => x.Context.Space).FirstOrDefault(x => x is not null)));
-        return ValidateAcquisitionStock(work) ?? ValidateResourceBounds(resources, payments) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
+        return ValidateSpecialOperations(work) ?? ValidateAcquisitionStock(work) ?? ValidateResourceBounds(resources, payments) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
     }
 
     private TurnDiagnostic? ValidatePermanentOperations(IEnumerable<(Effect Effect, int Owner)> work)
@@ -889,6 +909,7 @@ public sealed partial class TurnEngine
                         var spice = (owner, ResourceKind.Spice);
                         target[spice] = target.GetValueOrDefault(spice) + (space is { } board ? _state.Board.Spaces.Single(x => x.Definition.Id == board).BonusSpice : 0);
                         break;
+                    case ConditionalEffect conditional: Accumulate(conditional.Effects, owner, payer, space, target, includeChoices); break;
                     case GainEffect gain:
                         var key = (owner, gain.Resource);
                         target[key] = target.GetValueOrDefault(key) + gain.Amount;
@@ -1078,9 +1099,16 @@ public sealed partial class TurnEngine
 
     private TurnDiagnostic? ValidateWindowAction(GameAction action, DecisionWindowState window)
     {
-        if (window.SuspendedFrameId is not null || _frames.Count > 0)
+        if (window.SuspendedFrameId is not null || _frames.Count > 0 && !IsPostWinRewardRoot)
             return Illegal("window-suspended", "Complete the current Intrigue before using priority.");
-        if (action is PassPriorityAction) return null;
+        if (action is PassPriorityAction)
+        {
+            if (IsPostWinRewardRoot && !CurrentPending.IsEmpty)
+                return Illegal("mandatory-rewards", "Complete all mandatory rewards before closing this opportunity.");
+            return window.Kind == DecisionWindowKind.Combat && window.OpportunityPlays == 0 &&
+                window.ConsecutivePasses.Length + 1 == window.EligibleSeats.Length
+                ? PreflightConflictRewards(CalculateCombatOutcome()) : null;
+        }
         if (action is not PlayIntrigueAction play)
             return Illegal("window-action", "This window accepts only Intrigue plays and priority passes.");
         var card = Find(Player(play.PlayerId).Intrigue, play.Card);
@@ -1100,7 +1128,8 @@ public sealed partial class TurnEngine
         if (!CanPay(Player(play.PlayerId), rule.Cost)) return Illegal("intrigue-cost", "This Intrigue is unaffordable.");
         return ValidateContext(rule.Effects, cardSource: true, boardSource: false, play.PlayerId,
             combatRetreat: window.Kind == DecisionWindowKind.Combat) ??
-            Preflight(rule.Effects, play.PlayerId, payments: CostPayments(play.PlayerId, rule.Cost));
+            Preflight(rule.Effects, play.PlayerId, payments: CostPayments(play.PlayerId, rule.Cost)) ??
+            ValidateRemaining(rule.Effects.Select(x => (x, play.PlayerId)), payments: CostPayments(play.PlayerId, rule.Cost));
     }
 
     private void OpenPhaseWindow()
@@ -1127,7 +1156,11 @@ public sealed partial class TurnEngine
         _state.DecisionOwnerId = null;
         if (eligible.IsEmpty)
         {
-            if (kind == DecisionWindowKind.Combat) FreezeCombatOutcome();
+            if (kind == DecisionWindowKind.Combat)
+            {
+                FreezeCombatOutcome();
+                BeginConflictRewards();
+            }
             return;
         }
         _state.DecisionWindow = new(id, kind, eligible, 0, eligible[0], 0, [], continuation);
@@ -1160,7 +1193,8 @@ public sealed partial class TurnEngine
     {
         var window = _state.DecisionWindow;
         if (window is null || continuation.WindowId != window.Id || continuation.PlayerId != window.PriorityOwnerId ||
-            window.SuspendedFrameId is null || _frames.Count > 0)
+            window.SuspendedFrameId is null ||
+            (window.RewardFrameId is { } rewardRoot ? _frames.Count != 1 || _frames[0].Id != rewardRoot : _frames.Count > 0))
             throw new InvalidOperationException("Intrigue continuation lost its suspended priority window.");
         if (window.ResolvingCardId is { } card && _state.Shared.IntrigueResolving.Cards.Any(x => x.Id == card))
             _state.Shared.IntrigueResolving.MoveTo(card, _state.Shared.IntrigueDiscard);
@@ -1191,6 +1225,16 @@ public sealed partial class TurnEngine
     private void PassPriority()
     {
         var window = _state.DecisionWindow!;
+        if (window.Kind == DecisionWindowKind.PostWinRewards)
+        {
+            if (IsPostWinRewardRoot) PopFrame();
+            _state.DecisionWindow = null;
+            _conflictRewards = _conflictRewards! with
+            { ClosedPostWinOpportunities = _conflictRewards.ClosedPostWinOpportunities.Add(window.PriorityOwnerId) };
+            AdvanceConflictRecipient();
+            ContinueTurn();
+            return;
+        }
         // Finishing a played opportunity differs from passing an opportunity without playing.
         var passes = window.OpportunityPlays > 0 ? ImmutableArray<int>.Empty :
             window.ConsecutivePasses.Add(window.PriorityOwnerId);
@@ -1215,24 +1259,44 @@ public sealed partial class TurnEngine
         if (window.SuspendedFrameId is not null || _frames.Count > 0)
             throw new InvalidOperationException("A window cannot close while Intrigue work is suspended.");
         if (window.Kind == DecisionWindowKind.Combat) FreezeCombatOutcome();
-        // The next lifecycle task owns Conflict rewards / Endgame scoring. Preserve the phase and explicit stop.
         _state.DecisionWindow = null;
         _state.DecisionOwnerId = null;
+        if (window.Kind == DecisionWindowKind.Combat)
+        {
+            BeginConflictRewards();
+            ContinueTurn();
+        }
     }
 
     private void FreezeCombatOutcome()
     {
         if (_combatOutcome is not null)
             throw new InvalidOperationException("Combat outcome is already frozen.");
-        _combatOutcome = CombatOutcome.Calculate([.. _state.Players.Select(player =>
+        _combatOutcome = CalculateCombatOutcome();
+    }
+
+    private CombatOutcome CalculateCombatOutcome() => CombatOutcome.Calculate([.. _state.Players.Select(player =>
             new CombatParticipant(player.Id, CombatStrength.Calculate(CombatUnits(player), player.Temporary.Swords,
                 _rules.Strength.SwordStrength, _rules.Strength.RequiresDeployedUnits)))], _state.Players.Count);
-    }
 
     private void BeginRound()
     {
         _state.Round = 1;
         _state.Conflict.Deck.TryDrawTo(_state.Conflict.Revealed);
+        _state.Phase = GamePhase.RoundStart;
+        if (MatchingDefenseOwner() is { } controller)
+        {
+            PushFrame([new OptionalPaymentEffect(new(), [new DeployFromSupplyEffect(1)])],
+                RootContext(controller, null, _state.Conflict.Revealed.Cards.Single().Definition, null, EffectProvenance.Board),
+                EffectGroupMode.Sequence, new(ExecutionContinuationKind.RoundStart));
+            ContinueTurn();
+            return;
+        }
+        FinishRoundStart();
+    }
+
+    private void FinishRoundStart()
+    {
         foreach (var player in _state.Players)
         {
             player.Temporary = new(0, 0, false);
@@ -1319,6 +1383,22 @@ public sealed partial class TurnEngine
                 for (var i = 0; i < draw.Amount; i++)
                     if (_state.Shared.IntrigueDeck.TryDrawTo(player.Intrigue) is null)
                         throw new InvalidOperationException("Unavailable Intrigue draw passed preflight.");
+                break;
+            case ControlSpaceEffect control:
+                ApplyControl(control.Space, player);
+                break;
+            case TakeMentatEffect mentat:
+                _state.Board.Mentat = new(null, player.Id)
+                { ProtectedThroughRound = mentat.ForNextRound ? checked(_state.Round + 1) : null };
+                player.Units = player.Units with { AvailableAgents = checked(player.Units.AvailableAgents + 1) };
+                break;
+            case DeployFromSupplyEffect deploy:
+                player.Units = player.Units with
+                { TroopsInSupply = player.Units.TroopsInSupply - deploy.Amount, TroopsInConflict = player.Units.TroopsInConflict + deploy.Amount };
+                break;
+            case ConditionalEffect conditional:
+                if (ConditionHolds(conditional.Condition, player.Id))
+                    PushChild(conditional.Effects, context, EffectGroupMode.PlayerOrdered);
                 break;
             case OptionalPaymentEffect optional:
                 _frames[^1] = _frames[^1] with
@@ -1431,6 +1511,10 @@ public sealed partial class TurnEngine
             RecipientId = recipient ?? chooser ?? context.RecipientId,
         };
 
+    private bool IsPostWinRewardRoot => _frames.Count == 1 &&
+        _state.DecisionWindow is { Kind: DecisionWindowKind.PostWinRewards, SuspendedFrameId: null } window &&
+        window.RewardFrameId == _frames[0].Id;
+
     private bool IsRevealRoot => _frames.Count == 1 &&
         _frames[0].Continuation.Kind == ExecutionContinuationKind.RevealTurn;
 
@@ -1483,6 +1567,12 @@ public sealed partial class TurnEngine
                     throw new InvalidOperationException("Agent continuation belongs to a different turn.");
                 EndAgentTurn();
                 break;
+            case ExecutionContinuationKind.ConflictRewards:
+                AdvanceConflictRecipient();
+                break;
+            case ExecutionContinuationKind.RoundStart:
+                FinishRoundStart();
+                break;
             case ExecutionContinuationKind.CombatOpportunity:
             case ExecutionContinuationKind.Endgame:
                 ResumeWindow(continuation);
@@ -1497,6 +1587,7 @@ public sealed partial class TurnEngine
         while (Decision is null && _frames.Count > 0)
         {
             var frame = _frames[^1];
+            if (IsPostWinRewardRoot) break; // Explicit remaining awards can fund cards, and cards can fund awards.
             if (frame.Remaining.IsEmpty)
             {
                 if (frame.ParentId is null && (frame.Continuation.Kind == ExecutionContinuationKind.RevealTurn || _deploying))
@@ -1597,7 +1688,8 @@ public sealed partial class TurnEngine
     {
         if ((_state.Phase == GamePhase.PlayerTurns) != (_state.CurrentPlayerId is not null))
             throw new InvalidOperationException("Player Turns require a current turn player; other phases cannot have one.");
-        if (_frames.Count > 0 && _state.Phase != GamePhase.PlayerTurns && _state.DecisionWindow is null)
+        if (_frames.Count > 0 && _state.Phase != GamePhase.PlayerTurns && _state.DecisionWindow is null &&
+            _frames[0].Continuation.Kind is not (ExecutionContinuationKind.ConflictRewards or ExecutionContinuationKind.RoundStart))
             throw new InvalidOperationException("Lifecycle effect frames require their suspended window.");
         var expectedOwner = Decision?.Context.DecisionOwnerId ??
             (_frames.Count > 0 ? _frames[^1].ChooserId : _state.DecisionWindow?.PriorityOwnerId ??
@@ -1614,9 +1706,10 @@ public sealed partial class TurnEngine
              window.ConsecutivePasses.Distinct().Count() != window.ConsecutivePasses.Length ||
              window.ConsecutivePasses.Any(x => !window.EligibleSeats.Contains(x)) ||
              (window.SuspendedFrameId is { } suspended
-                 ? window.ResolvingCardId is null || !_frames.Any(x => x.Id == suspended && x.ParentId is null &&
+                 ? window.ResolvingCardId is null || !_frames.Any(x => x.Id == suspended && x.ParentId == window.RewardFrameId &&
                      x.Continuation.WindowId == window.Id && x.Continuation.PlayerId == window.PriorityOwnerId)
-                 : _frames.Count > 0 || window.ResolvingCardId is not null)))
+                 : _frames.Count > 0 && !(window.RewardFrameId is { } rewardRoot && _frames[0].Id == rewardRoot &&
+                     _frames[0].Continuation.Kind == ExecutionContinuationKind.ConflictRewards) || window.ResolvingCardId is not null)))
             throw new InvalidOperationException("Decision window state is inconsistent with its phase or suspended work.");
         var cards = _state.Zones.SelectMany(x => x.Cards).ToArray();
         if (cards.Length != _cardCount || cards.Select(x => x.Id).Distinct().Count() != cards.Length)
@@ -1757,8 +1850,6 @@ public sealed partial class TurnEngine
                     return Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
                 if (definition.ConflictTier != rule.Tier)
                     return Content("lifecycle-deck-content", "An enabled deck definition is invalid.");
-                if (rule.ControlSpace is not null)
-                    return Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
                 foreach (var reward in rule.Rewards)
                     foreach (var player in _state.Players)
                         if (ValidateContext(reward.Effects, false, false, player.Id) is { } error) return DeckDiagnostic(error);

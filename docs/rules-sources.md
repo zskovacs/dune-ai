@@ -292,3 +292,58 @@ are supported. `ThresholdChildFinishesBeforeParentSiblingAndPreservesForeignRole
 Turn preview/support semantics advance to v7 and lifecycle authoring to v5. Trusted
 setup/turn/replay schemas remain v3 because no serialized state field changes; older
 support versions, including v5, are rejected explicitly before replay actions.
+
+## SLICE-004 C3c — Conflict awards, post-win timing and control
+
+| Mechanic | Supplied source | Supported interpretation and direct verification |
+| --- | --- | --- |
+| Actual tier awards | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Execute each frozen `CombatOutcome` recipient/tier exactly once. Zero strength grants nothing, tied first has no winner window, and lower recipients follow the winner. `ConflictRewardTests.EveryRankingTableAwardsItsActualTierExactlyOnce` checks every Task 7 ranking table against actual resources. Seat order within independent tied awards is an explicit engine scheduling convention, not a rules tiebreak. |
+| Winner reward/card interleaving | [I p.13](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=13) | The unique winner may choose remaining reward items or supported PostWin cards. A selected child finishes before another selection; mandatory items must complete before passing, while optional cards may be declined. Current resources pay selected card costs. `WinnerCanFundPostWinPaymentWithRewardOrEarlierCardAndResumeExactRoot`, `OptionalPostWinPaymentUsesResolvedFundingAndBlocksInterleavingWhileSelected`, `UnfundedOptionalPostWinPaymentRejectsBeforeResourceOrChildMutation`. |
+| Generic award icons | [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16), [A p.1](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=1) | Reuse the single effect resolver for resources/VP, personal/shared draws, finite-supply recruitment, faction influence, choices, optional payment, foreign roles, nested acquisition and control. Synthetic combinations test execution contracts without inventing official card faces. `GenericRewardsReuseNestedAcquireChoicePaymentForeignRolesAndConditionalRuntime`, `LowerRecipientsRemainInteractiveAndReplayWithoutAPriorityWindow`. |
+| Control marker transfer and placement bonus | [I p.10](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=10), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16), [A p.2](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=2) | `BoardSpaceState.ControllerId` is authoritative. Replacement returns the previous marker and consumes the new one once; repeated same-owner awards preserve counts. Existing board `ControlReward` pays even when the controller places the Agent. `BoardControlTests.ControlAwardsReplaceControllerAndConserveEveryMarkerIncludingRepeatedSameOwner`, `AuthoritativePlacementBonusPaysControllerIncludingOwnAgent`. |
+| Matching Conflict defense | [I p.10](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=10), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16) | Reveal the matching Conflict, then let its controller optionally deploy one supply troop directly to Conflict before five-card draws/Player Turns. No supply allows only decline; garrison is unchanged. A typed RoundStart continuation returns to RoundStart. `MatchingConflictDefenseSuspendsRoundStartBeforeDrawAndReplaysToPlayerTurns`, `EmptySupplyAllowsOnlyDeclineAndDifferentControlledSpaceGivesNoDefense`. |
+| Carthag, Conspire, Heighliner | [I p.17](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=17), [A p.2](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=2) | Carthag recruits one/draws one Intrigue and pays its controller one Solari. Conspire costs four spice, gives Emperor influence/five Solari/two recruits/one Intrigue. Heighliner costs six spice, gives Guild influence/five recruits/two water. Carthag/Heighliner are Combat spaces. `CompleteSourcedBoardSpacesGrantPrintedEffects`. Secrets' random theft, Mentat/Swordmaster spaces and other unsourced gaps remain outside this task. |
+| Conflict Mentat lifetime | [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16) | A supported Mentat award takes the token only from its normal board space, adds one Agent and, for a Conflict award, protects it through the next round using `ProtectedThroughRound`. Another player's/contested Mentat is Unsupported. `GenericRewardsReuseNestedAcquireChoicePaymentForeignRolesAndConditionalRuntime`, `SupplyDeploymentCannotEnableNormalCombatIntrigueAndUnavailableMentatRejectsFinalPass`. Agent-kind placement and Recall lifetime enforcement belong to Task 9. |
+| Conditional award runtime | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7), complete Corner the Market face | Reuse the two existing Spice Must Flow ownership predicates. Only nonnegative direct resource-gain children are enabled; preflight conservatively includes their gains independently of hidden counts. Resolution counts owned deck/hand/discard/in-play cards. `ConditionalRewardLegalityDoesNotDependOnOpponentHiddenOwnedCounts` verifies legality privacy. Official Endgame scoring lifecycle tests remain Task 10. |
+
+The payment timing proof uses explicitly synthetic `fixture:post-win-spice` and
+`fixture:post-win-payment` definitions, two spice and four Solari invented solely
+for timing. Official Demand Respect/To the Victor remain absent: the supplied
+material does not establish their complete numeric faces. The official Conflict
+registry remains empty because the supplied illustrations do not establish deck
+tiers or quantities. All 18 lifecycle fixture Conflicts and their reward rows are
+visibly synthetic, with identified reserve substitution and unchanged startup
+completeness checks; earlier initial-Combat tests now reveal explicit synthetic
+Conflicts and declare their deliberately empty test reward tiers.
+
+Before the final closing pass, the engine preflights every mandatory recipient's
+support, resources, public acquisition stock, Intrigue reservations, faction and
+scarce operations. Unsupported work rejects before priority, history, frames or
+awards mutate. Final-retreat closure projects the outcome before unit mutation;
+zero positive strength has no mandatory awards. Post-win selections reserve the
+unfinished current root and lower recipients. See
+`FinalPassPreflightsAllRecipientsBeforeAnyWindowOrGrantMutation`,
+`MissingConflictOrRewardDefinitionCannotDisappearAtFinalPass`,
+`PostWinCardCannotConsumeStockOrCapacityNeededByUnfinishedMandatoryReward`.
+
+Conservative gates remain for tied foreign-role/scarce awards and tied competing
+faction gains beyond simple positive tracks below four with no incumbent, conflicting control recipients, unavailable markers/Mentat,
+mandatory choices containing scarce operations, conditional children beyond
+nonnegative direct gains, and unsupported shared Intrigue recycling. These are
+implementation limits, with no substitute awards or invented priority rule.
+Completion still stops in nonterminal Combat before Task 9 cleanup.
+
+Trusted setup snapshots advance to v4 for Mentat lifetime; turn snapshots/replays
+to v5 for reward progress and reward/window linkage; preview/support to v9 and
+partial lifecycle authoring to v6. All older replay rejection rows are retained,
+including the immediately previous v4/support-v8 pair. Strict JSON allowlists and
+unknown-member/enum rejection remain in force.
+
+Simple nonnegative direct/Sequence/PlayerOrdered Influence grants to tied seats
+are proven independent when every cumulative resulting shared faction track stays
+below four and the faction has no incumbent. Threshold-two VP still applies;
+canonical seat scheduling is preserved through explicit Sequence preflight.
+`IndependentTiedInfluenceBelowFourGrantsEachTrackAndThresholdVpInCanonicalSeatOrder`
+covers three/four players, direct/wrapped grants, threshold VP, canonical scheduling
+and replay. Shared faction work with an incumbent, signed/branch-dependent work
+or any possible crossing of four remains conservatively gated.
