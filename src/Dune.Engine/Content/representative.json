@@ -1,0 +1,507 @@
+[
+  {
+    "id": {
+      "value": "imperium:leader:paul-atreides:v1"
+    },
+    "name": "Paul Atreides",
+    "product": "Imperium",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 4,
+        "section": "Leader setup"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:leader:glossu-rabban:v1"
+    },
+    "name": "Glossu The Beast Rabban",
+    "product": "Imperium",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 4,
+        "section": "Leader setup"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:leader:earl-memnon-thorvald:v1"
+    },
+    "name": "Earl Memnon Thorvald",
+    "product": "Imperium",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 4,
+        "section": "Leader setup"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:leader:count-ilban-richese:v1"
+    },
+    "name": "Count Ilban Richese",
+    "product": "Imperium",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 4,
+        "section": "Leader setup"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "uprising:leader:feyd-rautha-harkonnen:v1"
+    },
+    "name": "Feyd-Rautha Harkonnen",
+    "product": "Uprising",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+        "page": 17,
+        "section": "Clarifications: leaders"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "uprising:leader:lady-jessica:v1"
+    },
+    "name": "Lady Jessica",
+    "product": "Uprising",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+        "page": 17,
+        "section": "Clarifications: leaders"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "uprising:leader:lady-margot-fenring:v1"
+    },
+    "name": "Lady Margot Fenring",
+    "product": "Uprising",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+        "page": 17,
+        "section": "Clarifications: leaders"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "uprising:leader:princess-irulan:v1"
+    },
+    "name": "Princess Irulan",
+    "product": "Uprising",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+        "page": 17,
+        "section": "Clarifications: leaders"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "uprising:leader:shaddam-corrino-iv:v1"
+    },
+    "name": "Shaddam Corrino IV",
+    "product": "Uprising",
+    "category": "Leader",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ],
+      "requiredModules": [
+        "UprisingChoam"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+        "page": 4,
+        "section": "Leader setup: CHOAM restriction"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:starter:dune-desert-planet:v1"
+    },
+    "name": "Dune, the Desert Planet",
+    "product": "Imperium",
+    "category": "StartingCard",
+    "quantity": 8,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ],
+      "excludedExpansions": [
+        "Immortality"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Four starting decks: two copies each"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:reserve:spice-must-flow:v1"
+    },
+    "name": "The Spice Must Flow",
+    "product": "Imperium",
+    "category": "ReserveCard",
+    "quantity": 10,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Components"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:board:main:v1"
+    },
+    "name": "Imperium game board",
+    "product": "Imperium",
+    "category": "BoardLayout",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Components"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "uprising:starter:dune-desert-planet:v1"
+    },
+    "name": "Dune, the Desert Planet",
+    "product": "Uprising",
+    "category": "StartingCard",
+    "quantity": 8,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ],
+      "excludedExpansions": [
+        "Immortality"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+        "page": 3,
+        "section": "Four starting decks: two copies each"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "uprising:reserve:spice-must-flow:v1"
+    },
+    "name": "The Spice Must Flow",
+    "product": "Uprising",
+    "category": "ReserveCard",
+    "quantity": 10,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+        "page": 3,
+        "section": "Components"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "uprising:board:main:v1"
+    },
+    "name": "Uprising game board",
+    "product": "Uprising",
+    "category": "BoardLayout",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+        "page": 3,
+        "section": "Components"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:reserve:foldspace:v1"
+    },
+    "name": "Foldspace",
+    "product": "Imperium",
+    "category": "ReserveCard",
+    "quantity": 6,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Components"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "immortality:starter:experimentation:v1"
+    },
+    "name": "Experimentation",
+    "product": "Immortality",
+    "category": "StartingCard",
+    "quantity": 8,
+    "availability": {
+      "requiredExpansions": [
+        "Immortality"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_IMMORTALITY_Rulebook.pdf",
+        "page": 5,
+        "section": "Setup: replace two Dune, the Desert Planet per player"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "ix:starter:control-the-spice:v1"
+    },
+    "name": "Control the Spice",
+    "product": "RiseOfIx",
+    "category": "StartingCard",
+    "quantity": 4,
+    "availability": {
+      "requiredExpansions": [
+        "RiseOfIx"
+      ],
+      "modes": [
+        "Epic"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_RISE_OF_IX_Rulebook_22-2-11.pdf",
+        "page": 10,
+        "section": "Epic setup"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "bloodlines:tech:ornithopter-fleet:v1"
+    },
+    "name": "Ornithopter Fleet",
+    "product": "Bloodlines",
+    "category": "TechTile",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ],
+      "requiredExpansions": [
+        "Bloodlines"
+      ],
+      "requiredModules": [
+        "BloodlinesTech"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_BLOODLINES_Rulebook.pdf",
+        "page": 6,
+        "section": "Tech Module: omit with original Imperium"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "bloodlines:tech:choam-transports:v1"
+    },
+    "name": "CHOAM Transports",
+    "product": "Bloodlines",
+    "category": "TechTile",
+    "quantity": 1,
+    "availability": {
+      "baseGames": [
+        "Uprising"
+      ],
+      "requiredExpansions": [
+        "Bloodlines"
+      ],
+      "requiredModules": [
+        "BloodlinesTech",
+        "UprisingChoam"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_BLOODLINES_Rulebook.pdf",
+        "page": 6,
+        "section": "Tech Module: CHOAM requirement"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  }
+]

@@ -1,12 +1,14 @@
 # Dune AI
 
-A local research monorepo for a future autonomous player for **Dune: Imperium –
-Uprising**, initially the base game without expansions. The architecture targets
+A local research monorepo for future autonomous play of **Dune: Imperium** and
+**Dune: Imperium – Uprising**. The first complete-game target is original Imperium
+with Rise of Ix and Immortality, competitive 3–4 players. The architecture targets
 deterministic headless simulation, parallel self-play and Python/PyTorch learning.
 
-**Current scope:** repository scaffolding and an executable two-player **toy
-token game**. No actual Dune rules, Python/engine bridge, neural model, PPO or MCTS
-are implemented. The toy game is an architecture example with invented rules.
+**Current scope:** SLICE-001 typed configuration, representative ruleset composition
+and sourced content architecture, plus the executable two-player **toy token game**.
+No Dune configuration is playable. No Python/engine bridge, neural model, PPO or
+MCTS exists. The toy game uses invented rules.
 
 ## Native Linux quick start
 
@@ -94,8 +96,14 @@ independently tested; the future environment will use an established multi-agent
 interface and a measured batched boundary. [ADR 0001](docs/adr/0001-csharp-python-interop.md)
 compares pythonnet, NativeAOT and IPC without prematurely selecting a transport.
 
-The next milestone is a **source-verified rules slice**: select the Uprising
-revision/mode, populate the [rule-source ledger](docs/rules-sources.md), and add
-setup plus one decision with privacy/replay tests. See the [roadmap](docs/roadmap.md).
+[SLICE-001 composition](docs/architecture/ruleset-composition.md) provides typed
+configuration/presets, sourced module replacements, representative content metadata
+and stable fingerprints. See the [rules index](docs/rules-index.md),
+[compatibility matrix](docs/compatibility-matrix.md) and
+[content-source assessment](docs/content/sources.md). Validated composition is
+separate from gameplay readiness; all Dune results remain nonplayable.
+
+Next is sourced setup and the first real decision for **Imperium + Ix + Immortality**.
+See the [roadmap](docs/roadmap.md) and [rule ledger](docs/rules-sources.md).
 Do not commit copyrighted rulebooks/card art, datasets, checkpoints, secrets or
 local experiment output. Contributor/agent conventions live in [AGENTS.md](AGENTS.md).

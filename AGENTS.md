@@ -2,8 +2,9 @@
 
 ## Scope and architecture
 
-This is a native Linux monorepo for a future self-play AI for **Dune: Imperium –
-Uprising**, initially the base game without expansions. The only playable game
+This is a native Linux monorepo for a future self-play AI for **Dune: Imperium**
+and **Dune: Imperium – Uprising**. The first complete-game target is original
+Imperium + Rise of Ix + Immortality, competitive 3–4 players. The only playable game
 currently implemented is a deliberately separate **toy token game**. Never label
 toy rules as Dune rules. No training algorithm or Python/engine bridge exists yet.
 
@@ -65,11 +66,12 @@ hidden-information boundaries or reproducibility.
 
 ## Mechanics and information security
 
-Every real rule must link to a verified Uprising source with edition/version,
-page/section and a behavioral test in `docs/rules-sources.md`. Document assumptions
-explicitly, keep unresolved mechanics blocked or excluded, and never invent a
-rule/card effect silently. Do not borrow original Imperium/expansion rules without
-verification that they apply. Never redistribute rulebooks/card art without rights.
+Every real rule must link to an applicable supplied local `docs/rules/*.pdf`
+source with edition/version, 1-based PDF page/section and a behavioral test in
+`docs/rules-sources.md`. See `docs/rules-index.md` and the compatibility
+matrix. Document assumptions explicitly, keep unresolved mechanics blocked or excluded, and never invent a
+rule/card effect silently. Do not transfer rules between base games or expansions
+without verification that they apply. Never redistribute rulebooks/card art without rights.
 
 The engine owns all randomness and complete hidden state. Agents receive only
 their observation and permitted legal actions; never pass a game/state/replay
@@ -106,3 +108,40 @@ Update architecture/ADRs for boundary or dependency changes and roadmap status f
 new vertical slices. Keep datasets, checkpoints, secrets, `.venv`, build products
 and local experiment output out of Git. Store experiment manifests (seeds,
 revision, configs, tool/dependency versions and metrics) when that feature arrives.
+
+## Microsoft Documentation
+
+When implementing or researching C#, .NET, runtime
+performance, or Microsoft technologies, use the
+Microsoft Learn MCP server to consult official
+documentation and code samples.
+
+Prefer official documentation over assumptions.
+
+## Expansion modules and content (SLICE-001)
+
+Configuration, Content and Rulesets live in the existing Engine project. Compose
+once before gameplay; share only immutable resolved definitions. All Dune results
+currently have gameplay NotImplemented and representative/incomplete inventories.
+Recognized options, validated composition and playable games are separate promises.
+Never run unfinished Dune recipes through Toy or no-op effects.
+
+For each new expansion/module: verify local PDF/page applicability, update the
+rules index/matrix and rule ledger, declare stable module ID/revision and explicit
+dependencies/incompatibilities, then add focused positive/exclusion tests. A
+replacement names the exact prior definition and depends on its producer; never
+rely on registration order. Conditional overrides require explicit interaction
+modules. Unsupported combinations return diagnostics and no partial definition.
+
+Static metadata belongs in the embedded Content catalog JSON. Use globally unique
+product/category/component/version IDs, owning product, quantity, availability,
+source pages, implementation and verification status. Definitions are separate
+from future episode-local instances. Do not import community text/art/catalogs
+without verified reuse rights. Partial data must not be declared complete.
+
+Fingerprint changes require deliberate semantic/version review. Preserve ordinal
+canonical ordering and seed-independent ruleset identity; record both episode and
+leader-selection seeds separately for replay. Keep leader setup policies distinct
+from official rules. Future drafting agents see only permitted observation/actions,
+never configuration seeds, hidden offers or full state. See ADR 0002 and
+`docs/architecture/ruleset-composition.md` for the extension contract.

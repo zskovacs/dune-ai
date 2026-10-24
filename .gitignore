@@ -40,3 +40,6 @@ training/experiments/outputs/
 *.pth
 *.ckpt
 .worktrees/
+
+# Locally supplied copyrighted rulebooks
+/docs/rules/
