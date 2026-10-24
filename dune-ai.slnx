@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Dune.Engine/Dune.Engine.csproj" />
+    <Project Path="src/Dune.Simulation/Dune.Simulation.csproj" />
+    <Project Path="src/Dune.Cli/Dune.Cli.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Dune.Engine.Tests/Dune.Engine.Tests.csproj" />
+    <Project Path="tests/Dune.Simulation.Tests/Dune.Simulation.Tests.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Dune.Benchmarks/Dune.Benchmarks.csproj" />
+  </Folder>
+</Solution>

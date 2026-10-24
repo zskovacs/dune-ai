@@ -1,0 +1,87 @@
+[tools]
+dotnet = "10.0.402"
+python = "3.12.15"
+uv = "0.13.5"
+
+[env]
+DOTNET_CLI_TELEMETRY_OPTOUT = "1"
+DOTNET_NOLOGO = "1"
+UV_PYTHON_DOWNLOADS = "never"
+UV_PYTHON_PREFERENCE = "only-system"
+UV_PYTHON = { value = "{{ tools.python.path }}/bin/python", tools = true }
+
+[tasks."setup:dotnet"]
+description = "Restore locked .NET dependencies"
+run = "dotnet restore dune-ai.slnx --locked-mode"
+
+[tasks."setup:python"]
+description = "Sync locked Python dependencies"
+run = "uv sync --locked"
+
+[tasks.setup]
+description = "Restore locked .NET and Python dependencies"
+depends = ["setup:dotnet", "setup:python"]
+
+[tasks.toolchain-check]
+description = "Check tool pins, interpreters and dependency locks"
+depends = ["setup"]
+run = ["python scripts/toolchain_check.py", "uv lock --check"]
+
+[tasks.build]
+description = "Build all .NET projects in Release"
+depends = ["setup:dotnet"]
+run = "dotnet build dune-ai.slnx --configuration Release --no-restore"
+
+[tasks."test:dotnet"]
+description = "Run all .NET tests"
+depends = ["build"]
+run = "dotnet test dune-ai.slnx --configuration Release --no-build --no-restore"
+
+[tasks."test:engine"]
+depends = ["build"]
+run = "dotnet test tests/Dune.Engine.Tests --configuration Release --no-build --no-restore"
+
+[tasks."test:simulation"]
+depends = ["build"]
+run = "dotnet test tests/Dune.Simulation.Tests --configuration Release --no-build --no-restore"
+
+[tasks."test:python"]
+description = "Run Python boundary tests"
+depends = ["setup:python"]
+run = "uv run --locked pytest"
+
+[tasks.test]
+description = "Run .NET and Python tests"
+depends = ["test:dotnet", "test:python"]
+
+[tasks.lint]
+description = "Check Python code with Ruff"
+depends = ["setup:python"]
+run = "uv run --locked ruff check training scripts"
+
+[tasks.format]
+description = "Format C# and Python code"
+depends = ["build", "setup:python"]
+run = ["dotnet format dune-ai.slnx --no-restore", "uv run --locked ruff format training scripts"]
+
+[tasks.format-check]
+description = "Verify C# and Python formatting"
+depends = ["build", "setup:python"]
+run = ["dotnet format dune-ai.slnx --no-restore --verify-no-changes", "uv run --locked ruff format --check training scripts"]
+
+[tasks.benchmark]
+description = "Run the full-episode benchmark (pass --job Dry for a quick run)"
+depends = ["build"]
+run = "dotnet run --project benchmarks/Dune.Benchmarks --configuration Release --no-build --no-restore --"
+
+[tasks.smoke]
+description = "Run a complete headless toy episode"
+depends = ["build"]
+run = "dotnet run --project src/Dune.Cli --configuration Release --no-build --no-restore -- --seed 42"
+
+[tasks.check]
+description = "Verify toolchains, builds, tests, lint and formatting"
+depends = ["toolchain-check", "test", "lint", "format-check"]
+
+[settings]
+lockfile = true

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../Dune.Engine/Dune.Engine.csproj" />
+  </ItemGroup>
+</Project>

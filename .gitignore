@@ -1,0 +1,42 @@
+# Local environments and private configuration
+.env
+.env.*
+.envrc
+!.env.example
+.codex/
+.superpowers/
+.venv/
+
+# .NET build, tests, benchmarks
+**/bin/
+**/obj/
+TestResults/
+BenchmarkDotNet.Artifacts/
+
+# Python build and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.user
+*.suo
+.DS_Store
+
+# Local experiment data and model outputs
+artifacts/
+data/
+checkpoints/
+training/experiments/outputs/
+*.pt
+*.pth
+*.ckpt
+.worktrees/

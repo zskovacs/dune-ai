@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling==1.30.1"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dune-ai-training"
+version = "0.1.0"
+description = "Python training boundary for Dune AI experiments"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.14,<1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["training"]
+
+[tool.uv]
+python-downloads = "never"
+python-preference = "only-system"
+
+[tool.pytest.ini_options]
+testpaths = ["training/tests"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
