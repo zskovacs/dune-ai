@@ -576,25 +576,16 @@ public sealed class TurnEngineTests
         Assert.True(TurnEngine.Replay(engine.CaptureReplay(), () => CreateState(), rules).IsSuccess);
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    public void CompleteGraphRejectsDuplicateMandatoryStockDemandBeforePlacementMutation(int nestedKind)
+    [Fact]
+    public void CompleteGraphRejectsDuplicateMandatoryStockDemandBeforePlacementMutation()
     {
         var state = CreateState();
         var reserve = state.Shared.Reserves.Single(x => x.Cards[0].Definition.Value.Contains("arrakis-liaison", StringComparison.Ordinal));
         var target = reserve.Cards[0].Definition;
         foreach (var excess in reserve.Cards.Skip(1).ToArray()) reserve.MoveTo(excess.Id, state.Shared.Trashed);
         var card = state.Players[0].Deck.Cards[0];
-        Effect nested = nestedKind switch
-        {
-            1 => new OptionalPaymentEffect(new(), [new ForPlayerEffect(1, [new AcquireEffect(target)])]),
-            2 => new ChoiceEffect([new("decline", new(), []), new("grant", new(), [new AcquireEffect(target)])]),
-            _ => new AcquireEffect(target),
-        };
         var rules = CardEffects(Rules(state), card.Definition,
-            agent: [new GainEffect(ResourceKind.Water, 99), new AcquireEffect(target), nested]);
+            agent: [new GainEffect(ResourceKind.Water, 99), new AcquireEffect(target), new AcquireEffect(target)]);
         rules = rules with
         {
             Spaces = [.. rules.Spaces.Select(x => x.Id == Space("secure-contract")

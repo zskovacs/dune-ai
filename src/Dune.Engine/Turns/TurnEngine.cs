@@ -291,8 +291,8 @@ public sealed class TurnEngine
             };
             if (selected is null || !CanPay(Player(frame.Context.PayerId), selected.Cost))
                 return Illegal("option", "This option is unavailable or unaffordable.");
-            return Preflight(selected.Effects, frame.Context.RecipientId, frame.Context.Space) ??
-                ValidateRemaining(selected.Effects.Select(x => (x, frame.Context.RecipientId)), frame.Context.Space);
+            return ValidateRemaining(selected.Effects.Select(x => (x, frame.Context.RecipientId)), frame.Context.Space,
+                CostPayments(frame.Context.PayerId, selected.Cost), frame.Context.PayerId);
         }
         if (_frames.Count > 1 && (action is not ResolveEffectAction immediate ||
             !CurrentPending.Any(x => x.Id == immediate.EffectId)))
@@ -330,10 +330,13 @@ public sealed class TurnEngine
                 var contextError = ValidateContext(cardRule.AgentEffects, cardSource: true, boardSource: true, active.Id) ??
                     ValidateContext(spaceRule.Effects.Concat(optionEffects), cardSource: false, boardSource: true, active.Id);
                 if (contextError is not null) return contextError;
-                var issue = Preflight(selectedEffects, active.Id, place.Space);
+                var optionCost = spaceRule.PlacementOptions.IsEmpty ? new ResourceCost() : spaceRule.PlacementOptions[place.PaymentOption].Cost;
+                var placementPayments = CostPayments(active.Id, new(spaceRule.Cost.Solari + optionCost.Solari,
+                    spaceRule.Cost.Spice + optionCost.Spice, spaceRule.Cost.Water + optionCost.Water));
+                var issue = Preflight(selectedEffects, active.Id, place.Space, placementPayments);
                 if (issue is null && spaceRule.ControlReward is { } controlReward && board.ControllerId is { } controller)
                     issue = ValidateResourceBounds(selectedEffects.Select(x => (x, active.Id))
-                        .Append((new GainEffect(controlReward, 1), controller)), place.Space);
+                        .Append((new GainEffect(controlReward, 1), controller)), place.Space, placementPayments);
                 if (issue is not null) return issue;
                 if (spaceRule.ControlReward is { } reward && !Enum.IsDefined(reward))
                     return Content("control-reward", "Invalid control reward.");
@@ -342,7 +345,7 @@ public sealed class TurnEngine
                 if (_frames.Count > 0 || _deploying || _revealing || active.Temporary.HasRevealed)
                     return Illegal("reveal", "Reveal is unavailable while another turn is resolving.");
                 var revealEffects = new List<Effect>();
-                var revealResources = new List<(Effect Effect, int Owner, BoardSpaceId? Space)>();
+                var revealResources = new List<(Effect Effect, int Owner, int Payer, BoardSpaceId? Space)>();
                 foreach (var card in active.Hand.Cards)
                 {
                     if (!_cards.TryGetValue(card.Definition, out var rule))
@@ -350,7 +353,7 @@ public sealed class TurnEngine
                     if (_cardErrors.TryGetValue(rule.Id, out var revealCardError)) return revealCardError;
                     if (ValidateContext(rule.RevealEffects, cardSource: true, boardSource: false, active.Id) is { } error) return error;
                     revealEffects.AddRange(rule.RevealEffects);
-                    revealResources.AddRange(rule.RevealEffects.Select(x => (x, active.Id, (BoardSpaceId?)null)));
+                    revealResources.AddRange(rule.RevealEffects.Select(x => (x, active.Id, active.Id, (BoardSpaceId?)null)));
                 }
                 foreach (var space in _state.Board.Spaces.Where(x => x.Occupants.Any(a => a.PlayerId == active.Id)))
                     if (_spaces.TryGetValue(space.Definition.Id, out var rule))
@@ -358,15 +361,15 @@ public sealed class TurnEngine
                         if (_spaceErrors.TryGetValue(rule.Id, out var revealSpaceError)) return revealSpaceError;
                         if (ValidateContext(rule.RevealEffects, cardSource: false, boardSource: true, active.Id) is { } error) return error;
                         revealEffects.AddRange(rule.RevealEffects);
-                        revealResources.AddRange(rule.RevealEffects.Select(x => (x, active.Id, (BoardSpaceId?)space.Definition.Id)));
+                        revealResources.AddRange(rule.RevealEffects.Select(x => (x, active.Id, active.Id, (BoardSpaceId?)space.Definition.Id)));
                     }
                 return Preflight(revealEffects, active.Id) ??
                     ValidateResourceBounds(revealResources.Concat(active.HasHighCouncilSeat
-                        ? [(new GainEffect(ResourceKind.Persuasion, 2), active.Id, (BoardSpaceId?)null)] : []));
+                        ? [(new GainEffect(ResourceKind.Persuasion, 2), active.Id, active.Id, (BoardSpaceId?)null)] : []));
             case ResolveEffectAction resolve:
                 var work = CurrentPending.FirstOrDefault(x => x.Id == resolve.EffectId && x.Context.DecisionOwnerId == action.PlayerId);
                 return work is null ? Illegal("effect", "This pending effect is unavailable.") :
-                    Preflight([work.Effect], work.Context.RecipientId, work.Context.Space) ?? ValidateRemaining();
+                    Preflight([work.Effect], work.Context.RecipientId, work.Context.Space, payer: work.Context.PayerId) ?? ValidateRemaining();
             case DeployAction deploy:
                 if (!_deploying || _frames.Count != 1 || !CurrentPending.IsEmpty ||
                     _frames[0].Continuation.Kind != ExecutionContinuationKind.AgentTurn || _revealing || deploy.Troops < 0 ||
@@ -386,10 +389,11 @@ public sealed class TurnEngine
                 if (purchase.Cost < 0) return Content("cost", "Card cost must be nonnegative.");
                 if (purchase.Cost > active.Temporary.Persuasion)
                     return Illegal("persuasion", "Insufficient Persuasion.");
+                (int Payer, ResourceKind Resource, int Amount)[] purchasePayments = [(active.Id, ResourceKind.Persuasion, purchase.Cost)];
                 return ValidateContext(purchase.AcquireEffects, cardSource: true, boardSource: false, active.Id) ??
-                    Preflight(purchase.AcquireEffects, active.Id) ??
-                    ValidateResourceBounds(Pending.Select(x => (x.Effect, x.Context.RecipientId, x.Context.Space))
-                        .Concat(purchase.AcquireEffects.Select(x => (x, active.Id, (BoardSpaceId?)null)))) ??
+                    Preflight(purchase.AcquireEffects, active.Id, payments: purchasePayments) ??
+                    ValidateResourceBounds(Pending.Select(x => (x.Effect, x.Context.RecipientId, x.Context.PayerId, x.Context.Space))
+                        .Concat(purchase.AcquireEffects.Select(x => (x, active.Id, active.Id, (BoardSpaceId?)null))), purchasePayments, selected) ??
                     ValidatePermanentOperations(Pending.Select(x => (x.Effect, x.Context.RecipientId))
                         .Concat(purchase.AcquireEffects.Select(x => (x, active.Id)))) ??
                     ValidateInfluenceBounds(Pending.Select(x => (x.Effect, x.Context.RecipientId))
@@ -427,13 +431,14 @@ public sealed class TurnEngine
         return null;
     }
 
-    private TurnDiagnostic? Preflight(IEnumerable<Effect> effects, int owner, BoardSpaceId? space = null)
+    private TurnDiagnostic? Preflight(IEnumerable<Effect> effects, int owner, BoardSpaceId? space = null,
+        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? payer = null)
     {
         var materialized = effects.ToImmutableArray();
         // Executable boxes were checked with their actual source/role context before activation.
-        return ValidateResourceBounds(materialized.Select(x => (x, owner)), space) ??
+        return ValidateAcquisitionStock(materialized.Select(x => (x, owner))) ??
+            ValidateResourceBounds(materialized.Select(x => (x, owner)), space, payments, payer) ??
             ValidateInfluenceBounds(materialized.Select(x => (x, owner))) ??
-            ValidateAcquisitionStock(materialized.Select(x => (x, owner))) ??
             ValidatePermanentOperations(materialized.Select(x => (x, owner)));
     }
 
@@ -471,67 +476,202 @@ public sealed class TurnEngine
         return issue;
     }
 
-    private TurnDiagnostic? ValidateRemaining(IEnumerable<(Effect Effect, int Owner)>? selected = null, BoardSpaceId? sourceSpace = null)
+    private TurnDiagnostic? ValidateRemaining(IEnumerable<(Effect Effect, int Owner)>? selected = null, BoardSpaceId? sourceSpace = null,
+        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? selectedPayer = null)
     {
         var work = Pending.Select(x => (x.Effect, x.Context.RecipientId)).Concat(selected ?? []).ToArray();
-        var resources = Pending.Select(x => (x.Effect, x.Context.RecipientId, x.Context.Space))
-            .Concat((selected ?? []).Select(x => (x.Effect, x.Owner, sourceSpace)));
-        return ValidateResourceBounds(resources) ?? ValidateInfluenceBounds(work) ?? ValidateAcquisitionStock(work) ?? ValidatePermanentOperations(work);
+        var resources = Pending.Select(x => (x.Effect, x.Context.RecipientId, x.Context.PayerId, x.Context.Space))
+            .Concat((selected ?? []).Select(x => (x.Effect, x.Owner, selectedPayer ?? x.Owner, sourceSpace)));
+        return ValidateAcquisitionStock(work) ?? ValidateResourceBounds(resources, payments) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
     }
 
     private TurnDiagnostic? ValidatePermanentOperations(IEnumerable<(Effect Effect, int Owner)> work)
     {
         var totals = new Dictionary<(int Owner, bool Swordmaster), int>();
-        foreach (var (effect, owner) in work) Accumulate([effect], owner, totals);
+        foreach (var (effect, owner) in work) AccumulatePermanentOperations([effect], owner, totals);
         foreach (var (key, count) in totals)
             if (count > (key.Swordmaster ? Player(key.Owner).Units.UnacquiredSwordmasters : Player(key.Owner).HasHighCouncilSeat ? 0 : 1))
                 return Illegal("permanent-upgrade", "A selected permanent upgrade is already acquired or granted more than once.");
         return null;
-
-        void Accumulate(IEnumerable<Effect> effects, int owner, Dictionary<(int Owner, bool Swordmaster), int> target)
-        {
-            foreach (var effect in effects)
-                switch (effect)
-                {
-                    case SwordmasterEffect or HighCouncilEffect:
-                        var key = (owner, effect is SwordmasterEffect);
-                        target[key] = target.GetValueOrDefault(key) + 1;
-                        break;
-                    case SequenceEffect sequence: Accumulate(sequence.Effects, owner, target); break;
-                    case PlayerOrderedEffect ordered: Accumulate(ordered.Effects, owner, target); break;
-                    case ForPlayerEffect player: Accumulate(player.Effects, player.RecipientId ?? player.PlayerId, target); break;
-                    case AcquireEffect acquire: Accumulate(_cards[acquire.Card].AcquireEffects, owner, target); break;
-                    case SignetEffect: Accumulate(_leaders[Player(owner).Leader].SignetEffects, owner, target); break;
-                        // Optional and choice branches are checked when selected, before any payment or frame mutation.
-                }
-        }
     }
 
-    private TurnDiagnostic? ValidateResourceBounds(IEnumerable<(Effect Effect, int Owner)> work, BoardSpaceId? space = null) =>
-        ValidateResourceBounds(work.Select(x => (x.Effect, x.Owner, space)));
-
-    private TurnDiagnostic? ValidateResourceBounds(IEnumerable<(Effect Effect, int Owner, BoardSpaceId? Space)> work)
+    private void AccumulatePermanentOperations(IEnumerable<Effect> effects, int owner, Dictionary<(int Owner, bool Swordmaster), int> target, bool includeChoices = false)
     {
-        var totals = new Dictionary<(int Owner, ResourceKind Resource), long>();
-        foreach (var (effect, owner, space) in work) Accumulate([effect], owner, space, totals);
-        foreach (var (key, amount) in totals)
-        {
-            var player = Player(key.Owner);
-            var current = key.Resource switch
+        foreach (var effect in effects)
+            switch (effect)
             {
-                ResourceKind.Solari => player.Resources.Solari,
-                ResourceKind.Spice => player.Resources.Spice,
-                ResourceKind.Water => player.Resources.Water,
-                ResourceKind.VictoryPoints => player.Resources.VictoryPoints,
-                ResourceKind.Persuasion => player.Temporary.Persuasion,
-                ResourceKind.Swords => player.Temporary.Swords,
-                _ => 0,
-            };
-            if (current + amount > int.MaxValue) return Content("resource-bounds", "Selected gains exceed the resource bounds.");
-        }
-        return null;
+                case SwordmasterEffect or HighCouncilEffect:
+                    var key = (owner, effect is SwordmasterEffect);
+                    target[key] = target.GetValueOrDefault(key) + 1;
+                    break;
+                case SequenceEffect sequence: AccumulatePermanentOperations(sequence.Effects, owner, target, includeChoices); break;
+                case PlayerOrderedEffect ordered: AccumulatePermanentOperations(ordered.Effects, owner, target, includeChoices); break;
+                case ForPlayerEffect player: AccumulatePermanentOperations(player.Effects, player.RecipientId ?? player.PlayerId, target, includeChoices); break;
+                case AcquireEffect acquire: AccumulatePermanentOperations(_cards[acquire.Card].AcquireEffects, owner, target, includeChoices); break;
+                case SignetEffect: AccumulatePermanentOperations(_leaders[Player(owner).Leader].SignetEffects, owner, target, includeChoices); break;
+                case ChoiceEffect choice when includeChoices && !HasFreeEmptyOption(choice):
+                    var maxima = new Dictionary<(int Owner, bool Swordmaster), int>();
+                    foreach (var option in choice.Options)
+                    {
+                        var branch = new Dictionary<(int Owner, bool Swordmaster), int>();
+                        AccumulatePermanentOperations(option.Effects, owner, branch, true);
+                        foreach (var (upgrade, amount) in branch) maxima[upgrade] = Math.Max(maxima.GetValueOrDefault(upgrade), amount);
+                    }
+                    foreach (var (upgrade, amount) in maxima) target[upgrade] = target.GetValueOrDefault(upgrade) + amount;
+                    break;
+                    // Optional and choice branches are checked when selected, before payment or frame mutation.
+            }
+    }
 
-        void Accumulate(IEnumerable<Effect> effects, int owner, BoardSpaceId? space, Dictionary<(int Owner, ResourceKind Resource), long> target)
+    private static bool HasFreeEmptyOption(ChoiceEffect choice) =>
+        choice.Options.Any(x => x.Cost == new ResourceCost() && x.Effects.IsEmpty);
+
+    private static IEnumerable<(int Payer, ResourceKind Resource, int Amount)> CostPayments(int payer, ResourceCost cost) =>
+        [(payer, ResourceKind.Solari, cost.Solari), (payer, ResourceKind.Spice, cost.Spice), (payer, ResourceKind.Water, cost.Water)];
+
+    private TurnDiagnostic? ValidateResourceBounds(IEnumerable<(Effect Effect, int Owner)> work, BoardSpaceId? space = null,
+        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? payer = null) =>
+        ValidateResourceBounds(work.Select(x => (x.Effect, x.Owner, payer ?? x.Owner, space)), payments);
+
+    private TurnDiagnostic? ValidateResourceBounds(IEnumerable<(Effect Effect, int Owner, int Payer, BoardSpaceId? Space)> work,
+        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, CardInstance? consumed = null)
+    {
+        var materialized = work.ToArray();
+        var totals = new Dictionary<(int Owner, ResourceKind Resource), long>();
+        // These affordable, selected payments happen before all selected and suspended work.
+        // Capacity is freed only on the bound payer, independently of each reward recipient.
+        AddPayments(totals, payments ?? []);
+        foreach (var (effect, owner, payer, space) in materialized) Accumulate([effect], owner, payer, space, totals);
+        if (!HasCapacity(totals)) return Content("resource-bounds", "Mandatory gains exceed resource bounds.");
+        if (AmbiguousJointChoices(materialized, totals, materialized.Select(x => (x.Effect, x.Owner))))
+            return Unsupported("choice-joint-ambiguous", "Overlapping mandatory choices require unsupported joint capacity or permanent-upgrade analysis.");
+        return materialized.All(x => ChoicesHaveCapacity([x.Effect], x.Owner, x.Payer, x.Space, totals, [],
+            new HashSet<Effect>(ReferenceEqualityComparer.Instance))) ? null :
+            Unsupported("choice-unavailable", "A mandatory choice has no option with provably safe stock, capacity and permanent upgrades.");
+
+        static void AddPayments(Dictionary<(int Owner, ResourceKind Resource), long> target,
+            IEnumerable<(int Payer, ResourceKind Resource, int Amount)> costs)
+        {
+            foreach (var (payer, resource, amount) in costs)
+                target[(payer, resource)] = target.GetValueOrDefault((payer, resource)) - amount;
+        }
+
+        bool HasCapacity(Dictionary<(int Owner, ResourceKind Resource), long> amounts)
+        {
+            foreach (var (key, amount) in amounts)
+            {
+                var player = Player(key.Owner);
+                var current = key.Resource switch
+                {
+                    ResourceKind.Solari => player.Resources.Solari,
+                    ResourceKind.Spice => player.Resources.Spice,
+                    ResourceKind.Water => player.Resources.Water,
+                    ResourceKind.VictoryPoints => player.Resources.VictoryPoints,
+                    ResourceKind.Persuasion => player.Temporary.Persuasion,
+                    ResourceKind.Swords => player.Temporary.Swords,
+                    _ => 0,
+                };
+                if (current + amount > int.MaxValue) return false;
+            }
+            return true;
+        }
+
+        bool AmbiguousJointChoices(IEnumerable<(Effect Effect, int Owner, int Payer, BoardSpaceId? Space)> entries,
+            Dictionary<(int Owner, ResourceKind Resource), long> amounts, IEnumerable<(Effect Effect, int Owner)> mandatoryWork)
+        {
+            var worst = new Dictionary<(int Owner, ResourceKind Resource), long>(amounts);
+            var capacityContributors = new Dictionary<(int Owner, ResourceKind Resource), int>();
+            var permanentWorst = new Dictionary<(int Owner, bool Swordmaster), int>();
+            foreach (var (effect, owner) in mandatoryWork) AccumulatePermanentOperations([effect], owner, permanentWorst);
+            var permanentContributors = new Dictionary<(int Owner, bool Swordmaster), int>();
+            foreach (var (choice, owner, payer, space) in entries.SelectMany(x => CapacityChoices([x.Effect], x.Owner, x.Payer, x.Space)))
+            {
+                // A free empty alternative proves this choice can always avoid additional demand.
+                if (HasFreeEmptyOption(choice)) continue;
+                var maxima = new Dictionary<(int Owner, ResourceKind Resource), long>();
+                var permanentMaxima = new Dictionary<(int Owner, bool Swordmaster), int>();
+                foreach (var option in choice.Options)
+                {
+                    var branch = new Dictionary<(int Owner, ResourceKind Resource), long>();
+                    AddPayments(branch, CostPayments(payer, option.Cost));
+                    Accumulate(option.Effects, owner, payer, space, branch, true);
+                    foreach (var (key, amount) in branch) maxima[key] = Math.Max(maxima.GetValueOrDefault(key), amount);
+                    var permanentBranch = new Dictionary<(int Owner, bool Swordmaster), int>();
+                    AccumulatePermanentOperations(option.Effects, owner, permanentBranch, true);
+                    foreach (var (key, amount) in permanentBranch) permanentMaxima[key] = Math.Max(permanentMaxima.GetValueOrDefault(key), amount);
+                }
+                foreach (var (key, amount) in maxima.Where(x => x.Value > 0))
+                {
+                    capacityContributors[key] = capacityContributors.GetValueOrDefault(key) + 1;
+                    worst[key] = worst.GetValueOrDefault(key) + amount;
+                }
+                foreach (var (key, amount) in permanentMaxima)
+                {
+                    permanentContributors[key] = permanentContributors.GetValueOrDefault(key) + 1;
+                    permanentWorst[key] = permanentWorst.GetValueOrDefault(key) + amount;
+                }
+            }
+            if (capacityContributors.Any(x => x.Value > 1 && !HasCapacity(new() { [x.Key] = worst[x.Key] }))) return true;
+            return permanentContributors.Any(x => x.Value > 1 && permanentWorst[x.Key] >
+                (x.Key.Swordmaster ? Player(x.Key.Owner).Units.UnacquiredSwordmasters : Player(x.Key.Owner).HasHighCouncilSeat ? 0 : 1));
+        }
+
+        IEnumerable<(ChoiceEffect Choice, int Owner, int Payer, BoardSpaceId? Space)> CapacityChoices(
+            IEnumerable<Effect> effects, int owner, int payer, BoardSpaceId? space)
+        {
+            foreach (var effect in effects)
+            {
+                if (effect is ChoiceEffect choice) { yield return (choice, owner, payer, space); continue; }
+                var children = effect switch
+                {
+                    SequenceEffect sequence => sequence.Effects,
+                    PlayerOrderedEffect ordered => ordered.Effects,
+                    ForPlayerEffect player => player.Effects,
+                    AcquireEffect acquire => _cards[acquire.Card].AcquireEffects,
+                    SignetEffect => _leaders[Player(owner).Leader].SignetEffects,
+                    _ => ImmutableArray<Effect>.Empty,
+                };
+                var recipient = effect is ForPlayerEffect target ? target.RecipientId ?? target.PlayerId : owner;
+                var childPayer = effect is ForPlayerEffect bound ? bound.PayerId ?? bound.PlayerId : payer;
+                foreach (var nested in CapacityChoices(children, recipient, childPayer, effect is AcquireEffect ? null : space)) yield return nested;
+            }
+        }
+
+        bool ChoicesHaveCapacity(IEnumerable<Effect> effects, int owner, int payer, BoardSpaceId? space,
+            Dictionary<(int Owner, ResourceKind Resource), long> amounts, ImmutableArray<(Effect Effect, int Owner)> selectedWork,
+            HashSet<Effect> selectedChoices)
+        {
+            foreach (var effect in effects)
+            {
+                var available = effect switch
+                {
+                    SequenceEffect sequence => ChoicesHaveCapacity(sequence.Effects, owner, payer, space, amounts, selectedWork, selectedChoices),
+                    PlayerOrderedEffect ordered => ChoicesHaveCapacity(ordered.Effects, owner, payer, space, amounts, selectedWork, selectedChoices),
+                    ForPlayerEffect player => ChoicesHaveCapacity(player.Effects, player.RecipientId ?? player.PlayerId,
+                        player.PayerId ?? player.PlayerId, space, amounts, selectedWork, selectedChoices),
+                    AcquireEffect acquire => ChoicesHaveCapacity(_cards[acquire.Card].AcquireEffects, owner, payer, null, amounts, selectedWork, selectedChoices),
+                    SignetEffect => ChoicesHaveCapacity(_leaders[Player(owner).Leader].SignetEffects, owner, payer, space, amounts, selectedWork, selectedChoices),
+                    ChoiceEffect choice => choice.Options.Any(option =>
+                    {
+                        var branch = new Dictionary<(int Owner, ResourceKind Resource), long>(amounts);
+                        AddPayments(branch, CostPayments(payer, option.Cost));
+                        Accumulate(option.Effects, owner, payer, space, branch);
+                        var branchWork = selectedWork.AddRange(option.Effects.Select(x => (x, owner)));
+                        var branchChoices = new HashSet<Effect>(selectedChoices, ReferenceEqualityComparer.Instance) { choice };
+                        var mandatoryWork = materialized.Select(x => (x.Effect, x.Owner)).Concat(branchWork).ToArray();
+                        return HasCapacity(branch) && ValidateAcquisitionStock(mandatoryWork, consumed, branchChoices) is null &&
+                            ValidatePermanentOperations(mandatoryWork) is null &&
+                            !AmbiguousJointChoices(option.Effects.Select(x => (x, owner, payer, space)), branch, mandatoryWork) &&
+                            ChoicesHaveCapacity(option.Effects, owner, payer, space, branch, branchWork, branchChoices);
+                    }),
+                    _ => true,
+                };
+                if (!available) return false;
+            }
+            return true;
+        }
+
+        void Accumulate(IEnumerable<Effect> effects, int owner, int payer, BoardSpaceId? space, Dictionary<(int Owner, ResourceKind Resource), long> target, bool includeChoices = false)
         {
             foreach (var effect in effects)
                 switch (effect)
@@ -549,22 +689,25 @@ public sealed class TurnEngine
                         var vp = (owner, ResourceKind.VictoryPoints);
                         target[vp] = target.GetValueOrDefault(vp) + 1;
                         break;
-                    case SequenceEffect sequence: Accumulate(sequence.Effects, owner, space, target); break;
-                    case PlayerOrderedEffect ordered: Accumulate(ordered.Effects, owner, space, target); break;
-                    case OptionalPaymentEffect optional: Accumulate(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, space, target); break;
-                    case ForPlayerEffect player: Accumulate(player.Effects, player.RecipientId ?? player.PlayerId, space, target); break;
-                    case AcquireEffect acquire: Accumulate(_cards[acquire.Card].AcquireEffects, owner, null, target); break;
-                    case SignetEffect: Accumulate(_leaders[Player(owner).Leader].SignetEffects, owner, space, target); break;
-                    case ChoiceEffect choice:
+                    case SequenceEffect sequence: Accumulate(sequence.Effects, owner, payer, space, target, includeChoices); break;
+                    case PlayerOrderedEffect ordered: Accumulate(ordered.Effects, owner, payer, space, target, includeChoices); break;
+                    case ForPlayerEffect player: Accumulate(player.Effects, player.RecipientId ?? player.PlayerId, player.PayerId ?? player.PlayerId, space, target, includeChoices); break;
+                    case AcquireEffect acquire: Accumulate(_cards[acquire.Card].AcquireEffects, owner, payer, null, target, includeChoices); break;
+                    case SignetEffect: Accumulate(_leaders[Player(owner).Leader].SignetEffects, owner, payer, space, target, includeChoices); break;
+                    case ChoiceEffect choice when includeChoices && !HasFreeEmptyOption(choice):
                         var maxima = new Dictionary<(int Owner, ResourceKind Resource), long>();
                         foreach (var option in choice.Options)
                         {
                             var branch = new Dictionary<(int Owner, ResourceKind Resource), long>();
-                            Accumulate(option.Effects, owner, space, branch);
-                            foreach (var (resource, value) in branch) maxima[resource] = Math.Max(maxima.GetValueOrDefault(resource), value);
+                            AddPayments(branch, CostPayments(payer, option.Cost));
+                            Accumulate(option.Effects, owner, payer, space, branch, true);
+                            foreach (var (resource, amount) in branch) maxima[resource] = Math.Max(maxima.GetValueOrDefault(resource), amount);
                         }
-                        foreach (var (resource, value) in maxima) target[resource] = target.GetValueOrDefault(resource) + value;
+                        foreach (var (resource, amount) in maxima) target[resource] = target.GetValueOrDefault(resource) + amount;
                         break;
+                        // Unselected optional/choice branches do not consume capacity. Once selected,
+                        // their mandatory effects are passed here with the payment that precedes them.
+
                 }
         }
     }
@@ -582,25 +725,112 @@ public sealed class TurnEngine
     }
 
     private TurnDiagnostic? ValidateAcquisitionStock(IEnumerable<(Effect Effect, int Owner)> work,
-        CardInstance? consumed = null)
+        CardInstance? consumed = null, IReadOnlySet<Effect>? selectedChoices = null)
     {
+        var materialized = work.ToArray();
         var demand = new Dictionary<ContentId, long>();
         var mandatory = new HashSet<ContentId>();
-        foreach (var (effect, owner) in work)
+        foreach (var (effect, owner) in materialized)
             AccumulateAcquisitionDemand([effect], owner, demand, mandatory);
-        foreach (var target in mandatory)
+        if (!HasStock(demand, mandatory))
+            return Unsupported("acquire-stock", "The complete effect graph could exhaust public stock required by a mandatory acquisition.");
+        if (AmbiguousJointStock(materialized, demand))
+            return Unsupported("choice-stock-ambiguous", "Competing mandatory choices require unsupported joint stock feasibility analysis.");
+        return materialized.All(x => ChoicesHaveStock([x.Effect], x.Owner, demand, mandatory)) ? null :
+            Unsupported("choice-stock", "No option can preserve visible stock required by mandatory acquisitions.");
+
+        bool HasStock(Dictionary<ContentId, long> counts, HashSet<ContentId> required)
         {
-            // Only visible stock is safe to reserve; a market refill may not assume hidden deck content.
-            var stock = PurchaseZones().Sum(zone => zone.Cards.Count(card => card.Definition == target &&
-                card.Id != consumed?.Id));
-            if (demand.GetValueOrDefault(target) > stock)
-                return Unsupported("acquire-stock", "The complete effect graph could exhaust public stock required by a mandatory acquisition.");
+            foreach (var target in required)
+            {
+                // Only visible stock is safe to reserve; a refill cannot assume hidden deck content.
+                var stock = PurchaseZones().Sum(zone => zone.Cards.Count(card => card.Definition == target &&
+                    card.Id != consumed?.Id));
+                if (counts.GetValueOrDefault(target) > stock) return false;
+            }
+            return true;
         }
-        return null;
+
+        bool AmbiguousJointStock(IEnumerable<(Effect Effect, int Owner)> entries, Dictionary<ContentId, long> counts)
+        {
+            var worst = new Dictionary<ContentId, long>(counts);
+            var competitors = new Dictionary<ContentId, int>();
+            foreach (var (choice, owner) in entries.SelectMany(x => MandatoryChoices([x.Effect], x.Owner)))
+            {
+                if (HasFreeEmptyOption(choice)) continue;
+                var maxima = new Dictionary<ContentId, long>();
+                var targets = new HashSet<ContentId>();
+                foreach (var option in choice.Options)
+                {
+                    var branch = new Dictionary<ContentId, long>();
+                    AccumulateAcquisitionDemand(option.Effects, owner, branch, targets, includeChoices: true);
+                    foreach (var (card, amount) in branch) maxima[card] = Math.Max(maxima.GetValueOrDefault(card), amount);
+                }
+                foreach (var card in targets)
+                {
+                    competitors[card] = competitors.GetValueOrDefault(card) + 1;
+                    worst[card] = worst.GetValueOrDefault(card) + maxima.GetValueOrDefault(card);
+                }
+            }
+            return competitors.Any(x => x.Value > 1 && !HasStock(worst, [x.Key]));
+        }
+
+        IEnumerable<(ChoiceEffect Choice, int Owner)> MandatoryChoices(IEnumerable<Effect> effects, int owner)
+        {
+            foreach (var effect in effects)
+            {
+                if (effect is ChoiceEffect choice)
+                {
+                    if (selectedChoices?.Contains(choice) != true) yield return (choice, owner);
+                    continue;
+                }
+                var children = effect switch
+                {
+                    SequenceEffect sequence => sequence.Effects,
+                    PlayerOrderedEffect ordered => ordered.Effects,
+                    ForPlayerEffect player => player.Effects,
+                    AcquireEffect acquire => _cards[acquire.Card].AcquireEffects,
+                    SignetEffect => _leaders[Player(owner).Leader].SignetEffects,
+                    _ => ImmutableArray<Effect>.Empty,
+                };
+                var recipient = effect is ForPlayerEffect target ? target.RecipientId ?? target.PlayerId : owner;
+                foreach (var nested in MandatoryChoices(children, recipient)) yield return nested;
+            }
+        }
+
+        bool ChoicesHaveStock(IEnumerable<Effect> effects, int owner, Dictionary<ContentId, long> counts,
+            HashSet<ContentId> required)
+        {
+            foreach (var effect in effects)
+            {
+                var available = effect switch
+                {
+                    SequenceEffect sequence => ChoicesHaveStock(sequence.Effects, owner, counts, required),
+                    PlayerOrderedEffect ordered => ChoicesHaveStock(ordered.Effects, owner, counts, required),
+                    ForPlayerEffect player => ChoicesHaveStock(player.Effects, player.RecipientId ?? player.PlayerId, counts, required),
+                    AcquireEffect acquire => ChoicesHaveStock(_cards[acquire.Card].AcquireEffects, owner, counts, required),
+                    SignetEffect => ChoicesHaveStock(_leaders[Player(owner).Leader].SignetEffects, owner, counts, required),
+                    ChoiceEffect choice when selectedChoices?.Contains(choice) == true => true,
+                    ChoiceEffect choice => choice.Options.Any(option =>
+                    {
+                        var branchCounts = new Dictionary<ContentId, long>(counts);
+                        var branchRequired = new HashSet<ContentId>(required);
+                        AccumulateAcquisitionDemand(option.Effects, owner, branchCounts, branchRequired);
+                        return HasStock(branchCounts, branchRequired) &&
+                            !AmbiguousJointStock(option.Effects.Select(x => (x, owner)), branchCounts) &&
+                            ChoicesHaveStock(option.Effects, owner, branchCounts, branchRequired);
+                    }),
+                    // An optional child may be declined; its mandatory choices are checked on selection.
+                    _ => true,
+                };
+                if (!available) return false;
+            }
+            return true;
+        }
     }
 
     private void AccumulateAcquisitionDemand(IEnumerable<Effect> effects, int owner,
-        Dictionary<ContentId, long> totals, HashSet<ContentId> mandatory, int depth = 0, bool required = true)
+        Dictionary<ContentId, long> totals, HashSet<ContentId> mandatory, int depth = 0, bool includeChoices = false)
     {
         if (depth > 32) throw new InvalidOperationException("A cyclic acquisition graph passed preflight.");
         foreach (var effect in effects)
@@ -608,36 +838,34 @@ public sealed class TurnEngine
             {
                 case AcquireEffect acquire:
                     totals[acquire.Card] = totals.GetValueOrDefault(acquire.Card) + 1;
-                    if (required && !acquire.AllowEmpty) mandatory.Add(acquire.Card);
-                    AccumulateAcquisitionDemand(_cards[acquire.Card].AcquireEffects, owner, totals, mandatory, depth + 1, required);
+                    if (!acquire.AllowEmpty) mandatory.Add(acquire.Card);
+                    AccumulateAcquisitionDemand(_cards[acquire.Card].AcquireEffects, owner, totals, mandatory, depth + 1, includeChoices);
                     break;
                 case SequenceEffect sequence:
-                    AccumulateAcquisitionDemand(sequence.Effects, owner, totals, mandatory, depth + 1, required);
+                    AccumulateAcquisitionDemand(sequence.Effects, owner, totals, mandatory, depth + 1, includeChoices);
                     break;
                 case PlayerOrderedEffect ordered:
-                    AccumulateAcquisitionDemand(ordered.Effects, owner, totals, mandatory, depth + 1, required);
-                    break;
-                case OptionalPaymentEffect optional:
-                    AccumulateAcquisitionDemand(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, totals, mandatory, depth + 1, false);
+                    AccumulateAcquisitionDemand(ordered.Effects, owner, totals, mandatory, depth + 1, includeChoices);
                     break;
                 case ForPlayerEffect player:
-                    AccumulateAcquisitionDemand(player.Effects, player.RecipientId ?? player.PlayerId, totals, mandatory, depth + 1, required);
+                    AccumulateAcquisitionDemand(player.Effects, player.RecipientId ?? player.PlayerId, totals, mandatory, depth + 1, includeChoices);
                     break;
                 case SignetEffect:
-                    AccumulateAcquisitionDemand(_leaders[Player(owner).Leader].SignetEffects, owner, totals, mandatory, depth + 1, required);
+                    AccumulateAcquisitionDemand(_leaders[Player(owner).Leader].SignetEffects, owner, totals, mandatory, depth + 1, includeChoices);
                     break;
-                case ChoiceEffect choice:
+                case ChoiceEffect choice when includeChoices && !HasFreeEmptyOption(choice):
                     var maxima = new Dictionary<ContentId, long>();
                     foreach (var option in choice.Options)
                     {
                         var branch = new Dictionary<ContentId, long>();
-                        AccumulateAcquisitionDemand(option.Effects, owner, branch, mandatory, depth + 1, required);
-                        foreach (var (target, amount) in branch)
-                            maxima[target] = Math.Max(maxima.GetValueOrDefault(target), amount);
+                        AccumulateAcquisitionDemand(option.Effects, owner, branch, mandatory, depth + 1, true);
+                        foreach (var (card, amount) in branch) maxima[card] = Math.Max(maxima.GetValueOrDefault(card), amount);
                     }
-                    foreach (var (target, amount) in maxima)
-                        totals[target] = totals.GetValueOrDefault(target) + amount;
+                    foreach (var (card, amount) in maxima) totals[card] = totals.GetValueOrDefault(card) + amount;
                     break;
+                    // Optional and choice branches reserve stock only after selection. Support for every
+                    // branch was checked before activation; selected work is combined with suspended frames.
+
             }
     }
 
