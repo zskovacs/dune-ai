@@ -79,7 +79,7 @@ public sealed class LifecycleDefinitionTests
         Assert.Equal(new ResourceCost(Spice: 1), plot.Cost);
         Assert.IsType<UnsupportedEffect>(Assert.Single(plot.Effects));
         Assert.Contains(plot.Sources, x => x.Page == 7 && x.Section.Contains("one-spice cost", StringComparison.Ordinal));
-        Assert.Equal("imperium-2020-lifecycle-authoring-v8", rules.Version);
+        Assert.Equal("imperium-2020-lifecycle-authoring-v9", rules.Version);
         Assert.Null(OriginalImperiumTurnRules.Create().Lifecycle);
         var result = new GameInitializer(RulesetComposer.CreateDefault()).Create(new GameConfiguration());
         Assert.False(result.IsSuccess);

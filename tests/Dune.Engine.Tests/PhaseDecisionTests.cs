@@ -102,7 +102,7 @@ public sealed class PhaseDecisionTests
         Assert.Equal(2, engine.DecisionOwnerId);
         Assert.Equal(new[] { 0, 1 }, engine.CaptureTrustedSnapshot().Data.Window!.ConsecutivePasses);
         Apply(engine, new PassPriorityAction(2));
-        Assert.Equal(phase == GamePhase.Combat ? GamePhase.PlayerTurns : GamePhase.Endgame, engine.Phase);
+        Assert.Equal(phase == GamePhase.Combat ? GamePhase.PlayerTurns : GamePhase.Completed, engine.Phase);
         if (phase == GamePhase.Combat)
         {
             Assert.Equal(0, engine.CurrentPlayerId);
@@ -114,10 +114,11 @@ public sealed class PhaseDecisionTests
         {
             Assert.Null(engine.CurrentPlayerId);
             Assert.Null(engine.DecisionOwnerId);
-            Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
+            Assert.Empty(engine.SupportDiagnostics(0));
+            Assert.True(engine.IsTerminal);
         }
         Assert.Null(engine.Observe(0).Game.Window);
-        Assert.False(state.IsCompleted);
+        Assert.Equal(phase == GamePhase.Endgame, state.IsCompleted);
         Replay(engine, Create, rules);
     }
 

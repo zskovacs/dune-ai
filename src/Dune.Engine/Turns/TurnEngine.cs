@@ -45,6 +45,7 @@ public sealed partial class TurnEngine
     private int _oldGarrison;
     private CombatOutcome? _combatOutcome;
     private ConflictRewardProgress? _conflictRewards;
+    private DuneGameResult? _result;
 
     public TurnEngine(GameState state, TurnRuleSet rules)
     {
@@ -128,6 +129,9 @@ public sealed partial class TurnEngine
     public int? CurrentPlayerId => _state.CurrentPlayerId;
     public int? DecisionOwnerId => _state.DecisionOwnerId;
     public GamePhase Phase => _state.Phase;
+    public bool IsTerminal => _state.IsCompleted;
+
+    public DuneGameResult GetResult() => _result ?? throw new InvalidOperationException("The game has not completed.");
 
     public StepResult StartRound() => Step(new StartRoundAction());
 
@@ -237,22 +241,26 @@ public sealed partial class TurnEngine
         }
         RefreshCombatStrength();
         _history.Add(action);
+        // The closing action belongs to the result's identity, and the identity must not hash the result itself.
+        if (_state.IsCompleted) _result = CreateResult();
         AssertInvariants();
         return new(StepStatus.Applied, []);
     }
 
-    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v6", _rulesIdentity, _initialHash,
+    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v7", _rulesIdentity, _initialHash,
         _state.CaptureTrustedSnapshot().Data, [.. _frames], _nextFrameId, _revealing, _deploying,
         _recruited, _oldGarrison, _nextEffectId,
         [.. _used.OrderBy(x => x.PlayerId).ThenBy(x => x.Space.Value, StringComparer.Ordinal)], [.. _history])
-    { Window = _state.DecisionWindow, NextWindowId = _nextWindowId, CombatOutcome = _combatOutcome, ConflictRewards = _conflictRewards is { } progress ? progress with { RemainingRewardWork = [.. Pending] } : null });
+    { Window = _state.DecisionWindow, NextWindowId = _nextWindowId, CombatOutcome = _combatOutcome, ConflictRewards = _conflictRewards is { } progress ? progress with { RemainingRewardWork = [.. Pending] } : null, Result = _result });
 
-    public TurnReplay CaptureReplay() => new("dune-turn-replay-v6",
+    public TurnReplay CaptureReplay() => CreateReplay(CaptureTrustedSnapshot().Hash);
+
+    private TurnReplay CreateReplay(string finalStateHash) => new("dune-turn-replay-v7",
         typeof(TurnEngine).Assembly.GetName().Version!.ToString(),
         System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
         _rulesIdentity, _state.Definition.Fingerprint, _state.ConfigurationIdentity, _state.ContentIdentity,
         _rules.SupportVersion, _state.Random.Checkpoint.Seed, _state.LeadersRandom.Checkpoint.Seed,
-        _initialHash, [.. _history], CaptureTrustedSnapshot().Hash);
+        _initialHash, [.. _history], finalStateHash);
 
     public static TurnReplayResult Replay(TurnReplay replay, Func<GameState> initialStateFactory, TurnRuleSet rules)
     {
@@ -333,6 +341,7 @@ public sealed partial class TurnEngine
 
     private TurnDiagnostic? Validate(GameAction action)
     {
+        if (_state.IsCompleted) return Illegal("completed", "The game has completed.");
         var leaderError = _state.Players.Select(LeaderSupport).FirstOrDefault(x => x is not null);
         if (action is StartRoundAction)
         {
@@ -1268,6 +1277,12 @@ public sealed partial class TurnEngine
             BeginConflictRewards();
             ContinueTurn();
         }
+        else if (window.Kind == DecisionWindowKind.Endgame)
+        {
+            _state.CurrentPlayerId = null;
+            _state.Phase = GamePhase.Completed;
+            _state.IsCompleted = true;
+        }
     }
 
     private void FreezeCombatOutcome()
@@ -1705,6 +1720,9 @@ public sealed partial class TurnEngine
 
     private void AssertInvariants()
     {
+        if (_state.IsCompleted != (_state.Phase == GamePhase.Completed) ||
+            _state.IsCompleted && (_frames.Count != 0 || _state.DecisionWindow is not null || _state.DecisionOwnerId is not null))
+            throw new InvalidOperationException("Completed games cannot retain execution work or decision owners.");
         if ((_state.Phase == GamePhase.PlayerTurns) != (_state.CurrentPlayerId is not null))
             throw new InvalidOperationException("Player Turns require a current turn player; other phases cannot have one.");
         if (_frames.Count > 0 && _state.Phase != GamePhase.PlayerTurns && _state.DecisionWindow is null &&

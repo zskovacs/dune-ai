@@ -12,14 +12,17 @@ explicit gates. See [coverage](../implemented-mechanics.md) and [ADR 0004](../ad
 executable definitions. `StartRound()`, `Observe(player)`, `LegalActions(player)`
 and `Step(action)` provide the sequential interaction boundary. `GameState` remains
 privileged; agents get `TurnObservation`, never the state, seeds or replay records.
-The facade deliberately stops at `CombatBoundary`, not at a terminal game result.
-The existing generic full-episode interface and Toy remain unchanged.
+Without a lifecycle definition, the bounded preview stops at `CombatBoundary`.
+Supported lifecycle definitions continue through recurring rounds and Endgame to
+the terminal result described below. The generic full-episode interface and Toy
+remain unchanged.
 
 Round Start reveals the next Conflict and draws five cards per player through the
 existing draw/refill operation. Players act clockwise from First Player. An Agent
 turn uses one Agent and moves the selected hand card into in-play. Early Reveal is
 allowed. A player's completed Reveal removes them from further scheduling; when
-all players finish, no decision owner remains and the engine stops before Combat.
+all players finish, lifecycle definitions open Combat decisions; the bounded turn
+preview instead stops before Combat with no decision owner.
 Current player identifies the active turn; decision owner identifies who must
 choose now. Effects can keep the same turn active across many decisions or give a
 nested choice to another player.
@@ -200,8 +203,8 @@ This advances setup snapshots to v4, turn snapshots/replays to v5, turn
 preview/support to v10 and lifecycle authoring to v7 (including the tied shared-draw
 safety revision). The official lifecycle
 registry remains partial and no authentic configuration becomes playable.
-Reward completion deliberately remains nonterminal Combat until Task 9 provides
-cleanup; Task 10 supplies terminal scoring/result behavior.
+Reward completion continues through cleanup, Makers and Recall as described below;
+the Endgame window supplies terminal scoring and the structured result.
 
 Canonical tied-seat reward scheduling excludes positive shared Intrigue draws: no
 supplied rule establishes tied distribution of distinct hidden cards. Preflight
@@ -220,7 +223,7 @@ and clears completed window/outcome/reward state. `RunMakers` uses resolved boar
 metadata while occupants still exist. `RunRecall` then records public
 `DuneTerminalReason` flags for VP >=10 and/or Conflict deck exhaustion. A trigger
 enters the existing Endgame window without Agent recall, marker rotation or a new
-hand. Task 10 owns final scoring/results.
+hand. Final scoring/results follow the Endgame window described below.
 
 Without a trigger, Recall reconstructs available Agents from typed ownership and
 Mentat lifetime, clears placed occupants and rotates First Player clockwise.
@@ -247,8 +250,44 @@ placement even when no token is available. Swordmaster is an eight-Solari,
 once-game permanent acquisition. Contested rewards and existing unsupported
 content gates remain explicit.
 
-Current schemas are setup **v5**, turn snapshot/replay **v6**, preview/support
-**v11**, lifecycle authoring **v8**. The shared synthetic fixture replays multiple
+Current schemas are setup **v5**, turn snapshot/replay **v7**, preview/support
+**v12**, lifecycle authoring **v9**. The shared synthetic fixture replays multiple
 rounds and the entire selected ten-card Conflict deck with conservation and
 seeded reshuffles; the official catalog remains incomplete and no authentic
 configuration is declared playable.
+
+### Endgame and trusted result
+
+Endgame uses the existing all-seat window, with a null normal player and an explicit
+decision owner. A seat can play any number of supported order-independent Endgame
+Intrigues before passing. Any play clears earlier passes; closure requires consecutive
+no-play passes from every seat. This clockwise opportunity schedule is an engine
+convention, not an official card-priority rule. Nested optional/foreign work returns
+to the same opportunity. Unsupported faces/timings retain their explicit diagnostics;
+lifecycle startup still validates the entire enabled inventory, independently of
+hidden deck positions.
+
+Corner the Market reuses the typed conditional runtime: its two printed VP
+conditions evaluate separately at resolution. Owned The Spice Must Flow copies in
+deck, hand, discard and in-play count; shared trash and Reserve do not. Conservative
+preflight bounds both awards without consulting hidden opponent ownership. The
+printed outcome may change public VP, but hidden cards remain redacted after completion.
+
+Closing Endgame sets `Completed`, clears decision ownership/window/work, and blocks
+every subsequent action, including `StartRound`. `IsTerminal` reports completion;
+`GetResult()` throws until then and returns detached immutable `DuneGameResult`
+afterwards. Final ranks use VP, spice, Solari, water and garrison troops, in that
+order. Applied tiebreaks record only criteria that actually split each seat's
+successively tied groups. Equal full tuples share competition rank and winner
+status. Standings and winner IDs serialize in seat order; seat order never breaks ties.
+
+The trusted result records setup/configuration/ruleset/content/rules/support
+identities and versions, inventory authenticity, both setup seeds, rounds, Recall
+reason flags and final standings. It carries no private cards and makes no claim
+of a complete authentic playable catalog. Seeds and replay identity stay outside
+policy observations. Turn snapshots include the result value. Its replay identity
+is SHA-256 of `dune-turn-replay-identity-v1`: the versioned replay header and ordered
+accepted actions, excluding the final-state hash and result. Construction occurs
+after appending the closing action, avoiding both circular hashing and omitted
+final passes. Earlier replay versions are rejected explicitly. `TurnEngine` does
+not implement the generic simulation `IGame` contract.

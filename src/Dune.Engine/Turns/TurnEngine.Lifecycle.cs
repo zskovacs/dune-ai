@@ -1,3 +1,7 @@
+using System.Collections.Immutable;
+using System.Security.Cryptography;
+using System.Text.Json;
+using Dune.Engine.Configuration;
 using Dune.Engine.Content;
 using Dune.Engine.Runtime;
 
@@ -5,6 +9,55 @@ namespace Dune.Engine.Turns;
 
 public sealed partial class TurnEngine
 {
+    private DuneGameResult CreateResult()
+    {
+        var replay = CreateReplay("");
+        var replayIdentity = Convert.ToHexStringLower(SHA256.HashData(
+            JsonSerializer.SerializeToUtf8Bytes(TurnReplayIdentityData.From(replay), ConfigurationJson.Options)));
+        var standings = _state.Players.Select(player => new DuneStanding(player.Id,
+            player.Resources.VictoryPoints, player.Resources.Spice, player.Resources.Solari,
+            player.Resources.Water, player.Units.TroopsInGarrison, 0, [])).ToArray();
+        var ranked = standings.OrderByDescending(x => x.VictoryPoints).ThenByDescending(x => x.Spice)
+            .ThenByDescending(x => x.Solari).ThenByDescending(x => x.Water).ThenByDescending(x => x.GarrisonTroops).ToArray();
+        var criteria = standings.ToDictionary(x => x.PlayerId, _ => ImmutableArray<DuneTiebreaker>.Empty);
+        foreach (var tied in standings.GroupBy(x => x.VictoryPoints)) RecordSplits([.. tied], 0);
+        var rank = 1;
+        for (var i = 0; i < ranked.Length; i++)
+        {
+            if (i > 0 && !SameScore(ranked[i - 1], ranked[i])) rank = i + 1;
+            var standing = ranked[i];
+            standings[Array.FindIndex(standings, x => x.PlayerId == standing.PlayerId)] = standing with
+            { Rank = rank, AppliedTiebreakers = criteria[standing.PlayerId] };
+        }
+        return new("dune-game-result-v1", replay.EngineVersion, replay.RuntimeVersion,
+            _state.Definition.Setup!.Id, _state.ConfigurationIdentity, "dune-configuration-sha256-v1",
+            _state.Definition.Fingerprint, _state.ContentIdentity, _rules.Version, _rulesIdentity,
+            _rules.SupportVersion, _rules.Lifecycle!.Version, _state.Authenticity,
+            replay.EnvironmentSeed, replay.LeaderSeed, _state.Round, _state.TerminalReason,
+            [.. standings.OrderBy(x => x.PlayerId)], [.. standings.Where(x => x.Rank == 1).OrderBy(x => x.PlayerId).Select(x => x.PlayerId)],
+            replayIdentity);
+
+        void RecordSplits(DuneStanding[] group, int index)
+        {
+            if (group.Length < 2 || index == 4) return;
+            var criterion = (DuneTiebreaker)index;
+            var subgroups = group.GroupBy(x => criterion switch
+            {
+                DuneTiebreaker.Spice => x.Spice,
+                DuneTiebreaker.Solari => x.Solari,
+                DuneTiebreaker.Water => x.Water,
+                _ => x.GarrisonTroops,
+            }).ToArray();
+            if (subgroups.Length > 1)
+                foreach (var standing in group) criteria[standing.PlayerId] = criteria[standing.PlayerId].Add(criterion);
+            foreach (var subgroup in subgroups) RecordSplits([.. subgroup], index + 1);
+        }
+    }
+
+    private static bool SameScore(DuneStanding left, DuneStanding right) =>
+        left.VictoryPoints == right.VictoryPoints && left.Spice == right.Spice && left.Solari == right.Solari &&
+        left.Water == right.Water && left.GarrisonTroops == right.GarrisonTroops;
+
     private bool MentatAtStartingSpace => _state.Board.Mentat.OwnerId is null &&
         _state.Board.Mentat.Space == _state.Board.Definition.InitialMentatSpace;
 
