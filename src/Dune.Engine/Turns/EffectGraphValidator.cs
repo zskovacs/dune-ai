@@ -36,6 +36,9 @@ public sealed class EffectGraphValidator
             switch (effect)
             {
                 case GainEffect gain when gain.Amount < 0 || !Enum.IsDefined(gain.Resource):
+                case RetreatEffect { Maximum: < 0 }:
+                case DrawIntrigueEffect { Amount: < 0 }:
+                case ConditionalEffect conditional when !Enum.IsDefined(conditional.Condition):
                 case DrawEffect { Amount: < 0 }:
                 case RecruitEffect { Amount: < 0 }:
                 case InfluenceEffect influence when influence.Amount < 0 || !Enum.IsDefined(influence.Faction):
@@ -61,6 +64,13 @@ public sealed class EffectGraphValidator
                         Cost(option.Cost, diagnostics);
                         Visit(option.Effects, depth + 1, jsonDepth + 4, path, diagnostics);
                     }
+                    break;
+                case ConditionalEffect conditional:
+                    Visit(conditional.Effects, depth + 1, jsonDepth + 2, path, diagnostics);
+                    diagnostics.Add(new(StepStatus.Unsupported, "effect-support", "Conditional scoring is not implemented."));
+                    break;
+                case RetreatEffect or DrawIntrigueEffect:
+                    diagnostics.Add(new(StepStatus.Unsupported, "effect-support", "This sourced lifecycle primitive is not implemented."));
                     break;
                 case UnsupportedEffect unsupported:
                     diagnostics.Add(new(StepStatus.Unsupported, "effect-support", unsupported.Reason));

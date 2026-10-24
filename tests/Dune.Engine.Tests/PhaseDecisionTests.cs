@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text.Json;
 using Dune.Engine.Configuration;
+using Dune.Engine.Fixtures;
 using Dune.Engine.Runtime;
 using Dune.Engine.Turns;
 using static Dune.Engine.Fixtures.TurnEngineFixture;
@@ -138,13 +139,13 @@ public sealed class PhaseDecisionTests
     {
         GameState Create()
         {
-            var result = WindowState(GamePhase.Combat);
+            var result = WindowState(GamePhase.Combat, lifecycleInventory: true);
             result.Phase = GamePhase.BeforeRoundStart;
             result.Round = 0;
             return result;
         }
         var state = Create();
-        var rules = WindowRules(state, IntrigueTiming.Combat, []);
+        var rules = LifecycleFixture.Rules(state);
         var engine = new TurnEngine(state, rules);
         Apply(engine, new StartRoundAction());
         FinishPlayerTurns(engine);
@@ -386,9 +387,9 @@ public sealed class PhaseDecisionTests
         Assert.Equal(snapshot.CanonicalJson, JsonSerializer.Serialize(copy, ConfigurationJson.Options));
     }
 
-    private static GameState WindowState(GamePhase phase)
+    private static GameState WindowState(GamePhase phase, bool lifecycleInventory = false)
     {
-        var state = CreateState();
+        var state = lifecycleInventory ? LifecycleFixture.CreateState() : CreateState();
         state.Phase = phase;
         state.Round = 1;
         state.FirstPlayerId = 2;
@@ -406,7 +407,7 @@ public sealed class PhaseDecisionTests
         Rules(state) with
         {
             Lifecycle = new("synthetic-window-tests-v1", [new(state.Players[2].Intrigue.Cards[0].Definition, timing,
-                new(), effects, [])]),
+                new(), effects, [new("Synthetic window fixture, not official content", 1, "Invented Intrigue effects")])]),
         };
 
     private static void Resolve<T>(TurnEngine engine) where T : Effect

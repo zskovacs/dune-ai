@@ -26,3 +26,17 @@ public static class CombatStrength
         return requiresDeployedUnits && count == 0 ? 0 : checked(strength + swords * swordStrength);
     }
 }
+
+/// <summary>Eligibility is a policy query, independent of calculated strength and sword coefficients.</summary>
+public static class CombatParticipation
+{
+    public static bool IsEligible(CombatParticipationPolicy policy, IEnumerable<CombatUnitContribution> units)
+    {
+        ArgumentNullException.ThrowIfNull(units);
+        return policy switch
+        {
+            CombatParticipationPolicy.OriginalTroops => units.Any(x => x.Kind == "troop" && x.Count > 0),
+            _ => throw new ArgumentOutOfRangeException(nameof(policy)),
+        };
+    }
+}

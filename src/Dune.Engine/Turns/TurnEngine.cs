@@ -12,6 +12,7 @@ namespace Dune.Engine.Turns;
 /// <summary>Incremental turns and decision windows over trusted setup state; unsupported lifecycle work stops explicitly.</summary>
 public sealed class TurnEngine
 {
+    private const string InvalidLifecycleVersion = "invalid-lifecycle:";
     private readonly GameState _state;
     private readonly TurnRuleSet _rules;
     private readonly Dictionary<ContentId, TurnDiagnostic> _cardErrors = [];
@@ -20,6 +21,8 @@ public sealed class TurnEngine
     private readonly Dictionary<BoardSpaceId, BoardRule> _spaces;
     private readonly Dictionary<ContentId, LeaderRule> _leaders;
     private readonly Dictionary<ContentId, IntrigueRule> _intrigues;
+    private readonly TurnDiagnostic? _lifecycleDefinitionError;
+    private readonly TurnDiagnostic? _lifecycleStartupDiagnostic;
     private readonly List<EffectExecutionFrame> _frames = [];
     private IEnumerable<PendingEffect> Pending => _frames.SelectMany(x => x.Remaining);
     private ImmutableArray<PendingEffect> CurrentPending => _frames.Count == 0 ? [] : _frames[^1].Remaining;
@@ -52,6 +55,7 @@ public sealed class TurnEngine
         if (rules.Strength.TroopStrength < 0 || rules.Strength.SwordStrength < 0)
             throw new ArgumentException("Strength coefficients must be nonnegative.", nameof(rules));
         _state = state;
+        _lifecycleDefinitionError = ValidateLifecycleDefinitions(rules.Lifecycle);
         foreach (var card in rules.Cards)
             if (card.Cost < 0 || OrEmpty(card.Icons).Any(x => !Enum.IsDefined(x)))
                 _cardErrors[card.Id] = Content("card-shape", "Card cost or icon is invalid.");
@@ -84,19 +88,25 @@ public sealed class TurnEngine
                 .Select(x => x with { SignetEffects = Normalize(x.SignetEffects) })],
             Lifecycle = rules.Lifecycle is { } lifecycle ? lifecycle with
             {
-                Intrigues = [.. OrEmpty(lifecycle.Intrigues).OrderBy(x => x.Id.Value, StringComparer.Ordinal)
-                    .Select(x => x with { Effects = Normalize(x.Effects), Sources = OrEmpty(x.Sources) })],
-                Conflicts = [.. OrEmpty(lifecycle.Conflicts).OrderBy(x => x.Id.Value, StringComparer.Ordinal)
-                    .Select(x => x with { Rewards = [.. OrEmpty(x.Rewards).OrderBy(r => r.Tier)
+                // Bind rejected shape data to a reserved, nonexecutable identity before serializing safe enum values.
+                Version = _lifecycleDefinitionError is { } invalid
+                    ? InvalidLifecycleVersion + invalid.Code + ":" + invalid.Message + ":" + lifecycle.Version : lifecycle.Version,
+                Intrigues = [.. OrEmpty(lifecycle.Intrigues).Where(x => x is not null).DistinctBy(x => x.Id).OrderBy(x => x.Id.Value, StringComparer.Ordinal)
+                    .Select(x => x with { Timing = Enum.IsDefined(x.Timing) ? x.Timing : IntrigueTiming.Plot, Effects = Normalize(x.Effects), Sources = OrEmpty(x.Sources) })],
+                Conflicts = [.. OrEmpty(lifecycle.Conflicts).Where(x => x is not null).DistinctBy(x => x.Id).OrderBy(x => x.Id.Value, StringComparer.Ordinal)
+                    .Select(x => x with { Tier = Enum.IsDefined(x.Tier) ? x.Tier : ConflictTier.I, Rewards = [.. OrEmpty(x.Rewards).Where(r => r is not null).OrderBy(r => r.Tier)
                         .Select(r => r with { Effects = Normalize(r.Effects) })], Sources = OrEmpty(x.Sources) })],
-                Factions = [.. OrEmpty(lifecycle.Factions).OrderBy(x => x.Faction)
-                    .Select(x => x with { ThresholdFourReward = Normalize(x.ThresholdFourReward), Sources = OrEmpty(x.Sources) })],
+                Factions = [.. OrEmpty(lifecycle.Factions).Where(x => x is not null).DistinctBy(x => x.Faction).OrderBy(x => x.Faction)
+                    .Select(x => x with { Faction = Enum.IsDefined(x.Faction) ? x.Faction : Faction.Emperor, ThresholdFourReward = Normalize(x.ThresholdFourReward), Sources = OrEmpty(x.Sources) })],
+                Participation = Enum.IsDefined(lifecycle.Participation) ? lifecycle.Participation : CombatParticipationPolicy.OriginalTroops,
+                Cleanup = Enum.IsDefined(lifecycle.Cleanup) ? lifecycle.Cleanup : CombatCleanupPolicy.ReturnTroopsToSupply,
             } : null,
         };
         _cards = _rules.Cards.ToDictionary(x => x.Id);
         _spaces = _rules.Spaces.ToDictionary(x => x.Id);
         _leaders = _rules.Leaders.ToDictionary(x => x.Id);
         _intrigues = _rules.Lifecycle?.Intrigues.ToDictionary(x => x.Id) ?? [];
+        _lifecycleStartupDiagnostic = LifecycleStartupSupport();
         _rulesIdentity = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(
             JsonSerializer.Serialize(_rules, ConfigurationJson.Options))));
         _initialHash = state.CaptureTrustedSnapshot().Hash;
@@ -149,6 +159,8 @@ public sealed class TurnEngine
     {
         Player(playerId);
         AssertInvariants();
+        if (_state.Phase == GamePhase.BeforeRoundStart && _lifecycleStartupDiagnostic is { } startup)
+            return [startup];
         if (_state.Phase != GamePhase.PlayerTurns && _state.DecisionWindow is null)
             return _state.Phase is GamePhase.Combat or GamePhase.Endgame
                 ? [Unsupported("lifecycle-support", "The lifecycle continuation is not implemented for this ruleset.")]
@@ -309,6 +321,7 @@ public sealed class TurnEngine
         {
             if (_state.Phase != GamePhase.BeforeRoundStart || _state.Round != 0)
                 return Illegal("phase", "Round Start is available only before the first round.");
+            if (_lifecycleStartupDiagnostic is not null) return _lifecycleStartupDiagnostic;
             if (leaderError is not null) return leaderError;
             return _state.Conflict.Deck.Count == 0 ? Content("conflict-empty", "No Conflict card is available.") : null;
         }
@@ -347,6 +360,9 @@ public sealed class TurnEngine
         if (_state.Phase != GamePhase.PlayerTurns)
             return Illegal("phase", "Player Turns are not active.");
         var active = Player(_state.CurrentPlayerId!.Value);
+        if (action is PlayIntrigueAction plot && Find(active.Intrigue, plot.Card) is { } plotCard &&
+            _intrigues.TryGetValue(plotCard.Definition, out var plotRule) && plotRule.Timing == IntrigueTiming.Plot)
+            return Unsupported("intrigue-plot-support", "Plot Intrigue play is not implemented.");
         switch (action)
         {
             case PlaceAgentAction place:
@@ -1084,11 +1100,7 @@ public sealed class TurnEngine
         if (card is null) return Illegal("intrigue-card", "The selected own Intrigue is unavailable.");
         if (!_intrigues.TryGetValue(card.Definition, out var rule))
             return Unsupported("intrigue-support", "The selected Intrigue has no executable definition.");
-        // The sourced lifecycle registry and complete-deck activation gate belong to C1.
-        if (_state.Authenticity != ContentAuthenticity.SyntheticFixture ||
-            !rule.Id.Value.StartsWith("fixture:", StringComparison.Ordinal))
-            return Unsupported("intrigue-support", "Official lifecycle Intrigues are not enabled.");
-        if (!Enum.IsDefined(rule.Timing)) return Content("intrigue-timing", "Invalid Intrigue timing.");
+        if (_lifecycleDefinitionError is not null) return _lifecycleDefinitionError;
         var timing = window.Kind switch
         {
             DecisionWindowKind.Combat => IntrigueTiming.Combat,
@@ -1106,11 +1118,12 @@ public sealed class TurnEngine
     private void OpenPhaseWindow()
     {
         if (_rules.Lifecycle is null) return;
-        if (_rules.Lifecycle.Participation != CombatParticipationPolicy.OriginalTroops ||
+        if (_lifecycleDefinitionError is not null || _rules.Lifecycle.Participation != CombatParticipationPolicy.OriginalTroops ||
             _rules.Lifecycle.Cleanup != CombatCleanupPolicy.ReturnTroopsToSupply)
             return; // Unsupported lifecycle policy leaves an explicit nonterminal stop.
         var kind = _state.Phase == GamePhase.Endgame ? DecisionWindowKind.Endgame : DecisionWindowKind.Combat;
-        var eligible = _state.Players.Where(x => kind == DecisionWindowKind.Endgame || x.Units.TroopsInConflict > 0)
+        var eligible = _state.Players.Where(x => kind == DecisionWindowKind.Endgame ||
+                CombatParticipation.IsEligible(_rules.Lifecycle.Participation, CombatUnits(x)))
             .OrderBy(x => (x.Id - _state.FirstPlayerId + _state.Players.Count) % _state.Players.Count)
             .Select(x => x.Id).ToImmutableArray();
         OpenWindow(kind, eligible, new(kind == DecisionWindowKind.Endgame
@@ -1501,7 +1514,7 @@ public sealed class TurnEngine
         foreach (var zone in new[] { player.InPlay, player.Hand })
             foreach (var card in zone.Cards.ToArray()) zone.MoveTo(card.Id, player.Discard);
         player.CombatMarker = CombatStrength.Calculate(
-            [new("troop", player.Units.TroopsInConflict, _rules.Strength.TroopStrength)],
+            CombatUnits(player),
             player.Temporary.Swords, _rules.Strength.SwordStrength, _rules.Strength.RequiresDeployedUnits);
         player.Temporary = player.Temporary with { Persuasion = 0 };
         _revealing = false;
@@ -1608,6 +1621,126 @@ public sealed class TurnEngine
         (payer is { } p ? ValidateOwner(p) : null) ??
         (recipient is { } r ? ValidateOwner(r) : null);
 
+    private IEnumerable<CombatUnitContribution> CombatUnits(PlayerState player) =>
+        [new("troop", player.Units.TroopsInConflict, _rules.Strength.TroopStrength)];
+
+    private TurnDiagnostic? ValidateLifecycleDefinitions(LifecycleRuleSet? lifecycle)
+    {
+        if (lifecycle is null) return null;
+        var intrigues = OrEmpty(lifecycle.Intrigues);
+        var conflicts = OrEmpty(lifecycle.Conflicts);
+        var factions = OrEmpty(lifecycle.Factions);
+        if (string.IsNullOrWhiteSpace(lifecycle.Version) || lifecycle.Version.StartsWith(InvalidLifecycleVersion, StringComparison.Ordinal) ||
+            !Enum.IsDefined(lifecycle.Participation) || !Enum.IsDefined(lifecycle.Cleanup) ||
+            intrigues.Any(x => x is null) || conflicts.Any(x => x is null) || factions.Any(x => x is null))
+            return Content("lifecycle-shape", "Lifecycle version, policy or definition is invalid.");
+        if (intrigues.Select(x => x.Id).Concat(conflicts.Select(x => x.Id)).Distinct().Count() != intrigues.Length + conflicts.Length ||
+            factions.Select(x => x.Faction).Distinct().Count() != factions.Length)
+            return Content("lifecycle-shape", "Lifecycle definitions must be unique.");
+        foreach (var rule in intrigues)
+            if (!ContentCatalog.ValidId(rule.Id.Value) || !Enum.IsDefined(rule.Timing) || ValidateCost(rule.Cost) is not null ||
+                !ValidLifecycleSources(rule.Id, rule.Sources) ||
+                !rule.Id.Value.StartsWith("fixture:", StringComparison.Ordinal) &&
+                    (!rule.Id.Value.StartsWith("imperium:intrigue:", StringComparison.Ordinal) ||
+                     !rule.Sources.Any(x => x.Document == "DUNE_IMPERIUM_Rules_2020_10_26.pdf" && (rule.Timing switch
+                     { IntrigueTiming.Combat => x.Page is 7 or 12, IntrigueTiming.PostWin => x.Page == 13, _ => x.Page == 7 }))))
+                return Content("lifecycle-shape", "Intrigue identity, timing, cost or source provenance is invalid.");
+        foreach (var rule in conflicts)
+            if (!ContentCatalog.ValidId(rule.Id.Value) || !Enum.IsDefined(rule.Tier) || !ValidLifecycleSources(rule.Id, rule.Sources) ||
+                !rule.Id.Value.StartsWith("fixture:", StringComparison.Ordinal) &&
+                    (!rule.Id.Value.StartsWith("imperium:conflict:", StringComparison.Ordinal) ||
+                     !rule.Sources.Any(x => x.Document == "DUNE_IMPERIUM_Rules_2020_10_26.pdf" && x.Page == 12)) ||
+                OrEmpty(rule.Rewards).Length != 3 || OrEmpty(rule.Rewards).Any(x => x is null) ||
+                !OrEmpty(rule.Rewards).Select(x => x.Tier).Order().SequenceEqual(new[] { 1, 2, 3 }) ||
+                rule.ControlSpace is { } control && !_state.Board.Definition.Spaces.Any(x => x.Id == control && x.Controllable))
+                return Content("lifecycle-shape", "Conflict identity, deck tier, reward positions, control space or source provenance is invalid.");
+        foreach (var rule in factions)
+            if (!Enum.IsDefined(rule.Faction) || rule.MaximumInfluence < 4 ||
+                !ContentCatalog.ValidSources(rule.Sources) ||
+                !(rule.Sources.All(OfficialSource) || _state.Authenticity == ContentAuthenticity.SyntheticFixture &&
+                    rule.Sources.All(x => x.Document.StartsWith("Synthetic", StringComparison.Ordinal))))
+                return Content("lifecycle-shape", "Faction, influence maximum or sources are invalid.");
+        return null;
+    }
+
+    private bool ValidLifecycleSources(ContentId id, ImmutableArray<SourceReference> sources)
+    {
+        if (!ContentCatalog.ValidSources(sources)) return false;
+        return id.Value.StartsWith("fixture:", StringComparison.Ordinal)
+            ? _state.Authenticity == ContentAuthenticity.SyntheticFixture &&
+                sources.All(x => x.Document.StartsWith("Synthetic", StringComparison.Ordinal))
+            : id.Value.StartsWith("imperium:", StringComparison.Ordinal) && sources.All(OfficialSource);
+    }
+
+    private static bool OfficialSource(SourceReference source) => source.Document switch
+    {
+        "DUNE_IMPERIUM_Rules_2020_10_26.pdf" => source.Page is >= 1 and <= 16,
+        "DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf" => source.Page is >= 1 and <= 2,
+        _ => false,
+    };
+
+    private TurnDiagnostic? LifecycleStartupSupport()
+    {
+        if (_rules.Lifecycle is not { } lifecycle) return null;
+        if (_lifecycleDefinitionError is not null) return _lifecycleDefinitionError;
+        if (_state.Players.Select(LeaderSupport).FirstOrDefault(x => x is not null) is { } leaderError)
+            return leaderError;
+        var conflicts = lifecycle.Conflicts.ToDictionary(x => x.Id);
+        // Use the configured inventory, never a hidden card's position or the current player's hand.
+        // Diagnostics deliberately disclose neither the definition, its category, nor the number of failures.
+        var enabled = _state.Definition.Content.Where(x => x.Quantity > 0 &&
+            x.Category is ContentCategory.IntrigueCard or ContentCategory.ConflictCard);
+        foreach (var definition in enabled)
+        {
+            if (definition.Category == ContentCategory.IntrigueCard)
+            {
+                if (!_intrigues.TryGetValue(definition.Id, out var rule) || rule.Timing == IntrigueTiming.Plot)
+                    return Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
+                foreach (var player in _state.Players)
+                    if (ValidateContext(rule.Effects, true, false, player.Id) is { } error) return DeckDiagnostic(error);
+            }
+            else
+            {
+                if (!conflicts.TryGetValue(definition.Id, out var rule))
+                    return Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
+                if (definition.ConflictTier != rule.Tier)
+                    return Content("lifecycle-deck-content", "An enabled deck definition is invalid.");
+                if (rule.ControlSpace is not null)
+                    return Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
+                foreach (var reward in rule.Rewards)
+                    foreach (var player in _state.Players)
+                        if (ValidateContext(reward.Effects, false, false, player.Id) is { } error) return DeckDiagnostic(error);
+            }
+        }
+        // Fixtures explicitly move unused original starters outside the enabled decks. Validate all remaining
+        // physical card definitions, including hidden stock, without pruning or inspecting a top-card identity.
+        var cardIds = _state.Zones.Where(x => x != _state.Shared.UnusedStarters && x != _state.Conflict.Unused)
+            .SelectMany(x => x.Cards).Select(x => x.Definition).ToHashSet();
+        if (cardIds.Except(_state.Definition.Content.Select(x => x.Id)).Any())
+            return Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
+        foreach (var definition in _state.Definition.Content.Where(x => cardIds.Contains(x.Id) &&
+            x.Category is ContentCategory.StartingCard or ContentCategory.ImperiumCard or ContentCategory.ReserveCard))
+        {
+            if (!_cards.TryGetValue(definition.Id, out var rule))
+                return Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
+            if (_cardErrors.TryGetValue(definition.Id, out var error)) return DeckDiagnostic(error);
+            foreach (var player in _state.Players)
+                foreach (var box in new[] { rule.AgentEffects, rule.RevealEffects, rule.AcquireEffects })
+                    if (ValidateContext(box, true, false, player.Id) is { } issue) return DeckDiagnostic(issue);
+        }
+        foreach (var faction in lifecycle.Factions)
+        {
+            foreach (var player in _state.Players)
+                if (ValidateContext(faction.ThresholdFourReward, false, false, player.Id) is { } issue) return DeckDiagnostic(issue);
+            return Unsupported("lifecycle-faction-support", "Faction threshold operations are not implemented.");
+        }
+        return null;
+    }
+
+    private static TurnDiagnostic DeckDiagnostic(TurnDiagnostic error) => error.Status == StepStatus.ContentError
+        ? Content("lifecycle-deck-content", "An enabled deck definition is invalid.")
+        : Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
+
     private ImmutableArray<Effect> Normalize(ImmutableArray<Effect> effects, int depth = 0, TurnDiagnostic? definitionError = null)
     {
         // Shape diagnostics stay bound to this box. Invalid input becomes a deterministic nonexecutable
@@ -1622,6 +1755,7 @@ public sealed class TurnEngine
         }
         var normalized = OrEmpty(effects).Where(x => x is not null).Select(effect => effect switch
         {
+            ConditionalEffect conditional => conditional with { Effects = Normalize(conditional.Effects, depth + 1) },
             SequenceEffect sequence => sequence with { Effects = Normalize(sequence.Effects, depth + 1) },
             PlayerOrderedEffect ordered => ordered with { Effects = Normalize(ordered.Effects, depth + 1) },
             OptionalPaymentEffect optional => optional with { Effects = Normalize(optional.Effects, depth + 1) },

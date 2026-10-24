@@ -118,7 +118,7 @@ copy counts remain verified setup metadata, separately from executable effects.
 | Arrakis Liaison / The Spice Must Flow | [I p.3](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=3) | Complete faces: Liaison cost2/access Landsraad+City/Reveal2 Persuasion; Flow cost9/acquire1 VP/Reveal1 spice | Sourced examples tests |
 | Fremen Camp / Sardaukar Legion | [I p.9](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=9) | Complete faces and examples: Camp optional2 spice ->3 recruits, Reveal2 Persuasion+1 sword; Legion2 recruits, Reveal1 Persuasion+2 swords | Sourced examples tests |
 
-Unverified starter boxes, Foldspace effects, Intrigue play and all real leader
+Unverified starter boxes, Foldspace effects, full Intrigue coverage and all real leader
 contracts remain unsupported. The p.3 fan's visible access icons are not evidence
 for the obscured boxes. No complete authentic game or RL environment is enabled.
 Engineering decisions (seeds, selectors, replay schema, diagnostics and synthetic
@@ -168,3 +168,53 @@ Acquire timing (A p.1) is pinned by an immediate Spice Must Flow VP assertion in
 `CommutativeSameOwnerAgentGainsResolveWithoutExtraActions` verifies that only
 order-independent Agent gains drain automatically; Reveal acquisition interleaving
 and meaningful optional-cost ordering retain explicit decisions.
+
+### SLICE-004 C1: partial lifecycle authoring and support gates
+
+`OriginalImperiumTurnRules.CreateLifecycleRules()` is a separate partial registry.
+`Create()` remains a bounded turn preview without lifecycle activation. Source
+records are authoring assertions, not proof of a complete authentic inventory.
+No catalog quantities or completeness flags change in this task.
+
+| Definition / policy | Supplied source | Authored behavior and limit | Direct test in `LifecycleDefinitionTests` |
+| --- | --- | --- | --- |
+| Ambush | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7), [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Combat timing; +4 swords through the existing effect resolver. Combat outcome/priority dynamics belong to the next task. | `OfficialAmbushRetainsSourceAndExecutesFourSwordsThroughRealWindow` |
+| Master Tactician | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Complete OR: +3 swords **or** retreat up to 3 own troops. Typed retreat is source authoring only; the entire face stays Unsupported until retreat runtime exists, including its sword alternative. | `CompleteMasterTacticianAndIndependentCornerConditionsStayUnsupported` |
+| Corner the Market | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7) | Two independent +1 VP conditions: own at least 2 The Spice Must Flow; own more than each opponent. Typed conditional scoring remains Unsupported. | `CompleteMasterTacticianAndIndependentCornerConditionsStayUnsupported` |
+| Plot / Calculated Hire | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7) | Plot timing is recognized; all Plot play is Unsupported, including Agent/Reveal turns. Any configured Plot entry blocks lifecycle startup. | `PlotAnywhereInEnabledInventoryBlocksStartupWithoutRevealingItsIdentity`, `PlotPlayDuringAgentAndRevealTurnsPreservesRngStateFramesAndHistory` |
+| Demand Respect / To the Victor | [I p.13](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=13) | Only post-win, before-rewards timing is established. Complete numeric faces remain unknown; no reward/cost value is enabled and both remain Unsupported. | `PartialSourceRegistryDoesNotInventConflictTiersQuantitiesOrPostWinValues`, `PlotAndPostWinFacesAreExcludedFromCombatAndEndgameWindows` |
+| Faction threshold-four authoring | [I p.4](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=4), [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16) | Emperor: recruit 2 troops; Guild: 3 Solari; Bene Gesserit: draw 1 Intrigue; Fremen: 1 water. Maximum 6 is explicitly a **visual inference** from seven cells anchored at 0/2/4, not a prose numeral. Faction threshold operations remain Unsupported until their runtime task. | `PartialSourceRegistryDoesNotInventConflictTiersQuantitiesOrPostWinValues` |
+| Original Combat participation / strength | [I p.11](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=11), [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Eligibility queries the immutable OriginalTroops policy using typed unit contributions. Strength reuses the existing calculator; zero-strength troop contributions and other unit kinds do not redefine original eligibility. | `ParticipationUsesOriginalTroopsIndependentlyOfStrength` |
+| Skirmish / Siege of Arrakeen evidence limit | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16) | Pictured first/second/third **reward positions** do not establish Conflict deck classes I/II/III or quantities. No executable official Conflict entry is authored. | `PartialSourceRegistryDoesNotInventConflictTiersQuantitiesOrPostWinValues` |
+
+Engineering checks (not official rules) validate lifecycle sources, IDs, enums,
+costs, unique reward positions 1/2/3, deck-tier agreement, and capability support.
+Before StartRound changes state or RNG, all configured Intrigue/Conflict pools
+are checked independently of hidden deck order and selected/unused Conflicts;
+all active main/reserve/player card definitions are checked too. Declared control
+rewards remain Unsupported until their runtime task. Rejected malformed policies
+receive a reserved nonexecutable identity before safe enum serialization. Legitimately
+unused starter storage is excluded. Failures disclose generic codes without card
+identities, categories, counts, or hidden effect text. The existing no-lifecycle
+preview remains available. `UnknownConflictAndMandatoryUnsupportedRewardRejectBeforeAnyStartupMutation`,
+`HiddenUnsupportedIdentityAndOrderNeverChangePublicDiagnostics`,
+`MalformedLifecycleDefinitionsRejectWithoutMutation`, and
+`ActiveReserveAndHiddenMainDeckAreIncludedInStartupSupportGate` cover the gates.
+
+The engine-only `tests/Fixtures/LifecycleFixture.cs` explicitly substitutes six
+synthetic reserve cards for the old fixture's six unsupported Foldspace copies.
+It preserves their physical IDs and total card count, changes the fixture recipe
+and definition to the synthetic ID, and recomputes configuration/content identities
+and the ruleset fingerprint. It declares all 40 synthetic Intrigue definitions
+and all 18 synthetic Conflict definitions (including unused candidates). This is
+an invented test inventory, not an authentic deck pruned for playability. The
+standard initializer and official Foldspace stay unchanged and unsupported.
+`CompleteSyntheticInventoryStartsAndPreservesPhysicalCopiesWithDistinctHonestIdentity`
+and the migrated `PhaseDecisionTests.LastRevealAutomaticallyOpensCombatWindowWithNoCurrentPlayer`
+exercise startup and replay through the real actions. Initial Combat/Endgame
+fixtures remain explicit trusted seams with per-play support/timing validation.
+
+Support semantics and official preview authoring revisions are explicitly v4;
+partial lifecycle authoring starts at v1. Serialized state/replay shapes remain
+v3. Previous support revisions, including v3, remain rejected before replay
+history applies (`LifecycleReplayTests.OlderReplayMetadataFailsValidationBeforeAnyActionsAreApplied`).
