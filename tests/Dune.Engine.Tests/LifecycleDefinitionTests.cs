@@ -31,7 +31,7 @@ public sealed class LifecycleDefinitionTests
     }
 
     [Fact]
-    public void CompleteMasterTacticianAndIndependentCornerConditionsStayUnsupported()
+    public void CompleteMasterTacticianIsSupportedWhileIndependentCornerConditionsStayUnsupported()
     {
         var rules = OriginalImperiumTurnRules.CreateLifecycleRules();
         var tactician = rules.Intrigues.Single(x => x.Id.Value.Contains("master-tactician", StringComparison.Ordinal));
@@ -47,7 +47,7 @@ public sealed class LifecycleDefinitionTests
             corner.Effects.Cast<ConditionalEffect>().Select(x => x.Condition));
         Assert.All(corner.Effects.Cast<ConditionalEffect>(), x => Assert.Equal(new GainEffect(ResourceKind.VictoryPoints, 1), Assert.Single(x.Effects)));
         var graph = new EffectGraphValidator();
-        Assert.Contains(graph.Validate(tactician.Effects), x => x.Status == StepStatus.Unsupported);
+        Assert.Empty(graph.Validate(tactician.Effects));
         Assert.Contains(graph.Validate(corner.Effects), x => x.Status == StepStatus.Unsupported);
         foreach (var face in new[] { tactician, corner })
         {
@@ -79,7 +79,7 @@ public sealed class LifecycleDefinitionTests
         Assert.Equal(new ResourceCost(Spice: 1), plot.Cost);
         Assert.IsType<UnsupportedEffect>(Assert.Single(plot.Effects));
         Assert.Contains(plot.Sources, x => x.Page == 7 && x.Section.Contains("one-spice cost", StringComparison.Ordinal));
-        Assert.Equal("imperium-2020-lifecycle-authoring-v2", rules.Version);
+        Assert.Equal("imperium-2020-lifecycle-authoring-v3", rules.Version);
         Assert.Null(OriginalImperiumTurnRules.Create().Lifecycle);
         var result = new GameInitializer(RulesetComposer.CreateDefault()).Create(new GameConfiguration());
         Assert.False(result.IsSuccess);
@@ -261,7 +261,6 @@ public sealed class LifecycleDefinitionTests
     }
 
     [Theory]
-    [InlineData("master-tactician", GamePhase.Combat)]
     [InlineData("corner-the-market", GamePhase.Endgame)]
     public void UnavailableSourcedPrimitivesRejectEntireFaceBeforePlayingOrPaying(string name, GamePhase phase)
     {

@@ -69,13 +69,13 @@ public sealed class EffectGraphValidator
                     Visit(conditional.Effects, depth + 1, jsonDepth + 2, path, diagnostics);
                     diagnostics.Add(new(StepStatus.Unsupported, "effect-support", "Conditional scoring is not implemented."));
                     break;
-                case RetreatEffect or DrawIntrigueEffect:
+                case DrawIntrigueEffect:
                     diagnostics.Add(new(StepStatus.Unsupported, "effect-support", "This sourced lifecycle primitive is not implemented."));
                     break;
                 case UnsupportedEffect unsupported:
                     diagnostics.Add(new(StepStatus.Unsupported, "effect-support", unsupported.Reason));
                     break;
-                case GainEffect or DrawEffect or RecruitEffect or InfluenceEffect or TrashSelfEffect or AcquireEffect or
+                case RetreatEffect or GainEffect or DrawEffect or RecruitEffect or InfluenceEffect or TrashSelfEffect or AcquireEffect or
                     HighCouncilEffect or SwordmasterEffect or HarvestSpiceEffect or SignetEffect:
                     break;
                 default: diagnostics.Add(new(StepStatus.Unsupported, "effect-type", "This effect primitive is unsupported.")); break;

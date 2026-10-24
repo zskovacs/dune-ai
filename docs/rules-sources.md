@@ -178,9 +178,9 @@ No catalog quantities or completeness flags change in this task.
 
 | Definition / policy | Supplied source | Authored behavior and limit | Direct test in `LifecycleDefinitionTests` |
 | --- | --- | --- | --- |
-| Ambush | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7), [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Combat timing; +4 swords through the existing effect resolver. Combat outcome/priority dynamics belong to the next task. | `OfficialAmbushRetainsSourceAndExecutesFourSwordsThroughRealWindow` |
-| Master Tactician | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Complete OR: +3 swords **or** retreat up to 3 own troops. Typed retreat is source authoring only; the entire face stays Unsupported until retreat runtime exists, including its sword alternative. | `CompleteMasterTacticianAndIndependentCornerConditionsStayUnsupported` |
-| Corner the Market | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7) | Two independent +1 VP conditions: own at least 2 The Spice Must Flow; own more than each opponent. Typed conditional scoring remains Unsupported. | `CompleteMasterTacticianAndIndependentCornerConditionsStayUnsupported` |
+| Ambush | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7), [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Combat timing; +4 swords through the existing effect resolver. Strength and priority update through C2; outcome rewards remain unsupported. | `OfficialAmbushRetainsSourceAndExecutesFourSwordsThroughRealWindow` |
+| Master Tactician | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16), [A p.1](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=1) | Complete OR: +3 swords **or** retreat 0..min(3, own deployed troops) to garrison. C2 enables both alternatives through the existing resolver and bounded count choice. | `CombatPriorityTests.AmbushAndMasterTacticianCanBothPlayBeforeFinishingOneOpportunity`, `CombatPriorityTests.MasterTacticianRetreatOffersBoundedCountAndReturnsOnlyOwnTroopsToGarrison` |
+| Corner the Market | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7) | Two independent +1 VP conditions: own at least 2 The Spice Must Flow; own more than each opponent. Typed conditional scoring remains Unsupported. | `CompleteMasterTacticianIsSupportedWhileIndependentCornerConditionsStayUnsupported` |
 | Plot / Calculated Hire | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7) | Calculated Hire's pictured cost is 1 spice. Plot timing is recognized; all Plot play is Unsupported, including Agent/Reveal turns. Any configured Plot entry blocks lifecycle startup. | `PlotAnywhereInEnabledInventoryBlocksStartupWithoutRevealingItsIdentity`, `PlotPlayDuringAgentAndRevealTurnsPreservesRngStateFramesAndHistory` |
 | Demand Respect / To the Victor | [I p.13](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=13) | Timing-only evidence: after a unique Conflict win and before the next phase, with reward/play interleaving permitted. Conflict spice may be taken first, and To the Victor may fund Demand Respect. Complete numeric faces/costs remain unknown, so both are absent from the executable registry. | `PartialSourceRegistryDoesNotInventConflictTiersQuantitiesOrPostWinValues`, `PlotAndUnknownPostWinFacesAreExcludedFromCombatAndEndgameWindows` |
 | Faction threshold-four authoring | [I p.4](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=4), [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16) | Emperor: recruit 2 troops; Guild: 3 Solari; Bene Gesserit: draw 1 Intrigue; Fremen: 1 water. Maximum 6 is explicitly a **visual inference** from seven cells anchored at 0/2/4, not a prose numeral. Faction threshold operations remain Unsupported until their runtime task. | `PartialSourceRegistryDoesNotInventConflictTiersQuantitiesOrPostWinValues` |
@@ -214,7 +214,35 @@ and the migrated `PhaseDecisionTests.LastRevealAutomaticallyOpensCombatWindowWit
 exercise startup and replay through the real actions. Initial Combat/Endgame
 fixtures remain explicit trusted seams with per-play support/timing validation.
 
-Support semantics and official preview authoring revisions are explicitly v4;
-partial lifecycle authoring is v2 after correcting Calculated Hire's cost and
-removing incomplete post-win faces. Serialized state/replay shapes remain v3.
-Previous support revisions, including v3, remain rejected before replay history applies (`LifecycleReplayTests.OlderReplayMetadataFailsValidationBeforeAnyActionsAreApplied`).
+C2 advances support semantics and official preview authoring to v5 and partial
+lifecycle authoring to v3 for runtime retreat and fresh Combat strength markers.
+Serialized state/replay shapes remain v3: the existing effect, decision and action
+records represent bounded retreat without new fields. Previous support revisions,
+including v4, remain rejected before replay history applies
+(`LifecycleReplayTests.OlderReplayMetadataFailsValidationBeforeAnyActionsAreApplied`).
+
+### SLICE-004 C2: Combat opportunities and retreat
+
+| Rule | Supplied source | Implemented behavior / direct tests in `CombatPriorityTests` |
+| --- | --- | --- |
+| Combat opportunities | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Begin at First Player and proceed clockwise among players with troops. Zero eligible seats close; one seat still receives explicit decisions. `PriorityStartsAtFirstPlayerAndWrapsAcrossEligibleSeats` covers 0/1/3/4 participants. |
+| Any number of Combat Intrigues; consecutive passes | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Completed cards keep the opportunity with their player and clear prior no-play passes. Finishing a played opportunity rotates without contributing a no-play pass; a later fresh pass is required even for one seat. Earlier passers may play again. `AmbushAndMasterTacticianCanBothPlayBeforeFinishingOneOpportunity`, `EarlierPasserCanPlayAgainAfterOtherPlayersPlayAndPass`. |
+| Immediate strength adjustment | [I p.11](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=11), [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | Use the shared troop/sword calculator after applied changes, including nested interruption cuts. No troops gives zero strength despite swords; eligibility separately queries original troops. `MasterTacticianRetreatOffersBoundedCountAndReturnsOnlyOwnTroopsToGarrison`, `SyntheticForeignDecisionUsesRecipientTroopsAndRestoresPriorityWithFreshStrength`, `ZeroStrengthTroopsRemainEligibleAndSwordChoiceFiltersAtDerivedStrengthBound`. |
+| Retreat destination and last troop | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16), [A p.1](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=1) | Retreat returns selected own troops to garrison, distinct from later Combat cleanup to supply. On completed-card return, remove ineligible seats and find the next eligible seat clockwise from the actor. `MasterTacticianRetreatOffersBoundedCountAndReturnsOnlyOwnTroopsToGarrison`, `SoleParticipantRetreatClosesAtUnsupportedOutcomeBoundary`. |
+| Intrigue discard and post-win separation | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7), [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12), [I p.13](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=13) | Keep the card publicly resolving until its final child returns, then discard it. Normal Combat windows reject post-win timing. `SyntheticForeignDecisionUsesRecipientTroopsAndRestoresPriorityWithFreshStrength`, `UnsupportedOrUnsafePlayPreservesResourcesZonesRandomFramesWindowAndHistory`. |
+
+Engineering checks additionally replay serialized accepted history at suspended
+choice/frame cuts, compare complete trusted snapshots and each player's legal
+actions, validate retreat counts before mutation, and reject known derived strength
+overflow before card movement or payment. Synthetic role-override tests verify that
+the decision owner chooses the recipient's troop count; the official Master
+Tactician face always binds its own player. They are execution-contract tests,
+not evidence for a new official opponent-targeting effect. Optional decline and
+mandatory-choice reservations retain the P1 bounded analysis; no general solver
+or rollback mechanism is introduced.
+
+Retreat is enabled only for original-troop Combat Intrigues. Combat deployment,
+re-entry, expansion units, unsupported effect graphs, other retreat timings and
+ordinary Agent/Reveal retreat boxes remain gated. Closure still stops at the
+unsupported Conflict outcome boundary; this task does not resolve rewards or
+assert an authentic complete Conflict deck or game.

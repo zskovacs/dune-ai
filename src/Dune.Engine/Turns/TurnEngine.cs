@@ -29,7 +29,7 @@ public sealed class TurnEngine
     private DecisionFrame? Decision => _frames.Count == 0 ? null : _frames[^1].Decision;
     private readonly EffectGraphValidator _graphValidator = new();
     private readonly Dictionary<ImmutableArray<Effect>, ImmutableArray<TurnDiagnostic>> _shapes = [];
-    private readonly Dictionary<(ImmutableArray<Effect> Effects, int Owner, bool Card, bool Board, int Depth), TurnDiagnostic?> _support = [];
+    private readonly Dictionary<(ImmutableArray<Effect> Effects, int Owner, bool Card, bool Board, bool CombatRetreat, int Depth), TurnDiagnostic?> _support = [];
     private readonly HashSet<UsedSpace> _used = [];
     private readonly List<GameAction> _history = [];
     private readonly string _initialHash;
@@ -141,6 +141,8 @@ public sealed class TurnEngine
             {
                 OptionalPaymentEffect => ["Decline", "Pay"],
                 ChoiceEffect choice => [.. choice.Options.Select(x => x.Label)],
+                RetreatEffect retreat => [.. Enumerable.Range(0, RetreatMaximum(retreat, frame.Context) + 1)
+                    .Select(x => $"Retreat {x} troops")],
                 _ => throw new InvalidOperationException("Unknown pending decision."),
             });
         return new(game, effects, decision, LegalActions(playerId));
@@ -229,6 +231,7 @@ public sealed class TurnEngine
             default:
                 throw new InvalidOperationException("Validated unknown action.");
         }
+        RefreshCombatStrength();
         _history.Add(action);
         AssertInvariants();
         return new(StepStatus.Applied, []);
@@ -271,7 +274,12 @@ public sealed class TurnEngine
     {
         if (Decision is { } frame)
         {
-            var count = frame.Effect is ChoiceEffect choice ? choice.Options.Length : 2;
+            var count = frame.Effect switch
+            {
+                ChoiceEffect choice => choice.Options.Length,
+                RetreatEffect retreat => RetreatMaximum(retreat, frame.Context) + 1,
+                _ => 2,
+            };
             for (var i = 0; i < count; i++) yield return new ChooseOptionAction(id, i);
             yield break;
         }
@@ -332,6 +340,9 @@ public sealed class TurnEngine
         {
             if (action is not ChooseOptionAction choose)
                 return Illegal("pending-decision", "Resolve the pending decision first.");
+            if (frame.Effect is RetreatEffect retreat)
+                return choose.Option < 0 || choose.Option > RetreatMaximum(retreat, frame.Context)
+                    ? Illegal("retreat-count", "Retreat exceeds the permitted deployed troop count.") : ValidateRemaining();
             if (frame.Effect is OptionalPaymentEffect && choose.Option == 0) return ValidateRemaining();
             var selected = frame.Effect switch
             {
@@ -437,6 +448,8 @@ public sealed class TurnEngine
                     _frames[0].Continuation.Kind != ExecutionContinuationKind.AgentTurn || _revealing || deploy.Troops < 0 ||
                     deploy.Troops > Math.Min(active.Units.TroopsInGarrison, _recruited + Math.Min(2, _oldGarrison)))
                     return Illegal("deployment", "Deployment exceeds recruits plus at most two old garrison troops.");
+                if (!StrengthFits(active.Temporary.Swords, active.Units.TroopsInConflict + deploy.Troops))
+                    return Content("resource-bounds", "Deployment exceeds Combat strength bounds.");
                 return null;
             case AcquireCardAction acquire:
                 if (!IsRevealRoot || action.PlayerId != active.Id)
@@ -504,10 +517,10 @@ public sealed class TurnEngine
             ValidatePermanentOperations(materialized.Select(x => (x, owner)));
     }
 
-    private TurnDiagnostic? Support(ImmutableArray<Effect> effects, int owner, bool card, bool board, int depth = 0)
+    private TurnDiagnostic? Support(ImmutableArray<Effect> effects, int owner, bool card, bool board, bool combatRetreat = false, int depth = 0)
     {
         if (depth > 32) return Content("effect-cycle", "Effect or acquisition/Signet graph is cyclic or too deep.");
-        var key = (effects, owner, card, board, depth);
+        var key = (effects, owner, card, board, combatRetreat, depth);
         if (_support.TryGetValue(key, out var cached)) return cached;
         var shape = _shapes.TryGetValue(effects, out var known) ? known : _graphValidator.Validate(effects);
         TurnDiagnostic? issue = shape.FirstOrDefault();
@@ -520,17 +533,19 @@ public sealed class TurnEngine
             {
                 TrashSelfEffect when !card => Content("effect-context", "Self-trash requires a source card."),
                 HarvestSpiceEffect when !board => Content("effect-context", "Spice harvest requires a board space."),
-                SequenceEffect sequence => Support(sequence.Effects, owner, card, board, depth + 1),
-                PlayerOrderedEffect ordered => Support(ordered.Effects, owner, card, board, depth + 1),
+                RetreatEffect when !combatRetreat || _rules.Lifecycle?.Participation != CombatParticipationPolicy.OriginalTroops =>
+                    Unsupported("retreat-context", "Retreat is supported only in original troop Combat Intrigues."),
+                SequenceEffect sequence => Support(sequence.Effects, owner, card, board, combatRetreat, depth + 1),
+                PlayerOrderedEffect ordered => Support(ordered.Effects, owner, card, board, combatRetreat, depth + 1),
                 OptionalPaymentEffect optional => ValidateRoles(optional.DecisionOwnerId, optional.PayerId, optional.RecipientId) ??
-                    Support(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, card, board, depth + 1),
-                ChoiceEffect choice => choice.Options.Select(x => Support(x.Effects, owner, card, board, depth + 1)).FirstOrDefault(x => x is not null),
+                    Support(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, card, board, combatRetreat, depth + 1),
+                ChoiceEffect choice => choice.Options.Select(x => Support(x.Effects, owner, card, board, combatRetreat, depth + 1)).FirstOrDefault(x => x is not null),
                 ForPlayerEffect target => ValidateOwner(target.PlayerId) ?? ValidateRoles(target.DecisionOwnerId, target.PayerId, target.RecipientId) ??
-                    Support(target.Effects, target.RecipientId ?? target.PlayerId, card, board, depth + 1),
+                    Support(target.Effects, target.RecipientId ?? target.PlayerId, card, board, combatRetreat, depth + 1),
                 AcquireEffect acquire => !_cards.TryGetValue(acquire.Card, out var rule)
                     ? Unsupported("acquire-effect", "The granted card is unsupported.")
-                    : _cardErrors.GetValueOrDefault(rule.Id) ?? Support(rule.AcquireEffects, owner, true, false, depth + 1),
-                SignetEffect => Support(_leaders[Player(owner).Leader].SignetEffects, owner, card, board, depth + 1),
+                    : _cardErrors.GetValueOrDefault(rule.Id) ?? Support(rule.AcquireEffects, owner, true, false, combatRetreat, depth + 1),
+                SignetEffect => Support(_leaders[Player(owner).Leader].SignetEffects, owner, card, board, combatRetreat, depth + 1),
                 _ => null,
             };
         }
@@ -634,7 +649,8 @@ public sealed class TurnEngine
                     ResourceKind.Swords => player.Temporary.Swords,
                     _ => 0,
                 };
-                if (current + amount > int.MaxValue) return false;
+                if (current + amount > int.MaxValue || key.Resource == ResourceKind.Swords &&
+                    !StrengthFits(current + amount, player.Units.TroopsInConflict)) return false;
             }
             return true;
         }
@@ -1086,8 +1102,8 @@ public sealed class TurnEngine
             }
     }
 
-    private TurnDiagnostic? ValidateContext(IEnumerable<Effect> effects, bool cardSource, bool boardSource, int owner) =>
-        Support(effects.ToImmutableArray(), owner, cardSource, boardSource);
+    private TurnDiagnostic? ValidateContext(IEnumerable<Effect> effects, bool cardSource, bool boardSource, int owner,
+        bool combatRetreat = false) => Support(effects.ToImmutableArray(), owner, cardSource, boardSource, combatRetreat);
 
     private TurnDiagnostic? ValidateWindowAction(GameAction action, DecisionWindowState window)
     {
@@ -1111,7 +1127,8 @@ public sealed class TurnEngine
         if (rule.Timing != timing) return Illegal("intrigue-timing", "This Intrigue cannot be played in the current window.");
         if (ValidateCost(rule.Cost) is { } costError) return costError;
         if (!CanPay(Player(play.PlayerId), rule.Cost)) return Illegal("intrigue-cost", "This Intrigue is unaffordable.");
-        return ValidateContext(rule.Effects, cardSource: true, boardSource: false, play.PlayerId) ??
+        return ValidateContext(rule.Effects, cardSource: true, boardSource: false, play.PlayerId,
+            combatRetreat: window.Kind == DecisionWindowKind.Combat) ??
             Preflight(rule.Effects, play.PlayerId, payments: CostPayments(play.PlayerId, rule.Cost));
     }
 
@@ -1121,6 +1138,7 @@ public sealed class TurnEngine
         if (_lifecycleDefinitionError is not null || _rules.Lifecycle.Participation != CombatParticipationPolicy.OriginalTroops ||
             _rules.Lifecycle.Cleanup != CombatCleanupPolicy.ReturnTroopsToSupply)
             return; // Unsupported lifecycle policy leaves an explicit nonterminal stop.
+        RefreshCombatStrength();
         var kind = _state.Phase == GamePhase.Endgame ? DecisionWindowKind.Endgame : DecisionWindowKind.Combat;
         var eligible = _state.Players.Where(x => kind == DecisionWindowKind.Endgame ||
                 CombatParticipation.IsEligible(_rules.Lifecycle.Participation, CombatUnits(x)))
@@ -1173,6 +1191,26 @@ public sealed class TurnEngine
             _state.Shared.IntrigueResolving.MoveTo(card, _state.Shared.IntrigueDiscard);
         _state.DecisionWindow = window with { SuspendedFrameId = null, ResolvingCardId = null };
         _state.DecisionOwnerId = window.PriorityOwnerId;
+        if (window.Kind == DecisionWindowKind.Combat)
+        {
+            var eligible = window.EligibleSeats.Where(id =>
+                CombatParticipation.IsEligible(_rules.Lifecycle!.Participation, CombatUnits(Player(id)))).ToImmutableArray();
+            if (eligible.IsEmpty)
+            {
+                CloseWindow(_state.DecisionWindow);
+                return;
+            }
+            var owner = eligible.Contains(window.PriorityOwnerId) ? window.PriorityOwnerId : eligible
+                .OrderBy(id => (id - window.PriorityOwnerId + _state.Players.Count) % _state.Players.Count).First();
+            _state.DecisionWindow = _state.DecisionWindow with
+            {
+                EligibleSeats = eligible,
+                ClockwiseCursor = eligible.IndexOf(owner),
+                PriorityOwnerId = owner,
+                OpportunityPlays = owner == window.PriorityOwnerId ? window.OpportunityPlays : 0,
+            };
+            _state.DecisionOwnerId = owner;
+        }
     }
 
     private void PassPriority()
@@ -1305,6 +1343,9 @@ public sealed class TurnEngine
             case ChoiceEffect choice:
                 _frames[^1] = _frames[^1] with { Decision = new(choice, context) };
                 break;
+            case RetreatEffect retreat:
+                _frames[^1] = _frames[^1] with { Decision = new(retreat, context) };
+                break;
             case ForPlayerEffect target:
                 PushChild(target.Effects, BindRoles(context, target.DecisionOwnerId ?? target.PlayerId,
                     target.PayerId ?? target.PlayerId, target.RecipientId ?? target.PlayerId), EffectGroupMode.PlayerOrdered);
@@ -1366,6 +1407,14 @@ public sealed class TurnEngine
                 var option = choice.Options[index];
                 Pay(Player(frame.Context.PayerId), option.Cost);
                 PushChild(option.Effects, frame.Context, EffectGroupMode.PlayerOrdered);
+                break;
+            case RetreatEffect:
+                var player = Player(frame.Context.RecipientId);
+                player.Units = player.Units with
+                {
+                    TroopsInConflict = player.Units.TroopsInConflict - index,
+                    TroopsInGarrison = player.Units.TroopsInGarrison + index,
+                };
                 break;
         }
     }
@@ -1624,6 +1673,20 @@ public sealed class TurnEngine
     private IEnumerable<CombatUnitContribution> CombatUnits(PlayerState player) =>
         [new("troop", player.Units.TroopsInConflict, _rules.Strength.TroopStrength)];
 
+    private int RetreatMaximum(RetreatEffect retreat, EffectContext context) =>
+        Math.Min(retreat.Maximum, Player(context.RecipientId).Units.TroopsInConflict);
+
+    private bool StrengthFits(long swords, int troops) =>
+        _rules.Strength.RequiresDeployedUnits && troops == 0 ||
+        (long)troops * _rules.Strength.TroopStrength + swords * _rules.Strength.SwordStrength <= int.MaxValue;
+
+    private void RefreshCombatStrength()
+    {
+        foreach (var player in _state.Players)
+            player.CombatMarker = CombatStrength.Calculate(CombatUnits(player), player.Temporary.Swords,
+                _rules.Strength.SwordStrength, _rules.Strength.RequiresDeployedUnits);
+    }
+
     private TurnDiagnostic? ValidateLifecycleDefinitions(LifecycleRuleSet? lifecycle)
     {
         if (lifecycle is null) return null;
@@ -1697,7 +1760,8 @@ public sealed class TurnEngine
                 if (!_intrigues.TryGetValue(definition.Id, out var rule) || rule.Timing == IntrigueTiming.Plot)
                     return Unsupported("lifecycle-deck-support", "An enabled deck definition is unsupported.");
                 foreach (var player in _state.Players)
-                    if (ValidateContext(rule.Effects, true, false, player.Id) is { } error) return DeckDiagnostic(error);
+                    if (ValidateContext(rule.Effects, true, false, player.Id,
+                        combatRetreat: rule.Timing == IntrigueTiming.Combat) is { } error) return DeckDiagnostic(error);
             }
             else
             {

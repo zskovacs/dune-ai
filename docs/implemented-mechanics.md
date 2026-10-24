@@ -1,4 +1,4 @@
-# SLICE-003 implemented mechanics and support matrix
+# SLICE-003 / SLICE-004 C2 implemented mechanics and support matrix
 
 The original Imperium (2020) turn engine is a **development preview**. No selected
 configuration is authentic complete gameplay or RL-ready. Tests can use explicitly
@@ -8,12 +8,13 @@ synthetic inventory and effects; these do not establish full rules coverage.
 | --- | --- | --- |
 | Setup | Existing Standard competitive 3–4 player recipe; fixed/random assignments | Authentic full inventory and leader setup/abilities incomplete |
 | Round Start | Top Conflict reveal, draw5, empty-deck recycling and seeded shuffle | Real Conflict/leader start triggers need complete supported data |
-| Scheduling | Clockwise, early Reveal, skip Revealed, multi-decision turn | Stops before Combat execution |
+| Scheduling | Clockwise, early Reveal, skip Revealed, multi-decision turn; lifecycle Combat priority | Stops before Conflict outcome/rewards |
 | Agent | Visible-card access, costs first, occupancy, influence and once-per-game restrictions | Only sourced card boxes/spaces; omitted actions diagnosed |
 | Effects | Typed primitive gains, draw, recruit, influence, optional payment/choice, nested owners, acquisition | Unique complex effects and higher faction threshold dependencies gated |
 | Reveal | Hand only, choice of effect order, interleaved purchases, multiple acquisitions, row refill, Reserve, cleanup | Unknown starter/market boxes stay unsupported |
 | Deployment | Finite supply/garrison/Conflict, choose zero through turn recruits plus two old troops | No combat resolution or other unit types |
-| Strength | Two per troop plus swords, zero without troops | No Combat Intrigue or outcome/reward ranking |
+| Strength | Two per troop plus swords, zero without troops; refresh after applied supported effects including nested decisions | No outcome/reward ranking |
+| Combat priority (support v5) | First Player clockwise; repeated plays/passes; Ambush +4 swords; Master Tactician +3 swords or bounded own retreat to garrison; completed-card eligibility refresh | No deployment/re-entry Intrigues, expansion units, post-win window, or authentic complete deck |
 | Privacy | Detached owner/public views; no physical-ID ranges, hidden order, RNG or privileged history | No ML encoding or fixed action vocabulary |
 | Replay | Versioned accepted history, initial factory, pending-context hash and final comparison | Pinned runtime/content/support versions only; no event sourcing |
 
@@ -76,10 +77,14 @@ or leader data blocks progress. It verifies replay of the accepted partial trace
 The command exits successfully when it demonstrates and identifies this expected
 support boundary; an engine/replay defect exits unsuccessfully.
 
-Complete Player Turns and Combat-boundary scheduling are exercised using
-**test-only synthetic effect fixtures**. This is engine verification, not an
-authentic first-round demo. The existing toy command remains a separate invented
+Complete Player Turns, Combat priority, and retreat are exercised using
+**test-only synthetic inventories**, with invented effects confined to resolver
+contract fixtures. This is engine verification, not an authentic first-round demo. The existing toy command remains a separate invented
 game. Neither command authorizes training on incomplete Dune mechanics.
 
 See [rule ledger](rules-sources.md), [turn architecture](architecture/turn-engine.md)
 and [roadmap](roadmap.md) for evidence and remaining work.
+
+The C2 runtime support revision is v5; partial lifecycle authoring is v3. Existing
+serialized v3 state/replay shapes remain, and earlier support semantics reject
+before replay. The ordinary `Create()` preview keeps lifecycle disabled.

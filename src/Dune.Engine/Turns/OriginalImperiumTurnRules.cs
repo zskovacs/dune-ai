@@ -10,14 +10,14 @@ namespace Dune.Engine.Turns;
 /// </summary>
 public static class OriginalImperiumTurnRules
 {
-    public const string Version = "imperium-2020-turn-preview-v4";
+    public const string Version = "imperium-2020-turn-preview-v5";
     private const string Rules = "DUNE_IMPERIUM_Rules_2020_10_26.pdf";
     private const string Aid = "DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf";
 
     public static TurnRuleSet Create() => new(Version, Cards(), Spaces(), []);
 
     /// <summary>Partial source authoring, not a complete inventory or a claim of lifecycle playability.</summary>
-    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v2",
+    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v3",
     [
         new(new("imperium:intrigue:ambush:v1"), IntrigueTiming.Combat, new(),
             [new GainEffect(ResourceKind.Swords, 4)], [new(Rules, 7, "Ambush complete face"), new(Rules, 12, "Combat Intrigue example")]),
@@ -25,7 +25,8 @@ public static class OriginalImperiumTurnRules
             [new ChoiceEffect([
                 new("Gain 3 swords", new(), [new GainEffect(ResourceKind.Swords, 3)]),
                 new("Retreat up to 3 own troops", new(), [new RetreatEffect(3)])])],
-            [new(Rules, 12, "Master Tactician complete OR face; retreat primitive remains unsupported")]),
+            [new(Rules, 12, "Master Tactician complete OR face: 3 swords or retreat up to 3 own troops"),
+             new(Rules, 16, "Retreat returns Conflict troops to garrison"), new(Aid, 1, "Retreat icon")]),
         new(new("imperium:intrigue:corner-the-market:v1"), IntrigueTiming.Endgame, new(),
             [new ConditionalEffect(EndgameCondition.OwnAtLeastTwoSpiceMustFlow, [new GainEffect(ResourceKind.VictoryPoints, 1)]),
              new ConditionalEffect(EndgameCondition.OwnMoreSpiceMustFlowThanEachOpponent, [new GainEffect(ResourceKind.VictoryPoints, 1)])],
