@@ -114,6 +114,8 @@ public sealed class PhaseDecisionTests
     [Theory]
     [InlineData(GamePhase.Combat, IntrigueTiming.Endgame)]
     [InlineData(GamePhase.Endgame, IntrigueTiming.Plot)]
+    [InlineData(GamePhase.Combat, IntrigueTiming.PostWin)]
+    [InlineData(GamePhase.Endgame, IntrigueTiming.PostWin)]
     public void UnsupportedAndWrongTimingIntriguesPreserveEveryTrustedField(GamePhase phase, IntrigueTiming timing)
     {
         var state = WindowState(phase);

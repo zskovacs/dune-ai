@@ -71,8 +71,15 @@ public sealed class LifecycleDefinitionTests
             Assert.Equal(6, x.MaximumInfluence);
             Assert.Contains(x.Sources, source => source.Section.Contains("VISUAL INFERENCE", StringComparison.Ordinal));
         });
-        Assert.All(rules.Intrigues.Where(x => x.Timing is IntrigueTiming.PostWin or IntrigueTiming.Plot),
-            x => Assert.IsType<UnsupportedEffect>(Assert.Single(x.Effects)));
+        Assert.DoesNotContain(rules.Intrigues, x => x.Timing == IntrigueTiming.PostWin);
+        Assert.DoesNotContain(rules.Intrigues, x => x.Id.Value is "imperium:intrigue:demand-respect:v1" or "imperium:intrigue:to-the-victor:v1");
+        Assert.DoesNotContain(rules.Intrigues.SelectMany(x => x.Sources),
+            x => x.Section.Contains("before rewards", StringComparison.OrdinalIgnoreCase));
+        var plot = Assert.Single(rules.Intrigues.Where(x => x.Timing == IntrigueTiming.Plot));
+        Assert.Equal(new ResourceCost(Spice: 1), plot.Cost);
+        Assert.IsType<UnsupportedEffect>(Assert.Single(plot.Effects));
+        Assert.Contains(plot.Sources, x => x.Page == 7 && x.Section.Contains("one-spice cost", StringComparison.Ordinal));
+        Assert.Equal("imperium-2020-lifecycle-authoring-v2", rules.Version);
         Assert.Null(OriginalImperiumTurnRules.Create().Lifecycle);
         var result = new GameInitializer(RulesetComposer.CreateDefault()).Create(new GameConfiguration());
         Assert.False(result.IsSuccess);
@@ -238,15 +245,18 @@ public sealed class LifecycleDefinitionTests
     }
 
     [Theory]
-    [InlineData("calculated-hire", GamePhase.Combat)]
-    [InlineData("demand-respect", GamePhase.Combat)]
-    [InlineData("to-the-victor", GamePhase.Endgame)]
-    public void PlotAndPostWinFacesAreExcludedFromCombatAndEndgameWindows(string name, GamePhase phase)
+    [InlineData("calculated-hire", GamePhase.Combat, StepStatus.Illegal)]
+    [InlineData("demand-respect", GamePhase.Combat, StepStatus.Unsupported)]
+    [InlineData("to-the-victor", GamePhase.Endgame, StepStatus.Unsupported)]
+    public void PlotAndUnknownPostWinFacesAreExcludedFromCombatAndEndgameWindows(string name, GamePhase phase, StepStatus expected)
     {
         var state = OfficialIntrigueState(name);
         state.Phase = phase;
-        var engine = new TurnEngine(state, Rules(state) with { Lifecycle = OriginalImperiumTurnRules.CreateLifecycleRules() with { Factions = [] } });
-        AssertRejectedUnchanged(engine, new PlayIntrigueAction(0, Card(state.Players[0].Intrigue.Cards.Single())), StepStatus.Illegal);
+        var lifecycle = OriginalImperiumTurnRules.CreateLifecycleRules();
+        if (expected == StepStatus.Unsupported)
+            Assert.DoesNotContain(lifecycle.Intrigues, x => x.Id.Value == "imperium:intrigue:" + name + ":v1");
+        var engine = new TurnEngine(state, Rules(state) with { Lifecycle = lifecycle with { Factions = [] } });
+        AssertRejectedUnchanged(engine, new PlayIntrigueAction(0, Card(state.Players[0].Intrigue.Cards.Single())), expected);
         Assert.DoesNotContain(engine.LegalActions(0), x => x is PlayIntrigueAction);
     }
 
@@ -354,12 +364,17 @@ public sealed class LifecycleDefinitionTests
     private static GameState OfficialIntrigueState(string name)
     {
         var replacementId = OriginalImperiumFixture.Catalog.Definitions.First(x => x.Category == ContentCategory.IntrigueCard).Id;
+        var timingOnly = name is "demand-respect" or "to-the-victor";
+        var sourcePage = timingOnly ? 13 : name == "master-tactician" ? 12 : 7;
+        var sourceSection = timingOnly
+            ? "Timing-only identity; synthetic one-copy rejection inventory, not a complete numeric face"
+            : "Illustrated Intrigue face; synthetic one-copy test inventory, not official multiplicity";
         var catalog = new ContentCatalog(OriginalImperiumFixture.Catalog.Definitions.Select(x => x.Id == replacementId
             ? x with
             {
                 Id = new("imperium:intrigue:" + name + ":v1"),
                 Name = name,
-                Sources = [new("DUNE_IMPERIUM_Rules_2020_10_26.pdf", 7, "Illustrated Intrigue face")]
+                Sources = [new("DUNE_IMPERIUM_Rules_2020_10_26.pdf", sourcePage, sourceSection)]
             } : x));
         var configuration = OriginalImperiumFixture.Configuration(3);
         var composer = new RulesetComposer(catalog);

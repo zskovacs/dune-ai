@@ -17,7 +17,7 @@ public static class OriginalImperiumTurnRules
     public static TurnRuleSet Create() => new(Version, Cards(), Spaces(), []);
 
     /// <summary>Partial source authoring, not a complete inventory or a claim of lifecycle playability.</summary>
-    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v1",
+    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v2",
     [
         new(new("imperium:intrigue:ambush:v1"), IntrigueTiming.Combat, new(),
             [new GainEffect(ResourceKind.Swords, 4)], [new(Rules, 7, "Ambush complete face"), new(Rules, 12, "Combat Intrigue example")]),
@@ -30,14 +30,8 @@ public static class OriginalImperiumTurnRules
             [new ConditionalEffect(EndgameCondition.OwnAtLeastTwoSpiceMustFlow, [new GainEffect(ResourceKind.VictoryPoints, 1)]),
              new ConditionalEffect(EndgameCondition.OwnMoreSpiceMustFlowThanEachOpponent, [new GainEffect(ResourceKind.VictoryPoints, 1)])],
             [new(Rules, 7, "Corner the Market complete face: two independent VP conditions")]),
-        new(new("imperium:intrigue:calculated-hire:v1"), IntrigueTiming.Plot, new(),
-            [new UnsupportedEffect("Plot play is not implemented.")], [new(Rules, 7, "Calculated Hire Plot timing; no runtime support")]),
-        new(new("imperium:intrigue:demand-respect:v1"), IntrigueTiming.PostWin, new(),
-            [new UnsupportedEffect("Complete numeric face is not established by the supplied source.")],
-            [new(Rules, 13, "Demand Respect played after winning a Conflict, before rewards")]),
-        new(new("imperium:intrigue:to-the-victor:v1"), IntrigueTiming.PostWin, new(),
-            [new UnsupportedEffect("Complete numeric face is not established by the supplied source.")],
-            [new(Rules, 13, "To the Victor played after winning a Conflict, before rewards")]),
+        new(new("imperium:intrigue:calculated-hire:v1"), IntrigueTiming.Plot, new(Spice: 1),
+            [new UnsupportedEffect("Plot play is not implemented.")], [new(Rules, 7, "Calculated Hire pictured one-spice cost and Plot timing; no runtime support")]),
     ], Conflicts: [], Factions:
     [
         FactionDefinition(Faction.Emperor, [new RecruitEffect(2)]),
