@@ -12,6 +12,12 @@ Complete gameplay and training remain roadmap work.
 The design favors correctness, reproducibility and clear ownership before
 throughput optimizations.
 
+SLICE-003.5 adds an [ability/decision architecture audit](architecture/ability-decision-audit.md),
+[proposed execution design and next-slice plans](architecture/ability-execution-design.md),
+[sourced complex-mechanic case studies](architecture/complex-ability-case-studies.md),
+and [external-review handoff](handoffs/SLICE-003.5-result.md). These are assessments
+and proposals; Combat and the comprehensive catalog audit remain unimplemented.
+
 ```mermaid
 flowchart LR
     E[Dune.Engine: contracts + Toy] --> S[Dune.Simulation: agents + runners]

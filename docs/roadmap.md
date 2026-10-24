@@ -44,6 +44,15 @@ gate remains: audit full card/Conflict inventories, obscured starting effects,
 remaining leaders and passive/Signet/setup contracts. No missing effect receives a
 substitute. The original+Ix+Immortality complete-game target remains unchanged.
 
+## SLICE-003.5 — ability and decision architecture audit
+
+Documentation-only assessment of actual effect/decision capabilities, KH, Combat
+Intrigue, Graft and representative expansion interactions. The
+[audit](architecture/ability-decision-audit.md), [proposed ADR 0006](adr/0006-ability-and-decision-execution.md),
+and [self-contained handoff](handoffs/SLICE-003.5-result.md) prepare the next slices.
+No gameplay support is added. Combat requires explicit causal continuations,
+decision-role context and phase-aware priority windows before reward/cleanup work.
+
 ## SLICE-004 — phase completion and content gates
 
 Resolve the outstanding source evidence and implement at least one complete
@@ -54,6 +63,21 @@ and full-game termination/ranking with explicit supported content. Extend replay
 and privacy tests across these phase boundaries. Higher faction threshold bonuses,
 alliances and remaining base spaces/cards need complete sourced implementations;
 no expansion mechanic or training algorithm should be used to bypass those gates.
+
+Divide implementation into the architecture-specific prerequisites and bounded
+Combat/round/endgame tasks in
+the [preparation plan](architecture/ability-execution-design.md#slice-004-preparation-plan-combat-round-completion-and-endgame).
+
+## SLICE-004.5 — card catalog and ability coverage audit
+
+After SLICE-004 establishes actual timing/reward/result contracts, reconcile sourced
+inventories and classify each executable box, ability capability and interaction.
+Keep source/evidence, metadata completeness and implementation status separate.
+Reuse SLICE-003.5's API map/capability matrix/case studies; audit the implementation
+delta and catalog coverage instead of repeating the architecture audit. Follow the
+[preparation plan](architecture/ability-execution-design.md#slice-0045-preparation-plan-catalog-and-ability-coverage-audit)
+for fields, gaps, batching and exclusions. No comprehensive catalog audit is included
+in SLICE-003.5.
 
 ## Complete-game target
 

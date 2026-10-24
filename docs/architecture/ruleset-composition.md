@@ -99,7 +99,7 @@ support scope fail rather than extrapolating from these examples.
 
 ## Fingerprint contract
 
-Fingerprint format v1 uses SHA-256 over canonical UTF-8 JSON. Inputs include the
+Fingerprint format v2 uses SHA-256 over canonical UTF-8 JSON. Inputs include the
 semantic configuration/profile, leader policy parameters, module IDs/revisions,
 selected content metadata, final setup definitions and source/override history.
 Set-like arrays and mappings use ordinal stable ordering; meaningful player order

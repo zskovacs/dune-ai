@@ -132,10 +132,11 @@ must never enter player observations or policy logs.
 Replay is scoped to the recorded engine/setup schema, ruleset/content identity and
 pinned runtime implementation. **Cross-runtime replay is not promised.** Changes
 to draws, pool ordering, IDs or canonicalization require version review. The v2
-ruleset fingerprint intentionally differs from SLICE-001 v1. Future action-history
-replay will rebuild setup from its identities and both seeds, reject incompatible
-versions, then apply ordered validated actions. There is no event store, database,
-full restore/import format or gameplay replay in this slice.
+ruleset fingerprint intentionally differs from SLICE-001 v1. SLICE-003's
+`TurnEngine.Replay` now rebuilds through a trusted initial-state factory, rejects
+incompatible identities/versions and applies ordered accepted actions, including
+suspended decisions. See [turn replay](turn-engine.md#replay). This does not provide
+an event store, database, full snapshot restore/import or complete-game execution.
 
 ## Verification and performance
 

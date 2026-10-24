@@ -124,3 +124,9 @@ unsupported combinations cannot borrow these base effects automatically.
 This slice establishes ordinary managed baselines. No dependency, allocation
 framework, reflection dispatcher, event-sourcing system or custom PRNG was added.
 See [benchmark report](../benchmarks/slice-003.md) for measured scope and limits.
+
+SLICE-003.5 verifies these extension limits in the
+[ability and decision audit](ability-decision-audit.md). Nested option ownership
+and acquisition priority work today; general causal continuation, Combat priority
+windows, source/recipient role separation and scoped modifiers are proposed in
+[ADR 0006](../adr/0006-ability-and-decision-execution.md), not implemented support.
