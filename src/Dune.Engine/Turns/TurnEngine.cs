@@ -541,13 +541,14 @@ public sealed class TurnEngine
         // These affordable, selected payments happen before all selected and suspended work.
         // Capacity is freed only on the bound payer, independently of each reward recipient.
         AddPayments(totals, payments ?? []);
+        var funding = new Dictionary<(int Owner, ResourceKind Resource), long>(totals);
         foreach (var (effect, owner, payer, space) in materialized) Accumulate([effect], owner, payer, space, totals);
         if (!HasCapacity(totals)) return Content("resource-bounds", "Mandatory gains exceed resource bounds.");
-        if (AmbiguousJointChoices(materialized, totals, materialized.Select(x => (x.Effect, x.Owner))))
-            return Unsupported("choice-joint-ambiguous", "Overlapping mandatory choices require unsupported joint capacity or permanent-upgrade analysis.");
+        if (AmbiguousJointChoices(materialized, totals, materialized.Select(x => (x.Effect, x.Owner)), funding))
+            return Unsupported("choice-joint-ambiguous", "Overlapping mandatory choices require unsupported joint funding, capacity or permanent-upgrade analysis.");
         return materialized.All(x => ChoicesHaveCapacity([x.Effect], x.Owner, x.Payer, x.Space, totals, [],
-            new HashSet<Effect>(ReferenceEqualityComparer.Instance))) ? null :
-            Unsupported("choice-unavailable", "A mandatory choice has no option with provably safe stock, capacity and permanent upgrades.");
+            new HashSet<Effect>(ReferenceEqualityComparer.Instance), funding)) ? null :
+            Unsupported("choice-unavailable", "A mandatory choice has no provably affordable option preserving stock, capacity and permanent upgrades.");
 
         static void AddPayments(Dictionary<(int Owner, ResourceKind Resource), long> target,
             IEnumerable<(int Payer, ResourceKind Resource, int Amount)> costs)
@@ -577,10 +578,13 @@ public sealed class TurnEngine
         }
 
         bool AmbiguousJointChoices(IEnumerable<(Effect Effect, int Owner, int Payer, BoardSpaceId? Space)> entries,
-            Dictionary<(int Owner, ResourceKind Resource), long> amounts, IEnumerable<(Effect Effect, int Owner)> mandatoryWork)
+            Dictionary<(int Owner, ResourceKind Resource), long> amounts, IEnumerable<(Effect Effect, int Owner)> mandatoryWork,
+            Dictionary<(int Owner, ResourceKind Resource), long> funds)
         {
             var worst = new Dictionary<(int Owner, ResourceKind Resource), long>(amounts);
             var capacityContributors = new Dictionary<(int Owner, ResourceKind Resource), int>();
+            var paymentWorst = new Dictionary<(int Owner, ResourceKind Resource), long>();
+            var paymentContributors = new Dictionary<(int Owner, ResourceKind Resource), int>();
             var permanentWorst = new Dictionary<(int Owner, bool Swordmaster), int>();
             foreach (var (effect, owner) in mandatoryWork) AccumulatePermanentOperations([effect], owner, permanentWorst);
             var permanentContributors = new Dictionary<(int Owner, bool Swordmaster), int>();
@@ -590,11 +594,16 @@ public sealed class TurnEngine
                 if (HasFreeEmptyOption(choice)) continue;
                 var maxima = new Dictionary<(int Owner, ResourceKind Resource), long>();
                 var permanentMaxima = new Dictionary<(int Owner, bool Swordmaster), int>();
+                var paymentMaxima = new Dictionary<(int Owner, ResourceKind Resource), long>();
                 foreach (var option in choice.Options)
                 {
                     var branch = new Dictionary<(int Owner, ResourceKind Resource), long>();
                     AddPayments(branch, CostPayments(payer, option.Cost));
                     Accumulate(option.Effects, owner, payer, space, branch, true);
+                    var optionPayments = new Dictionary<(int Owner, ResourceKind Resource), long>();
+                    foreach (var (boundPayer, resource, amount) in CostPayments(payer, option.Cost)) optionPayments[(boundPayer, resource)] = amount;
+                    MaximumPayments(option.Effects, owner, payer, optionPayments, mandatoryOnly: true);
+                    foreach (var (key, amount) in optionPayments) paymentMaxima[key] = Math.Max(paymentMaxima.GetValueOrDefault(key), amount);
                     foreach (var (key, amount) in branch) maxima[key] = Math.Max(maxima.GetValueOrDefault(key), amount);
                     var permanentBranch = new Dictionary<(int Owner, bool Swordmaster), int>();
                     AccumulatePermanentOperations(option.Effects, owner, permanentBranch, true);
@@ -605,12 +614,18 @@ public sealed class TurnEngine
                     capacityContributors[key] = capacityContributors.GetValueOrDefault(key) + 1;
                     worst[key] = worst.GetValueOrDefault(key) + amount;
                 }
+                foreach (var (key, amount) in paymentMaxima.Where(x => x.Value > 0))
+                {
+                    paymentContributors[key] = paymentContributors.GetValueOrDefault(key) + 1;
+                    paymentWorst[key] = paymentWorst.GetValueOrDefault(key) + amount;
+                }
                 foreach (var (key, amount) in permanentMaxima)
                 {
                     permanentContributors[key] = permanentContributors.GetValueOrDefault(key) + 1;
                     permanentWorst[key] = permanentWorst.GetValueOrDefault(key) + amount;
                 }
             }
+            if (paymentContributors.Any(x => x.Value > 1 && CashAvailable(x.Key, funds) < paymentWorst[x.Key])) return true;
             if (capacityContributors.Any(x => x.Value > 1 && !HasCapacity(new() { [x.Key] = worst[x.Key] }))) return true;
             return permanentContributors.Any(x => x.Value > 1 && permanentWorst[x.Key] >
                 (x.Key.Swordmaster ? Player(x.Key.Owner).Units.UnacquiredSwordmasters : Player(x.Key.Owner).HasHighCouncilSeat ? 0 : 1));
@@ -639,20 +654,23 @@ public sealed class TurnEngine
 
         bool ChoicesHaveCapacity(IEnumerable<Effect> effects, int owner, int payer, BoardSpaceId? space,
             Dictionary<(int Owner, ResourceKind Resource), long> amounts, ImmutableArray<(Effect Effect, int Owner)> selectedWork,
-            HashSet<Effect> selectedChoices)
+            HashSet<Effect> selectedChoices, Dictionary<(int Owner, ResourceKind Resource), long> funds)
         {
             foreach (var effect in effects)
             {
                 var available = effect switch
                 {
-                    SequenceEffect sequence => ChoicesHaveCapacity(sequence.Effects, owner, payer, space, amounts, selectedWork, selectedChoices),
-                    PlayerOrderedEffect ordered => ChoicesHaveCapacity(ordered.Effects, owner, payer, space, amounts, selectedWork, selectedChoices),
+                    SequenceEffect sequence => SequenceHasCapacity(sequence.Effects, owner, payer, space, amounts, selectedWork, selectedChoices, funds),
+                    PlayerOrderedEffect ordered => ChoicesHaveCapacity(ordered.Effects, owner, payer, space, amounts, selectedWork, selectedChoices, funds),
                     ForPlayerEffect player => ChoicesHaveCapacity(player.Effects, player.RecipientId ?? player.PlayerId,
-                        player.PayerId ?? player.PlayerId, space, amounts, selectedWork, selectedChoices),
-                    AcquireEffect acquire => ChoicesHaveCapacity(_cards[acquire.Card].AcquireEffects, owner, payer, null, amounts, selectedWork, selectedChoices),
-                    SignetEffect => ChoicesHaveCapacity(_leaders[Player(owner).Leader].SignetEffects, owner, payer, space, amounts, selectedWork, selectedChoices),
+                        player.PayerId ?? player.PlayerId, space, amounts, selectedWork, selectedChoices, funds),
+                    AcquireEffect acquire => ChoicesHaveCapacity(_cards[acquire.Card].AcquireEffects, owner, payer, null, amounts, selectedWork, selectedChoices, funds),
+                    SignetEffect => ChoicesHaveCapacity(_leaders[Player(owner).Leader].SignetEffects, owner, payer, space, amounts, selectedWork, selectedChoices, funds),
                     ChoiceEffect choice => choice.Options.Any(option =>
                     {
+                        if (!CanFund(payer, option.Cost, funds)) return false;
+                        var branchFunding = new Dictionary<(int Owner, ResourceKind Resource), long>(funds);
+                        AddPayments(branchFunding, CostPayments(payer, option.Cost));
                         var branch = new Dictionary<(int Owner, ResourceKind Resource), long>(amounts);
                         AddPayments(branch, CostPayments(payer, option.Cost));
                         Accumulate(option.Effects, owner, payer, space, branch);
@@ -661,14 +679,108 @@ public sealed class TurnEngine
                         var mandatoryWork = materialized.Select(x => (x.Effect, x.Owner)).Concat(branchWork).ToArray();
                         return HasCapacity(branch) && ValidateAcquisitionStock(mandatoryWork, consumed, branchChoices) is null &&
                             ValidatePermanentOperations(mandatoryWork) is null &&
-                            !AmbiguousJointChoices(option.Effects.Select(x => (x, owner, payer, space)), branch, mandatoryWork) &&
-                            ChoicesHaveCapacity(option.Effects, owner, payer, space, branch, branchWork, branchChoices);
+                            !AmbiguousJointChoices(option.Effects.Select(x => (x, owner, payer, space)), branch, mandatoryWork, branchFunding) &&
+                            ChoicesHaveCapacity(option.Effects, owner, payer, space, branch, branchWork, branchChoices, branchFunding);
                     }),
                     _ => true,
                 };
                 if (!available) return false;
             }
             return true;
+        }
+
+        long CurrentCash((int Owner, ResourceKind Resource) key) => key.Resource switch
+        {
+            ResourceKind.Solari => Player(key.Owner).Resources.Solari,
+            ResourceKind.Spice => Player(key.Owner).Resources.Spice,
+            ResourceKind.Water => Player(key.Owner).Resources.Water,
+            _ => 0,
+        };
+
+        long CashAvailable((int Owner, ResourceKind Resource) key, Dictionary<(int Owner, ResourceKind Resource), long> funds) =>
+            CurrentCash(key) + funds.GetValueOrDefault(key);
+
+        bool CanFund(int payer, ResourceCost cost, Dictionary<(int Owner, ResourceKind Resource), long> funds) =>
+            CashAvailable((payer, ResourceKind.Solari), funds) >= cost.Solari &&
+            CashAvailable((payer, ResourceKind.Spice), funds) >= cost.Spice &&
+            CashAvailable((payer, ResourceKind.Water), funds) >= cost.Water;
+
+        bool SequenceHasCapacity(ImmutableArray<Effect> effects, int owner, int payer, BoardSpaceId? space,
+            Dictionary<(int Owner, ResourceKind Resource), long> amounts, ImmutableArray<(Effect Effect, int Owner)> selectedWork,
+            HashSet<Effect> selectedChoices, Dictionary<(int Owner, ResourceKind Resource), long> funds)
+        {
+            var prefix = new Dictionary<(int Owner, ResourceKind Resource), long>(funds);
+            var creditIncome = true;
+            foreach (var effect in effects)
+            {
+                if (!ChoicesHaveCapacity([effect], owner, payer, space, amounts, selectedWork, selectedChoices, prefix)) return false;
+                var suspends = MaySuspend(effect);
+                ProjectCompleted(effect, owner, payer, prefix, creditIncome && !suspends);
+                if (suspends) creditIncome = false;
+            }
+            return true;
+        }
+
+        bool MaySuspend(Effect effect) => effect switch
+        {
+            SequenceEffect sequence => sequence.Effects.Any(MaySuspend),
+            ChoiceEffect or OptionalPaymentEffect or ForPlayerEffect or PlayerOrderedEffect or AcquireEffect or SignetEffect => true,
+            _ => false,
+        };
+
+        void ProjectCompleted(Effect effect, int owner, int payer,
+            Dictionary<(int Owner, ResourceKind Resource), long> funds, bool creditIncome)
+        {
+            if (creditIncome && effect is SequenceEffect sequence)
+            {
+                foreach (var child in sequence.Effects) ProjectCompleted(child, owner, payer, funds, true);
+                return;
+            }
+            if (creditIncome && effect is GainEffect { Resource: ResourceKind.Solari or ResourceKind.Spice or ResourceKind.Water } gain)
+            {
+                var key = (owner, gain.Resource);
+                funds[key] = funds.GetValueOrDefault(key) + gain.Amount;
+                return;
+            }
+            // Only uninterrupted automatic Sequence prefixes supply guaranteed income. Following a
+            // decision/child boundary, bound possible spending and gate funding that requires more ordering.
+            var expenses = new Dictionary<(int Owner, ResourceKind Resource), long>();
+            MaximumPayments([effect], owner, payer, expenses);
+            foreach (var (key, amount) in expenses)
+                funds[key] = Math.Max(0, CashAvailable(key, funds) - amount) - CurrentCash(key);
+        }
+
+        void MaximumPayments(IEnumerable<Effect> effects, int owner, int payer,
+            Dictionary<(int Owner, ResourceKind Resource), long> target, bool mandatoryOnly = false)
+        {
+            foreach (var effect in effects)
+            {
+                switch (effect)
+                {
+                    case ChoiceEffect choice when !mandatoryOnly || !HasFreeEmptyOption(choice):
+                        var maxima = new Dictionary<(int Owner, ResourceKind Resource), long>();
+                        foreach (var option in choice.Options)
+                        {
+                            var branch = new Dictionary<(int Owner, ResourceKind Resource), long>();
+                            foreach (var (boundPayer, resource, amount) in CostPayments(payer, option.Cost)) branch[(boundPayer, resource)] = amount;
+                            MaximumPayments(option.Effects, owner, payer, branch, mandatoryOnly);
+                            foreach (var (key, amount) in branch) maxima[key] = Math.Max(maxima.GetValueOrDefault(key), amount);
+                        }
+                        foreach (var (key, amount) in maxima) target[key] = target.GetValueOrDefault(key) + amount;
+                        break;
+                    case OptionalPaymentEffect optional when !mandatoryOnly:
+                        var optionalPayer = optional.PayerId ?? optional.DecisionOwnerId ?? payer;
+                        foreach (var (boundPayer, resource, amount) in CostPayments(optionalPayer, optional.Cost))
+                            target[(boundPayer, resource)] = target.GetValueOrDefault((boundPayer, resource)) + amount;
+                        MaximumPayments(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, optionalPayer, target);
+                        break;
+                    case SequenceEffect sequence: MaximumPayments(sequence.Effects, owner, payer, target, mandatoryOnly); break;
+                    case PlayerOrderedEffect ordered: MaximumPayments(ordered.Effects, owner, payer, target, mandatoryOnly); break;
+                    case ForPlayerEffect player: MaximumPayments(player.Effects, player.RecipientId ?? player.PlayerId, player.PayerId ?? player.PlayerId, target, mandatoryOnly); break;
+                    case AcquireEffect acquire: MaximumPayments(_cards[acquire.Card].AcquireEffects, owner, payer, target, mandatoryOnly); break;
+                    case SignetEffect: MaximumPayments(_leaders[Player(owner).Leader].SignetEffects, owner, payer, target, mandatoryOnly); break;
+                }
+            }
         }
 
         void Accumulate(IEnumerable<Effect> effects, int owner, int payer, BoardSpaceId? space, Dictionary<(int Owner, ResourceKind Resource), long> target, bool includeChoices = false)

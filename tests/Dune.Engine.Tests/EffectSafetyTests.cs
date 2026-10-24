@@ -547,6 +547,177 @@ public sealed class EffectSafetyTests
         Reject(engine, new PlaceAgentAction(0, Card(card), Space("secure-contract")), StepStatus.Unsupported);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SoleUnaffordableChoiceRejectsBeforeEnclosingPlacementOrItsPayment(bool placementCost)
+    {
+        var state = CreateState();
+        state.Players[0].Resources = state.Players[0].Resources with { Water = placementCost ? 1 : 0 };
+        var card = state.Players[0].Deck.Cards[0];
+        var rules = CardEffects(Rules(state), card.Definition, agent:
+            [new ChoiceEffect([new("pay", new(Water: 1), [])])]);
+        if (placementCost) rules = rules with { Spaces = [.. rules.Spaces.Select(x => x.Id == Space("secure-contract") ? x with { Cost = new(Water: 1) } : x)] };
+        var engine = new TurnEngine(state, rules);
+        Apply(engine, new StartRoundAction());
+        Reject(engine, new PlaceAgentAction(0, Card(card), Space("secure-contract")), StepStatus.Unsupported);
+    }
+
+    [Fact]
+    public void MixedAffordableAndUnaffordableChoiceOptionsKeepTheAffordableBranchLegal()
+    {
+        var state = CreateState();
+        state.Players[0].Resources = state.Players[0].Resources with { Water = 0 };
+        var card = state.Players[0].Deck.Cards[0];
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent:
+            [new ChoiceEffect([new("unaffordable", new(Water: 1), []),
+                new("free", new(), [new GainEffect(ResourceKind.Spice, 1)])])]));
+        Apply(engine, new StartRoundAction());
+        Apply(engine, new PlaceAgentAction(0, Card(card), Space("secure-contract")));
+        Resolve(engine, typeof(ChoiceEffect));
+        Reject(engine, new ChooseOptionAction(0, 0), StepStatus.Illegal);
+        Apply(engine, new ChooseOptionAction(0, 1));
+        Assert.Equal(1, state.Players[0].Resources.Spice);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ChoiceAffordabilityUsesTheBoundForeignPayer(bool affordable)
+    {
+        var state = CreateState();
+        state.Players[0].Resources = state.Players[0].Resources with { Water = 5 };
+        state.Players[1].Resources = state.Players[1].Resources with { Water = affordable ? 1 : 0 };
+        var card = state.Players[0].Deck.Cards[0];
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent:
+            [new ForPlayerEffect(0, [new ChoiceEffect([new("pay", new(Water: 1), [new GainEffect(ResourceKind.Spice, 1)])])])
+            { DecisionOwnerId = 2, PayerId = 1 }]));
+        Apply(engine, new StartRoundAction());
+        var place = new PlaceAgentAction(0, Card(card), Space("secure-contract"));
+        if (!affordable) { Reject(engine, place, StepStatus.Unsupported); return; }
+        Apply(engine, place);
+        Resolve(engine, typeof(ForPlayerEffect));
+        Resolve(engine, typeof(ChoiceEffect));
+        Apply(engine, new ChooseOptionAction(2, 0));
+        Assert.Equal(0, state.Players[1].Resources.Water);
+        Assert.Equal(5, state.Players[0].Resources.Water);
+        Assert.Equal(1, state.Players[0].Resources.Spice);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void OnlyAnEarlierAutomaticSequenceGainCanFundTheFollowingChoice(bool gainFirst)
+    {
+        var state = CreateState();
+        state.Players[0].Resources = state.Players[0].Resources with { Water = 0 };
+        var card = state.Players[0].Deck.Cards[0];
+        Effect gain = new GainEffect(ResourceKind.Water, 1);
+        Effect choice = new ChoiceEffect([new("pay", new(Water: 1), [])]);
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent:
+            [new SequenceEffect(gainFirst ? [gain, choice] : [choice, gain])]));
+        Apply(engine, new StartRoundAction());
+        var place = new PlaceAgentAction(0, Card(card), Space("secure-contract"));
+        if (!gainFirst) { Reject(engine, place, StepStatus.Unsupported); return; }
+        Apply(engine, place);
+        Resolve(engine, typeof(SequenceEffect));
+        Assert.Equal(1, state.Players[0].Resources.Water);
+        Assert.Contains(new ChooseOptionAction(0, 0), engine.LegalActions(0));
+        Apply(engine, new ChooseOptionAction(0, 0));
+        Assert.Equal(0, state.Players[0].Resources.Water);
+        Assert.Equal(1, engine.CurrentPlayerId);
+    }
+
+    [Fact]
+    public void PlayerOrderedPeerFundingIsExplicitlyUnsupportedBeforePlacement()
+    {
+        var state = CreateState();
+        state.Players[0].Resources = state.Players[0].Resources with { Water = 0 };
+        var card = state.Players[0].Deck.Cards[0];
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent:
+            [new GainEffect(ResourceKind.Water, 1), new ChoiceEffect([new("pay", new(Water: 1), [])])]));
+        Apply(engine, new StartRoundAction());
+        Reject(engine, new PlaceAgentAction(0, Card(card), Space("secure-contract")), StepStatus.Unsupported);
+    }
+
+    [Fact]
+    public void EnclosingOptionalPaymentCannotAlsoFundItsMandatoryChildChoice()
+    {
+        var state = CreateState();
+        var card = state.Players[0].Deck.Cards[0];
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent:
+            [new OptionalPaymentEffect(new(Water: 1), [new ChoiceEffect([new("pay again", new(Water: 1), [])])])]));
+        Apply(engine, new StartRoundAction());
+        Apply(engine, new PlaceAgentAction(0, Card(card), Space("secure-contract")));
+        Resolve(engine, typeof(OptionalPaymentEffect));
+        Reject(engine, new ChooseOptionAction(0, 1), StepStatus.Unsupported);
+        Apply(engine, new ChooseOptionAction(0, 0));
+        Assert.Equal(1, state.Players[0].Resources.Water);
+    }
+
+    [Fact]
+    public void AChoiceRewardCannotFundItsOwnPayment()
+    {
+        var state = CreateState();
+        state.Players[0].Resources = state.Players[0].Resources with { Water = 0 };
+        var card = state.Players[0].Deck.Cards[0];
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent:
+            [new ChoiceEffect([new("refund", new(Water: 1), [new GainEffect(ResourceKind.Water, 1)])])]));
+        Apply(engine, new StartRoundAction());
+        Reject(engine, new PlaceAgentAction(0, Card(card), Space("secure-contract")), StepStatus.Unsupported);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void CompulsoryPaidChoicesMustNotCompeteForTheSameFunds(int water)
+    {
+        var state = CreateState();
+        state.Players[0].Resources = state.Players[0].Resources with { Water = water };
+        var card = state.Players[0].Deck.Cards[0];
+        ChoiceEffect Choice() => new([new("pay", new(Water: 1), [])]);
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent: [Choice(), Choice()]));
+        Apply(engine, new StartRoundAction());
+        var place = new PlaceAgentAction(0, Card(card), Space("secure-contract"));
+        if (water == 1) { Reject(engine, place, StepStatus.Unsupported); return; }
+        Apply(engine, place);
+        Apply(engine, new ResolveEffectAction(0, engine.Observe(0).PendingEffects.First(x => x.Kind == nameof(ChoiceEffect)).Id));
+        Apply(engine, new ChooseOptionAction(0, 0));
+        Resolve(engine, typeof(ChoiceEffect));
+        Apply(engine, new ChooseOptionAction(0, 0));
+        Assert.Equal(0, state.Players[0].Resources.Water);
+    }
+
+    [Fact]
+    public void PaidChoicesWithFreeEmptyAlternativesCanSpendThenDecline()
+    {
+        var state = CreateState();
+        var card = state.Players[0].Deck.Cards[0];
+        ChoiceEffect Choice() => new([new("pay", new(Water: 1), []), new("leave", new(), [])]);
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent: [Choice(), Choice()]));
+        Apply(engine, new StartRoundAction());
+        Apply(engine, new PlaceAgentAction(0, Card(card), Space("secure-contract")));
+        Apply(engine, new ResolveEffectAction(0, engine.Observe(0).PendingEffects.First(x => x.Kind == nameof(ChoiceEffect)).Id));
+        Apply(engine, new ChooseOptionAction(0, 0));
+        Resolve(engine, typeof(ChoiceEffect));
+        Reject(engine, new ChooseOptionAction(0, 0), StepStatus.Illegal);
+        Apply(engine, new ChooseOptionAction(0, 1));
+        Assert.Equal(0, state.Players[0].Resources.Water);
+    }
+
+    [Fact]
+    public void FundingAfterAnEarlierDecisionBoundaryIsExplicitlyUnsupported()
+    {
+        var state = CreateState();
+        state.Players[0].Resources = state.Players[0].Resources with { Water = 0 };
+        var card = state.Players[0].Deck.Cards[0];
+        var engine = new TurnEngine(state, CardEffects(Rules(state), card.Definition, agent:
+            [new SequenceEffect([new OptionalPaymentEffect(new(), []), new GainEffect(ResourceKind.Water, 1),
+                new ChoiceEffect([new("pay", new(Water: 1), [])])])]));
+        Apply(engine, new StartRoundAction());
+        Reject(engine, new PlaceAgentAction(0, Card(card), Space("secure-contract")), StepStatus.Unsupported);
+    }
+
     private static void Resolve(TurnEngine engine, Type effect)
     {
         var owner = engine.DecisionOwnerId!.Value;
