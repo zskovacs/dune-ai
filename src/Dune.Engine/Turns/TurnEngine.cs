@@ -17,7 +17,9 @@ public sealed class TurnEngine
     private readonly Dictionary<ContentId, CardRule> _cards;
     private readonly Dictionary<BoardSpaceId, BoardRule> _spaces;
     private readonly Dictionary<ContentId, LeaderRule> _leaders;
-    private readonly List<PendingEffect> _pending = [];
+    private readonly List<EffectExecutionFrame> _frames = [];
+    private IEnumerable<PendingEffect> Pending => _frames.SelectMany(x => x.Remaining);
+    private ImmutableArray<PendingEffect> CurrentPending => _frames.Count == 0 ? [] : _frames[^1].Remaining;
     private readonly Stack<DecisionFrame> _decisions = [];
     private readonly HashSet<UsedSpace> _used = [];
     private readonly List<GameAction> _history = [];
@@ -26,6 +28,7 @@ public sealed class TurnEngine
     private readonly Dictionary<int, int> _troopTotals;
     private readonly string _rulesIdentity;
     private int _nextEffectId;
+    private int _nextFrameId;
     private bool _revealing;
     private bool _deploying;
     private int _recruited;
@@ -46,9 +49,20 @@ public sealed class TurnEngine
         _rules = rules with
         {
             Cards = [.. rules.Cards.OrderBy(x => x.Id.Value, StringComparer.Ordinal)
-                .Select(x => x with { AcquireEffects = OrEmpty(x.AcquireEffects) })],
-            Spaces = [.. rules.Spaces.OrderBy(x => x.Id.Value, StringComparer.Ordinal)],
-            Leaders = [.. rules.Leaders.OrderBy(x => x.Id.Value, StringComparer.Ordinal)],
+                .Select(x => x with
+                {
+                    Icons = OrEmpty(x.Icons), AgentEffects = Normalize(x.AgentEffects),
+                    RevealEffects = Normalize(x.RevealEffects), AcquireEffects = Normalize(x.AcquireEffects),
+                    Sources = OrEmpty(x.Sources),
+                })],
+            Spaces = [.. rules.Spaces.OrderBy(x => x.Id.Value, StringComparer.Ordinal).Select(x => x with
+            {
+                Effects = Normalize(x.Effects), RevealEffects = Normalize(x.RevealEffects),
+                PlacementOptions = [.. OrEmpty(x.PlacementOptions).Select(o => o with { Effects = Normalize(o.Effects) })],
+                Sources = OrEmpty(x.Sources),
+            })],
+            Leaders = [.. rules.Leaders.OrderBy(x => x.Id.Value, StringComparer.Ordinal)
+                .Select(x => x with { SignetEffects = Normalize(x.SignetEffects) })],
         };
         _cards = _rules.Cards.ToDictionary(x => x.Id);
         _spaces = _rules.Spaces.ToDictionary(x => x.Id);
@@ -72,7 +86,7 @@ public sealed class TurnEngine
     {
         var game = _state.Observe(playerId);
         // Only pending work owned by the viewer is visible. Effect payloads may contain private targets.
-        var effects = _pending.Where(x => x.Context.OwnerId == playerId)
+        var effects = CurrentPending.Where(x => x.Context.OwnerId == playerId)
             .Select(x => new ObservedPendingEffect(x.Id, playerId, x.Effect.GetType().Name)).ToImmutableArray();
         PendingDecisionSummary? decision = null;
         if (_decisions.TryPeek(out var frame) && frame.Context.OwnerId == playerId)
@@ -121,8 +135,7 @@ public sealed class TurnEngine
                 Reveal();
                 break;
             case ResolveEffectAction resolve:
-                var work = _pending.Single(x => x.Id == resolve.EffectId);
-                _pending.Remove(work);
+                var work = Take(resolve.EffectId);
                 Execute(work.Effect, work.Context);
                 ContinueTurn();
                 break;
@@ -138,7 +151,7 @@ public sealed class TurnEngine
                     TroopsInConflict = player.Units.TroopsInConflict + deploy.Troops,
                 };
                 _deploying = false;
-                EndAgentTurn();
+                Resume(PopFrame().Continuation);
                 break;
             case AcquireCardAction acquire:
                 var source = _state.Zones.Single(x => x.Id == acquire.Source);
@@ -146,7 +159,7 @@ public sealed class TurnEngine
                 var rule = _cards[card.Definition];
                 var buyer = Player(acquire.PlayerId);
                 buyer.Temporary = buyer.Temporary with { Persuasion = buyer.Temporary.Persuasion - rule.Cost };
-                Acquire(card, source, buyer);
+                Acquire(card, source, buyer, RootContext(buyer.Id, card.Id, card.Definition, null, EffectProvenance.Acquisition));
                 ContinueTurn();
                 break;
             case EndRevealAction:
@@ -160,12 +173,12 @@ public sealed class TurnEngine
         return new(StepStatus.Applied, []);
     }
 
-    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v1", _rulesIdentity, _initialHash,
-        _state.CaptureTrustedSnapshot().Data, [.. _pending], [.. _decisions], _revealing, _deploying,
+    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v2", _rulesIdentity, _initialHash,
+        _state.CaptureTrustedSnapshot().Data, [.. Pending], [.. _decisions], [.. _frames], _nextFrameId, _revealing, _deploying,
         _recruited, _oldGarrison, _nextEffectId,
         [.. _used.OrderBy(x => x.PlayerId).ThenBy(x => x.Space.Value, StringComparer.Ordinal)], [.. _history]));
 
-    public TurnReplay CaptureReplay() => new("dune-turn-replay-v1",
+    public TurnReplay CaptureReplay() => new("dune-turn-replay-v2",
         typeof(TurnEngine).Assembly.GetName().Version!.ToString(),
         System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
         _rulesIdentity, _state.Definition.Fingerprint, _state.ConfigurationIdentity, _state.ContentIdentity,
@@ -200,33 +213,25 @@ public sealed class TurnEngine
             for (var i = 0; i < count; i++) yield return new ChooseOptionAction(id, i);
             yield break;
         }
-        var acquisitionDepth = _pending.Count == 0 ? 0 : _pending.Max(x => x.Context.AcquisitionDepth);
-        if (acquisitionDepth > 0)
+        if (_frames.Count > 0)
         {
-            foreach (var work in _pending.Where(x => x.Context.OwnerId == id && x.Context.AcquisitionDepth == acquisitionDepth))
+            var current = _frames[^1];
+            if (current.ParentId is null && current.Continuation.Kind == ExecutionContinuationKind.AgentTurn &&
+                _deploying && current.Remaining.IsEmpty)
+            {
+                var max = Math.Min(Player(id).Units.TroopsInGarrison, _recruited + Math.Min(2, _oldGarrison));
+                for (var i = 0; i <= max; i++) yield return new DeployAction(id, i);
+                yield break;
+            }
+            if (IsRevealRoot)
+            {
+                foreach (var zone in PurchaseZones())
+                    foreach (var selector in Selectors(zone))
+                        yield return new AcquireCardAction(id, selector, zone.Id);
+            }
+            foreach (var work in current.Remaining)
                 yield return new ResolveEffectAction(id, work.Id);
-            yield break;
-        }
-        if (_deploying && _pending.Count == 0)
-        {
-            var max = Math.Min(Player(id).Units.TroopsInGarrison, _recruited + Math.Min(2, _oldGarrison));
-            for (var i = 0; i <= max; i++) yield return new DeployAction(id, i);
-            yield break;
-        }
-        if (_revealing)
-        {
-            foreach (var zone in PurchaseZones())
-                foreach (var selector in Selectors(zone))
-                    yield return new AcquireCardAction(id, selector, zone.Id);
-            foreach (var work in _pending.Where(x => x.Context.OwnerId == id))
-                yield return new ResolveEffectAction(id, work.Id);
-            yield return new EndRevealAction(id);
-            yield break;
-        }
-        if (_pending.Count > 0)
-        {
-            foreach (var work in _pending.Where(x => x.Context.OwnerId == id))
-                yield return new ResolveEffectAction(id, work.Id);
+            if (IsRevealRoot) yield return new EndRevealAction(id);
             yield break;
         }
         foreach (var selector in Selectors(Player(id).Hand))
@@ -263,20 +268,19 @@ public sealed class TurnEngine
             return frame.Effect switch
             {
                 OptionalPaymentEffect optional when choose.Option == 0 => null,
-                OptionalPaymentEffect optional when choose.Option == 1 && CanPay(Player(action.PlayerId), optional.Cost) => null,
+                OptionalPaymentEffect optional when choose.Option == 1 && CanPay(Player(frame.Context.PayerId), optional.Cost) => null,
                 ChoiceEffect choice when choose.Option >= 0 && choose.Option < choice.Options.Length &&
-                    CanPay(Player(action.PlayerId), choice.Options[choose.Option].Cost) => null,
+                    CanPay(Player(frame.Context.PayerId), choice.Options[choose.Option].Cost) => null,
                 _ => Illegal("option", "This option is unavailable or unaffordable."),
             };
         }
-        var acquisitionDepth = _pending.Count == 0 ? 0 : _pending.Max(x => x.Context.AcquisitionDepth);
-        if (acquisitionDepth > 0 && (action is not ResolveEffectAction immediate ||
-            !_pending.Any(x => x.Id == immediate.EffectId && x.Context.AcquisitionDepth == acquisitionDepth)))
-            return Illegal("acquire-effects", "Resolve the immediate acquisition effects before continuing suspended work.");
+        if (_frames.Count > 1 && (action is not ResolveEffectAction immediate ||
+            !CurrentPending.Any(x => x.Id == immediate.EffectId)))
+            return Illegal("child-effects", "Complete the current child before continuing suspended work.");
         switch (action)
         {
             case PlaceAgentAction place:
-                if (_pending.Count > 0 || _revealing || _deploying || active.Temporary.HasRevealed ||
+                if (_frames.Count > 0 || _revealing || _deploying || active.Temporary.HasRevealed ||
                     active.Units.AvailableAgents == 0)
                     return Illegal("agent-turn", "An Agent turn is unavailable.");
                 var physical = Find(active.Hand, place.Card);
@@ -301,7 +305,8 @@ public sealed class TurnEngine
                 if (optionError is not null) return optionError;
                 var optionEffects = spaceRule.PlacementOptions.IsEmpty ? [] : spaceRule.PlacementOptions[place.PaymentOption].Effects;
                 var selectedEffects = cardRule.AgentEffects.Concat(spaceRule.Effects).Concat(optionEffects);
-                var contextError = ValidateContext(selectedEffects, cardSource: true, boardSource: true, active.Id);
+                var contextError = ValidateContext(cardRule.AgentEffects, cardSource: true, boardSource: true, active.Id) ??
+                    ValidateContext(spaceRule.Effects.Concat(optionEffects), cardSource: false, boardSource: true, active.Id);
                 if (contextError is not null) return contextError;
                 var issue = Preflight(selectedEffects, active.Id);
                 if (issue is not null) return issue;
@@ -309,7 +314,7 @@ public sealed class TurnEngine
                     return Content("control-reward", "Invalid control reward.");
                 return null;
             case RevealAction:
-                if (_pending.Count > 0 || _deploying || _revealing || active.Temporary.HasRevealed)
+                if (_frames.Count > 0 || _deploying || _revealing || active.Temporary.HasRevealed)
                     return Illegal("reveal", "Reveal is unavailable while another turn is resolving.");
                 var revealEffects = new List<Effect>();
                 foreach (var card in active.Hand.Cards)
@@ -327,16 +332,17 @@ public sealed class TurnEngine
                     }
                 return Preflight(revealEffects, active.Id);
             case ResolveEffectAction resolve:
-                var work = _pending.FirstOrDefault(x => x.Id == resolve.EffectId && x.Context.OwnerId == action.PlayerId);
+                var work = CurrentPending.FirstOrDefault(x => x.Id == resolve.EffectId && x.Context.DecisionOwnerId == action.PlayerId);
                 return work is null ? Illegal("effect", "This pending effect is unavailable.") :
-                    Preflight([work.Effect], work.Context.OwnerId);
+                    Preflight([work.Effect], work.Context.RecipientId);
             case DeployAction deploy:
-                if (!_deploying || _pending.Count > 0 || _revealing || deploy.Troops < 0 ||
+                if (!_deploying || _frames.Count != 1 || !CurrentPending.IsEmpty ||
+                    _frames[0].Continuation.Kind != ExecutionContinuationKind.AgentTurn || _revealing || deploy.Troops < 0 ||
                     deploy.Troops > Math.Min(active.Units.TroopsInGarrison, _recruited + Math.Min(2, _oldGarrison)))
                     return Illegal("deployment", "Deployment exceeds recruits plus at most two old garrison troops.");
                 return null;
             case AcquireCardAction acquire:
-                if (!_revealing || action.PlayerId != active.Id)
+                if (!IsRevealRoot || action.PlayerId != active.Id)
                     return Illegal("acquisition", "Purchases are available only during this player's Reveal.");
                 var source = PurchaseZones().FirstOrDefault(x => x.Id == acquire.Source);
                 var selected = source is null ? null : Find(source, acquire.Card);
@@ -349,12 +355,12 @@ public sealed class TurnEngine
                     return Illegal("persuasion", "Insufficient Persuasion.");
                 return ValidateContext(purchase.AcquireEffects, cardSource: true, boardSource: false, active.Id) ??
                     Preflight(purchase.AcquireEffects, active.Id) ??
-                    ValidateInfluenceBounds(_pending.Select(x => (x.Effect, x.Context.OwnerId))
+                    ValidateInfluenceBounds(Pending.Select(x => (x.Effect, x.Context.RecipientId))
                         .Concat(purchase.AcquireEffects.Select(x => (x, active.Id)))) ??
-                    ValidateAcquisitionStock(_pending.Select(x => (x.Effect, x.Context.OwnerId))
+                    ValidateAcquisitionStock(Pending.Select(x => (x.Effect, x.Context.RecipientId))
                         .Concat(purchase.AcquireEffects.Select(x => (x, active.Id))), selected);
             case EndRevealAction:
-                return !_revealing || _pending.Count != 0 ? Illegal("pending-effects", "Resolve all Reveal effects before ending Reveal.") : null;
+                return !IsRevealRoot || Pending.Any() ? Illegal("pending-effects", "Resolve all Reveal effects before ending Reveal.") : null;
             default:
                 return Illegal("action", "This action is unavailable.");
         }
@@ -400,11 +406,16 @@ public sealed class TurnEngine
                 InfluenceEffect influence when influence.Amount < 0 || !Enum.IsDefined(influence.Faction) => Content("effect", "Invalid influence gain."),
                 InfluenceEffect influence when Influence(Player(owner), influence.Faction) + influence.Amount >= 4 =>
                     Unsupported("alliance-bonus", "The faction alliance bonus is not yet supported."),
+                SequenceEffect sequence => Preflight(sequence.Effects, owner, depth + 1),
+                PlayerOrderedEffect ordered => Preflight(ordered.Effects, owner, depth + 1),
                 OptionalPaymentEffect optional => ValidateCost(optional.Cost) ??
-                    ValidateOwner(optional.DecisionOwnerId ?? owner) ?? Preflight(optional.Effects, optional.DecisionOwnerId ?? owner, depth + 1),
+                    ValidateRoles(optional.DecisionOwnerId, optional.PayerId, optional.RecipientId) ??
+                    Preflight(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, depth + 1),
                 ChoiceEffect choice when choice.Options.IsDefaultOrEmpty => Content("choice", "An effect choice needs options."),
                 ChoiceEffect choice => choice.Options.Select(x => ValidateCost(x.Cost) ?? Preflight(x.Effects, owner, depth + 1)).FirstOrDefault(x => x is not null),
-                ForPlayerEffect target => ValidateOwner(target.PlayerId) ?? Preflight(target.Effects, target.PlayerId, depth + 1),
+                ForPlayerEffect target => ValidateOwner(target.PlayerId) ??
+                    ValidateRoles(target.DecisionOwnerId, target.PayerId, target.RecipientId) ??
+                    Preflight(target.Effects, target.RecipientId ?? target.PlayerId, depth + 1),
                 AcquireEffect acquire when !acquire.AllowEmpty && !PurchaseZones().Any(x => x.Cards.Any(c => c.Definition == acquire.Card)) =>
                     Content("acquire-unavailable", "An effect requires a card absent from the public supplies."),
                 AcquireEffect acquire when !_cards.ContainsKey(acquire.Card) => Unsupported("acquire-effect", "The granted card is unsupported."),
@@ -462,11 +473,17 @@ public sealed class TurnEngine
                     if (!acquire.AllowEmpty) mandatory.Add(acquire.Card);
                     AccumulateAcquisitionDemand(_cards[acquire.Card].AcquireEffects, owner, totals, mandatory, depth + 1);
                     break;
+                case SequenceEffect sequence:
+                    AccumulateAcquisitionDemand(sequence.Effects, owner, totals, mandatory, depth + 1);
+                    break;
+                case PlayerOrderedEffect ordered:
+                    AccumulateAcquisitionDemand(ordered.Effects, owner, totals, mandatory, depth + 1);
+                    break;
                 case OptionalPaymentEffect optional:
-                    AccumulateAcquisitionDemand(optional.Effects, optional.DecisionOwnerId ?? owner, totals, mandatory, depth + 1);
+                    AccumulateAcquisitionDemand(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, totals, mandatory, depth + 1);
                     break;
                 case ForPlayerEffect player:
-                    AccumulateAcquisitionDemand(player.Effects, player.PlayerId, totals, mandatory, depth + 1);
+                    AccumulateAcquisitionDemand(player.Effects, player.RecipientId ?? player.PlayerId, totals, mandatory, depth + 1);
                     break;
                 case SignetEffect:
                     AccumulateAcquisitionDemand(_leaders[Player(owner).Leader].SignetEffects, owner, totals, mandatory, depth + 1);
@@ -497,8 +514,14 @@ public sealed class TurnEngine
                     var key = (owner, influence.Faction);
                     totals[key] = totals.GetValueOrDefault(key) + influence.Amount;
                     break;
+                case SequenceEffect sequence:
+                    AccumulateInfluence(sequence.Effects, owner, totals, depth + 1);
+                    break;
+                case PlayerOrderedEffect ordered:
+                    AccumulateInfluence(ordered.Effects, owner, totals, depth + 1);
+                    break;
                 case OptionalPaymentEffect optional:
-                    AccumulateInfluence(optional.Effects, optional.DecisionOwnerId ?? owner, totals, depth + 1);
+                    AccumulateInfluence(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, totals, depth + 1);
                     break;
                 case ChoiceEffect choice:
                     var maxima = new Dictionary<(int Owner, Faction Faction), long>();
@@ -512,7 +535,7 @@ public sealed class TurnEngine
                     foreach (var (target, amount) in maxima) totals[target] = totals.GetValueOrDefault(target) + amount;
                     break;
                 case ForPlayerEffect player:
-                    AccumulateInfluence(player.Effects, player.PlayerId, totals, depth + 1);
+                    AccumulateInfluence(player.Effects, player.RecipientId ?? player.PlayerId, totals, depth + 1);
                     break;
                 case AcquireEffect acquire:
                     AccumulateInfluence(_cards[acquire.Card].AcquireEffects, owner, totals, depth + 1);
@@ -532,9 +555,14 @@ public sealed class TurnEngine
             {
                 TrashSelfEffect when !cardSource => Content("effect-context", "Self-trash requires a source card."),
                 HarvestSpiceEffect when !boardSource => Content("effect-context", "Spice harvest requires a board space."),
-                OptionalPaymentEffect optional => ValidateContext(optional.Effects, cardSource, boardSource, optional.DecisionOwnerId ?? owner, depth + 1),
+                SequenceEffect sequence => ValidateContext(sequence.Effects, cardSource, boardSource, owner, depth + 1),
+                PlayerOrderedEffect ordered => ValidateContext(ordered.Effects, cardSource, boardSource, owner, depth + 1),
+                OptionalPaymentEffect optional => ValidateRoles(optional.DecisionOwnerId, optional.PayerId, optional.RecipientId) ??
+                    ValidateContext(optional.Effects, cardSource, boardSource, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, depth + 1),
                 ChoiceEffect choice => choice.Options.Select(x => ValidateContext(x.Effects, cardSource, boardSource, owner, depth + 1)).FirstOrDefault(x => x is not null),
-                ForPlayerEffect target => ValidateContext(target.Effects, cardSource, boardSource, target.PlayerId, depth + 1),
+                ForPlayerEffect target => ValidateOwner(target.PlayerId) ??
+                    ValidateRoles(target.DecisionOwnerId, target.PayerId, target.RecipientId) ??
+                    ValidateContext(target.Effects, cardSource, boardSource, target.RecipientId ?? target.PlayerId, depth + 1),
                 AcquireEffect acquire when _cards.TryGetValue(acquire.Card, out var rule) => ValidateContext(rule.AcquireEffects, true, false, owner, depth + 1),
                 SignetEffect => ValidateContext(_leaders[Player(owner).Leader].SignetEffects, cardSource, boardSource, owner, depth + 1),
                 _ => null,
@@ -574,12 +602,14 @@ public sealed class TurnEngine
         _oldGarrison = player.Units.TroopsInGarrison;
         _recruited = 0;
         _deploying = rule.Combat;
-        var context = new EffectContext(player.Id, card.Id, action.Space);
+        var context = RootContext(player.Id, card.Id, card.Definition, action.Space, EffectProvenance.Card);
+        PushFrame([], context, EffectGroupMode.PlayerOrdered, new(ExecutionContinuationKind.AgentTurn, player.Id));
         Enqueue(_cards[card.Definition].AgentEffects, context);
-        Enqueue(rule.Effects, context);
-        if (!rule.PlacementOptions.IsEmpty) Enqueue(rule.PlacementOptions[action.PaymentOption].Effects, context);
+        var boardContext = RootContext(player.Id, null, null, action.Space, EffectProvenance.Board);
+        Enqueue(rule.Effects, boardContext);
+        if (!rule.PlacementOptions.IsEmpty) Enqueue(rule.PlacementOptions[action.PaymentOption].Effects, boardContext);
         if (rule.ControlReward is { } reward && board.ControllerId is { } controller)
-            Enqueue([new GainEffect(reward, 1)], context with { OwnerId = controller });
+            Enqueue([new GainEffect(reward, 1)], boardContext with { RecipientId = controller });
         ContinueTurn();
     }
 
@@ -592,20 +622,22 @@ public sealed class TurnEngine
             HasRevealed = true,
             Persuasion = player.Temporary.Persuasion + (player.HasHighCouncilSeat ? 2 : 0)
         };
+        PushFrame([], RootContext(player.Id, null, null, null, EffectProvenance.Card),
+            EffectGroupMode.PlayerOrdered, new(ExecutionContinuationKind.RevealTurn, player.Id));
         foreach (var card in player.Hand.Cards.ToArray())
         {
             player.Hand.MoveTo(card.Id, player.InPlay);
-            Enqueue(_cards[card.Definition].RevealEffects, new(player.Id, card.Id, null));
+            Enqueue(_cards[card.Definition].RevealEffects, RootContext(player.Id, card.Id, card.Definition, null, EffectProvenance.Card));
         }
         foreach (var space in _state.Board.Spaces.Where(x => x.Occupants.Any(a => a.PlayerId == player.Id)))
             if (_spaces.TryGetValue(space.Definition.Id, out var rule))
-                Enqueue(rule.RevealEffects, new(player.Id, null, space.Definition.Id));
+                Enqueue(rule.RevealEffects, RootContext(player.Id, null, null, space.Definition.Id, EffectProvenance.Board));
         ContinueTurn();
     }
 
     private void Execute(Effect effect, EffectContext context)
     {
-        var player = Player(context.OwnerId);
+        var player = Player(context.RecipientId);
         switch (effect)
         {
             case GainEffect gain:
@@ -630,13 +662,21 @@ public sealed class TurnEngine
                 if (before < 2 && after >= 2) Gain(player, ResourceKind.VictoryPoints, 1);
                 break;
             case OptionalPaymentEffect optional:
-                _decisions.Push(new(optional, context with { OwnerId = optional.DecisionOwnerId ?? context.OwnerId }));
+                _decisions.Push(new(optional, BindRoles(context, optional.DecisionOwnerId,
+                    optional.PayerId, optional.RecipientId)));
                 break;
             case ChoiceEffect choice:
                 _decisions.Push(new(choice, context));
                 break;
             case ForPlayerEffect target:
-                Enqueue(target.Effects, context with { OwnerId = target.PlayerId });
+                PushChild(target.Effects, BindRoles(context, target.DecisionOwnerId ?? target.PlayerId,
+                    target.PayerId ?? target.PlayerId, target.RecipientId ?? target.PlayerId), EffectGroupMode.PlayerOrdered);
+                break;
+            case SequenceEffect sequence:
+                PushChild(sequence.Effects, context, EffectGroupMode.Sequence);
+                break;
+            case PlayerOrderedEffect ordered:
+                PushChild(ordered.Effects, context, EffectGroupMode.PlayerOrdered);
                 break;
             case TrashSelfEffect:
                 if (context.SourceCard is { } id)
@@ -650,7 +690,7 @@ public sealed class TurnEngine
             case AcquireEffect acquire:
                 var source = PurchaseZones().FirstOrDefault(x => x.Cards.Any(c => c.Definition == acquire.Card));
                 if (source is not null) Acquire(source.Cards.First(x => x.Definition == acquire.Card), source, player,
-                    context.AcquisitionDepth + 1);
+                    context);
                 break;
             case HighCouncilEffect:
                 player.HasHighCouncilSeat = true;
@@ -668,7 +708,7 @@ public sealed class TurnEngine
                 board.BonusSpice = 0;
                 break;
             case SignetEffect:
-                Enqueue(_leaders[player.Leader].SignetEffects, context);
+                PushChild(_leaders[player.Leader].SignetEffects, context with { Provenance = EffectProvenance.Signet }, EffectGroupMode.PlayerOrdered);
                 break;
             default:
                 throw new InvalidOperationException("Unsupported effect passed preflight.");
@@ -681,66 +721,138 @@ public sealed class TurnEngine
         switch (frame.Effect)
         {
             case OptionalPaymentEffect optional when index == 1:
-                Pay(Player(frame.Context.OwnerId), optional.Cost);
-                Enqueue(optional.Effects, frame.Context);
+                Pay(Player(frame.Context.PayerId), optional.Cost);
+                PushChild(optional.Effects, frame.Context, EffectGroupMode.PlayerOrdered);
                 break;
             case ChoiceEffect choice:
                 var option = choice.Options[index];
-                Pay(Player(frame.Context.OwnerId), option.Cost);
-                Enqueue(option.Effects, frame.Context);
+                Pay(Player(frame.Context.PayerId), option.Cost);
+                PushChild(option.Effects, frame.Context, EffectGroupMode.PlayerOrdered);
                 break;
         }
     }
 
-    private void Acquire(CardInstance card, CardZone source, PlayerState player, int acquisitionDepth = 1)
+    private void Acquire(CardInstance card, CardZone source, PlayerState player, EffectContext context)
     {
         source.MoveTo(card.Id, player.Discard);
         if (source == _state.Shared.ImperiumRow) _state.Shared.ImperiumDeck.TryDrawTo(source);
-        Enqueue(_cards[card.Definition].AcquireEffects, new(player.Id, card.Id, null, acquisitionDepth));
+        PushChild(_cards[card.Definition].AcquireEffects, context with
+        {
+            SourceCard = card.Id,
+            SourceDefinition = card.Definition,
+            Space = null,
+            Provenance = EffectProvenance.Acquisition,
+        }, EffectGroupMode.PlayerOrdered);
+    }
+
+    private static EffectContext RootContext(int player, CardInstanceId? card, ContentId? definition,
+        BoardSpaceId? space, EffectProvenance provenance) => new(player, player, player, player,
+            card, definition, space, provenance);
+
+    private static EffectContext BindRoles(EffectContext context, int? chooser, int? payer, int? recipient) =>
+        context with
+        {
+            DecisionOwnerId = chooser ?? context.DecisionOwnerId,
+            PayerId = payer ?? chooser ?? context.PayerId,
+            RecipientId = recipient ?? chooser ?? context.RecipientId,
+        };
+
+    private bool IsRevealRoot => _frames.Count == 1 &&
+        _frames[0].Continuation.Kind == ExecutionContinuationKind.RevealTurn;
+
+    private void PushChild(IEnumerable<Effect> effects, EffectContext context, EffectGroupMode mode) =>
+        PushFrame(effects, context, mode, new(ExecutionContinuationKind.ParentFrame));
+
+    private void PushFrame(IEnumerable<Effect> effects, EffectContext context, EffectGroupMode mode,
+        ExecutionContinuation continuation)
+    {
+        var parent = _frames.Count == 0 ? (int?)null : _frames[^1].Id;
+        var id = ++_nextFrameId;
+        _frames.Add(new(id, parent, mode, context.DecisionOwnerId, [], continuation));
+        Enqueue(effects, context);
     }
 
     private void Enqueue(IEnumerable<Effect> effects, EffectContext context)
     {
-        foreach (var effect in effects) _pending.Add(new(++_nextEffectId, effect, context));
+        var frame = _frames[^1];
+        _frames[^1] = frame with
+        {
+            Remaining = frame.Remaining.AddRange(effects.Select(effect =>
+                new PendingEffect(++_nextEffectId, effect, context with { ParentFrameId = frame.Id }))),
+        };
+    }
+
+    private PendingEffect Take(int id)
+    {
+        var frame = _frames[^1];
+        var work = frame.Remaining.Single(x => x.Id == id);
+        _frames[^1] = frame with { Remaining = frame.Remaining.Remove(work) };
+        return work;
+    }
+
+    private EffectExecutionFrame PopFrame()
+    {
+        var frame = _frames[^1];
+        _frames.RemoveAt(_frames.Count - 1);
+        return frame;
+    }
+
+    private void Resume(ExecutionContinuation continuation)
+    {
+        switch (continuation.Kind)
+        {
+            case ExecutionContinuationKind.ParentFrame:
+                if (_frames.Count == 0) throw new InvalidOperationException("A child lost its parent frame.");
+                break;
+            case ExecutionContinuationKind.AgentTurn:
+                if (_state.CurrentPlayerId != continuation.PlayerId)
+                    throw new InvalidOperationException("Agent continuation belongs to a different turn.");
+                EndAgentTurn();
+                break;
+            default:
+                throw new InvalidOperationException("This execution continuation is not implemented.");
+        }
     }
 
     private void ContinueTurn()
     {
-        while (_decisions.Count == 0 && _pending.Count > 0)
+        while (_decisions.Count == 0 && _frames.Count > 0)
         {
-            var depth = _pending.Max(x => x.Context.AcquisitionDepth);
-            var available = _pending.Where(x => x.Context.AcquisitionDepth == depth).ToArray();
-            if (!_revealing && available.Length == _pending.Count &&
-                available.Select(x => x.Context.OwnerId).Distinct().Count() == 1 &&
+            var frame = _frames[^1];
+            if (frame.Remaining.IsEmpty)
+            {
+                if (frame.ParentId is null && (frame.Continuation.Kind == ExecutionContinuationKind.RevealTurn || _deploying))
+                    break;
+                Resume(PopFrame().Continuation);
+                continue;
+            }
+            var available = frame.Remaining;
+            if (frame.Mode == EffectGroupMode.Sequence)
+            {
+                var next = Take(available[0].Id);
+                Execute(next.Effect, next.Context);
+                continue;
+            }
+            if (!IsRevealRoot && available.Select(x => x.Context.RecipientId).Distinct().Count() == 1 &&
                 available.All(x => x.Effect is GainEffect or RecruitEffect or InfluenceEffect or HarvestSpiceEffect))
             {
-                // These same-owner primitives commute; no meaningful ordering decision remains.
+                // These same-recipient primitives commute; no ordering choice remains in this frame.
                 foreach (var commutative in available)
                 {
-                    _pending.Remove(commutative);
+                    Take(commutative.Id);
                     Execute(commutative.Effect, commutative.Context);
                 }
                 continue;
             }
-            if (available.Length != 1 || (depth == 0 && _revealing) ||
+            if (available.Length != 1 || IsRevealRoot ||
                 available[0].Effect is not (GainEffect or DrawEffect or RecruitEffect or InfluenceEffect or
                     HarvestSpiceEffect or HighCouncilEffect or SwordmasterEffect))
                 break;
-            var work = available[0];
-            _pending.Remove(work);
+            var work = Take(available[0].Id);
             Execute(work.Effect, work.Context);
         }
-        if (_decisions.TryPeek(out var frame)) _state.DecisionOwnerId = frame.Context.OwnerId;
-        else if (_pending.Count > 0)
-        {
-            var depth = _pending.Max(x => x.Context.AcquisitionDepth);
-            var available = _pending.Where(x => x.Context.AcquisitionDepth == depth).ToArray();
-            // The highest acquisition frame completes before its suspended parent or Reveal work.
-            _state.DecisionOwnerId = available.Any(x => x.Context.OwnerId == _state.CurrentPlayerId)
-                ? _state.CurrentPlayerId : available[0].Context.OwnerId;
-        }
-        else if (_revealing || _deploying) _state.DecisionOwnerId = _state.CurrentPlayerId;
-        else EndAgentTurn();
+        if (_decisions.TryPeek(out var decision)) _state.DecisionOwnerId = decision.Context.DecisionOwnerId;
+        else if (_frames.Count > 0) _state.DecisionOwnerId = _frames[^1].ChooserId;
     }
 
     private void EndAgentTurn()
@@ -752,6 +864,9 @@ public sealed class TurnEngine
 
     private void EndReveal()
     {
+        var continuation = PopFrame().Continuation;
+        if (continuation.Kind != ExecutionContinuationKind.RevealTurn || continuation.PlayerId != _state.CurrentPlayerId)
+            throw new InvalidOperationException("Reveal continuation belongs to a different turn.");
         var player = Player(_state.CurrentPlayerId!.Value);
         foreach (var zone in new[] { player.InPlay, player.Hand })
             foreach (var card in zone.Cards.ToArray()) zone.MoveTo(card.Id, player.Discard);
@@ -834,6 +949,27 @@ public sealed class TurnEngine
         foreach (var group in zone.Cards.GroupBy(x => x.Definition).OrderBy(x => x.Key.Value, StringComparer.Ordinal))
             for (var i = 0; i < group.Count(); i++) yield return new(group.Key, i);
     }
+    private TurnDiagnostic? ValidateRoles(int? chooser, int? payer, int? recipient) =>
+        (chooser is { } c ? ValidateOwner(c) : null) ??
+        (payer is { } p ? ValidateOwner(p) : null) ??
+        (recipient is { } r ? ValidateOwner(r) : null);
+
+    private static ImmutableArray<Effect> Normalize(ImmutableArray<Effect> effects, int depth = 0)
+    {
+        // Preflight owns the depth diagnostic; normalization must not recurse unboundedly before it.
+        if (depth > 32) return OrEmpty(effects);
+        return [.. OrEmpty(effects).Select(effect => effect switch
+        {
+            SequenceEffect sequence => sequence with { Effects = Normalize(sequence.Effects, depth + 1) },
+            PlayerOrderedEffect ordered => ordered with { Effects = Normalize(ordered.Effects, depth + 1) },
+            OptionalPaymentEffect optional => optional with { Effects = Normalize(optional.Effects, depth + 1) },
+            ForPlayerEffect target => target with { Effects = Normalize(target.Effects, depth + 1) },
+            ChoiceEffect choice => choice with { Options = [.. OrEmpty(choice.Options)
+                .Select(option => option with { Effects = Normalize(option.Effects, depth + 1) })] },
+            _ => effect,
+        })];
+    }
+
     private static ImmutableArray<T> OrEmpty<T>(ImmutableArray<T> values) => values.IsDefault ? [] : values;
     private static TurnDiagnostic Illegal(string code, string message) => new(StepStatus.Illegal, code, message);
     private static TurnDiagnostic Unsupported(string code, string message) => new(StepStatus.Unsupported, code, message);

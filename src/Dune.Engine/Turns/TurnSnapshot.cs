@@ -9,14 +9,10 @@ using Dune.Engine.Setup;
 
 namespace Dune.Engine.Turns;
 
-/// <summary>Positive acquisition depths finish before suspended parent/Reveal effects.</summary>
-public sealed record EffectContext(int OwnerId, CardInstanceId? SourceCard, BoardSpaceId? Space,
-    int AcquisitionDepth = 0);
-public sealed record PendingEffect(int Id, Effect Effect, EffectContext Context);
-public sealed record DecisionFrame(Effect Effect, EffectContext Context);
 public sealed record UsedSpace(int PlayerId, BoardSpaceId Space);
 public sealed record TurnSnapshotData(string Schema, string RulesIdentity, string InitialStateHash, SnapshotData Game,
     ImmutableArray<PendingEffect> Pending, ImmutableArray<DecisionFrame> Decisions,
+    ImmutableArray<EffectExecutionFrame> Frames, int NextFrameId,
     bool Revealing, bool Deploying, int Recruited, int OldGarrison, int NextEffectId,
     ImmutableArray<UsedSpace> UsedSpaces, ImmutableArray<GameAction> Actions);
 /// <summary>Complete trusted turn state. Contains hidden cards, seeds, pending execution and history.</summary>

@@ -118,8 +118,8 @@ public sealed class TurnEngineTests
         Assert.Single(snapshot.Data.Decisions);
         Assert.Equal(1, snapshot.Data.Decisions[0].Context.OwnerId);
         Apply(engine, new ChooseOptionAction(1, 1));
-        // Active-player work and foreign work retain separate contexts.
-        Apply(engine, engine.LegalActions(0).OfType<ResolveEffectAction>().Single());
+        // The foreign child completes before the active player's suspended board gain.
+        Assert.Empty(engine.LegalActions(0));
         Apply(engine, engine.LegalActions(1).OfType<ResolveEffectAction>().Single());
         Assert.Equal(0, engine.CurrentPlayerId);
         Assert.Equal(2, engine.DecisionOwnerId);
@@ -526,18 +526,22 @@ public sealed class TurnEngineTests
         rules = rules with
         {
             Cards = [.. rules.Cards.Select(x => ownCards.Contains(x.Id)
-            ? x with { RevealEffects = [new ForPlayerEffect(1, [new GainEffect(ResourceKind.Water, 1)])] } : x)]
+            ? x with { RevealEffects = [new ForPlayerEffect(1, [new ChoiceEffect([new("gain", new(), [new GainEffect(ResourceKind.Water, 1)])])])] } : x)]
         };
         var engine = new TurnEngine(state, rules);
         Apply(engine, new StartRoundAction());
         Apply(engine, new RevealAction(0));
-        for (var i = 0; i < 5; i++)
-            Apply(engine, engine.LegalActions(0).OfType<ResolveEffectAction>().First());
+        Apply(engine, engine.LegalActions(0).OfType<ResolveEffectAction>().First());
         Assert.Equal(0, engine.CurrentPlayerId);
         Assert.Equal(1, engine.DecisionOwnerId);
         Assert.Empty(engine.LegalActions(0));
         Assert.True(TurnEngine.Replay(engine.CaptureReplay(), () => CreateState(), rules).IsSuccess);
-        ResolveAllEffects(engine);
+        for (var i = 0; i < 5; i++)
+        {
+            Apply(engine, engine.LegalActions(1).OfType<ResolveEffectAction>().Single());
+            Apply(engine, new ChooseOptionAction(1, 0));
+            if (i < 4) Apply(engine, engine.LegalActions(0).OfType<ResolveEffectAction>().First());
+        }
         Assert.Equal(6, state.Players[1].Resources.Water);
         Assert.Equal(0, engine.DecisionOwnerId);
         Assert.Contains(engine.LegalActions(0), x => x is EndRevealAction);
@@ -675,7 +679,7 @@ public sealed class TurnEngineTests
         Apply(engine, new ResolveEffectAction(0, gain.Id));
         var outer = engine.CaptureTrustedSnapshot().Data.Pending.First();
         Apply(engine, new AcquireCardAction(0, Card(market), state.Shared.ImperiumRow.Id));
-        var acquisition = engine.CaptureTrustedSnapshot().Data.Pending.Single(x => x.Context.AcquisitionDepth == 1);
+        var acquisition = engine.CaptureTrustedSnapshot().Data.Frames[^1].Remaining.Single();
         var blockedBuy = new AcquireCardAction(0, Card(state.Shared.ImperiumRow.Cards[0]), state.Shared.ImperiumRow.Id);
         var before = engine.CaptureTrustedSnapshot().Hash;
         Assert.Equal(StepStatus.Illegal, engine.Step(new ResolveEffectAction(0, outer.Id)).Status);
@@ -686,7 +690,8 @@ public sealed class TurnEngineTests
         Assert.All(engine.LegalActions(0), action => Assert.IsType<ChooseOptionAction>(action));
         var replay = TurnEngine.Replay(engine.CaptureReplay(), () => CreateState(), rules);
         Assert.True(replay.IsSuccess);
-        Assert.Equal(1, replay.Engine!.CaptureTrustedSnapshot().Data.Decisions.Single().Context.AcquisitionDepth);
+        var replayed = replay.Engine!.CaptureTrustedSnapshot().Data;
+        Assert.Equal(replayed.Frames[^1].Id, replayed.Decisions.Single().Context.ParentFrameId);
         Apply(engine, new ChooseOptionAction(0, 1));
         Assert.Equal(3, state.Players[0].Resources.Water);
         Assert.Contains(new ResolveEffectAction(0, outer.Id), engine.LegalActions(0));
@@ -711,11 +716,11 @@ public sealed class TurnEngineTests
         Apply(engine, new ResolveEffectAction(0, gain.Id));
         Apply(engine, new AcquireCardAction(0, Card(market), state.Shared.ImperiumRow.Id));
         var immediate = engine.CaptureTrustedSnapshot().Data.Pending.Single(x => x.Effect is AcquireEffect);
-        Assert.Equal(1, immediate.Context.AcquisitionDepth);
+        Assert.Equal(engine.CaptureTrustedSnapshot().Data.Frames[^1].Id, immediate.Context.ParentFrameId);
         Apply(engine, new ResolveEffectAction(0, immediate.Id));
         Assert.Equal(1, state.Players[0].Resources.VictoryPoints);
-        Assert.DoesNotContain(engine.CaptureTrustedSnapshot().Data.Pending, x => x.Context.AcquisitionDepth == 2);
-        var optional = engine.CaptureTrustedSnapshot().Data.Pending.Single(x => x.Context.AcquisitionDepth == 1);
+        Assert.Equal(2, engine.CaptureTrustedSnapshot().Data.Frames.Length);
+        var optional = engine.CaptureTrustedSnapshot().Data.Frames[^1].Remaining.Single();
         Apply(engine, new ResolveEffectAction(0, optional.Id));
         Apply(engine, new ChooseOptionAction(0, 0));
         FinishPlayerTurns(engine);

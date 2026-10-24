@@ -24,16 +24,31 @@ public sealed record ResourceCost(int Solari = 0, int Spice = 0, int Water = 0);
 [JsonDerivedType(typeof(HarvestSpiceEffect), "harvest")]
 [JsonDerivedType(typeof(UnsupportedEffect), "unsupported")]
 [JsonDerivedType(typeof(SignetEffect), "signet")]
+[JsonDerivedType(typeof(SequenceEffect), "sequence")]
+[JsonDerivedType(typeof(PlayerOrderedEffect), "player-ordered")]
 public abstract record Effect;
 public sealed record GainEffect(ResourceKind Resource, int Amount) : Effect;
 public sealed record DrawEffect(int Amount) : Effect;
 public sealed record RecruitEffect(int Amount) : Effect;
 public sealed record InfluenceEffect(Faction Faction, int Amount = 1) : Effect;
+/// <summary>A legacy chooser override also binds payer/recipient unless explicitly overridden.</summary>
 public sealed record OptionalPaymentEffect(ResourceCost Cost, ImmutableArray<Effect> Effects,
-    int? DecisionOwnerId = null) : Effect;
+    int? DecisionOwnerId = null) : Effect
+{
+    public int? PayerId { get; init; }
+    public int? RecipientId { get; init; }
+}
 public sealed record EffectOption(string Label, ResourceCost Cost, ImmutableArray<Effect> Effects);
 public sealed record ChoiceEffect(ImmutableArray<EffectOption> Options) : Effect;
-public sealed record ForPlayerEffect(int PlayerId, ImmutableArray<Effect> Effects) : Effect;
+/// <summary>The target binds all roles by default; each explicit role override replaces that binding.</summary>
+public sealed record ForPlayerEffect(int PlayerId, ImmutableArray<Effect> Effects) : Effect
+{
+    public int? DecisionOwnerId { get; init; }
+    public int? PayerId { get; init; }
+    public int? RecipientId { get; init; }
+}
+public sealed record SequenceEffect(ImmutableArray<Effect> Effects) : Effect;
+public sealed record PlayerOrderedEffect(ImmutableArray<Effect> Effects) : Effect;
 public sealed record TrashSelfEffect : Effect;
 public sealed record SignetEffect : Effect;
 public sealed record AcquireEffect(ContentId Card, bool AllowEmpty = false) : Effect;
