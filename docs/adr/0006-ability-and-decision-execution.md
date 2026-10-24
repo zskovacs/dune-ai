@@ -94,4 +94,4 @@ added. The catalog/leader/Conflict evidence, Plot, holder loss, tied positive
 shared Intrigue draws, contested Mentat and conservative composite-graph gates
 remain explicit. No expansion capability, general trigger framework, unexpected
 exception rollback, authentic complete-game or RL-ready claim follows.
-Task review and final whole-branch review are controller-owned and pending.
+All task reviews are complete. The final whole-branch review is controller-owned and pending.
