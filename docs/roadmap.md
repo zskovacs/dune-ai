@@ -48,25 +48,27 @@ substitute. The original+Ix+Immortality complete-game target remains unchanged.
 
 Documentation-only assessment of actual effect/decision capabilities, KH, Combat
 Intrigue, Graft and representative expansion interactions. The
-[audit](architecture/ability-decision-audit.md), [proposed ADR 0006](adr/0006-ability-and-decision-execution.md),
+[audit](architecture/ability-decision-audit.md), [ADR 0006](adr/0006-ability-and-decision-execution.md),
 and [self-contained handoff](handoffs/SLICE-003.5-result.md) prepare the next slices.
-No gameplay support is added. Combat requires explicit causal continuations,
-decision-role context and phase-aware priority windows before reward/cleanup work.
+That documentation-only slice added no gameplay support. It established the
+causal continuation, role and window prerequisites subsequently implemented by
+SLICE-004 below.
 
-## SLICE-004 — phase completion and content gates
+## SLICE-004 — supported lifecycle implemented; final review pending
 
-Resolve the outstanding source evidence and implement at least one complete
-authentic leader/first-round content path before claiming a playable environment.
-Then add Combat Intrigue priority/pass decisions, strength changes, ties/rewards,
-troop returns, Makers bonus spice, Recall (Agents/cards/First Player), round reset
-and full-game termination/ranking with explicit supported content. Extend replay
-and privacy tests across these phase boundaries. Higher faction threshold bonuses,
-alliances and remaining base spaces/cards need complete sourced implementations;
-no expansion mechanic or training algorithm should be used to bypass those gates.
+Causal frames, explicit roles, phase-aware windows, Combat play/pass/retreat,
+tie rewards, faction prerequisites, PostWin interleaving, control/defense, Makers,
+typed Agent Recall, recurring rounds and immutable Endgame results now use one
+`TurnEngine`. A development-only ten-Conflict synthetic game completes through
+the existing episode runner and verifies replay. Every accepted prefix, invalid
+actions, privacy and concurrent isolation are integration-tested; synthetic
+measurements and retained gates are recorded in the
+[handoff](handoffs/SLICE-004-result.md) and [benchmarks](benchmarks/slice-004.md).
+Controller task/final reviews remain pending.
 
-Divide implementation into the architecture-specific prerequisites and bounded
-Combat/round/endgame tasks in
-the [preparation plan](architecture/ability-execution-design.md#slice-004-preparation-plan-combat-round-completion-and-endgame).
+Authentic initialization remains blocked by missing catalog, leader and Conflict
+evidence. Plot/Alliance-loss/tied shared draws/contested Mentat/composite gates
+remain. No authentic complete-game, expansion gameplay or RL-readiness claim.
 
 ## SLICE-004.5 — card catalog and ability coverage audit
 

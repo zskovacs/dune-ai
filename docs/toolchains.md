@@ -118,3 +118,20 @@ CI uses [the official mise action](https://github.com/jdx/mise-action) with lock
 installation and the same setup/check/smoke tasks. It has no separate SDK/Python
 version matrix and requires no NVIDIA GPU. A remote CI run is possible only after
 the owner connects/pushes the repository; initialization does not do that.
+
+## SLICE-004 lifecycle verification and measurement
+
+```sh
+mise run preview:lifecycle -- --seed 42 --players 3
+mise run preview:lifecycle -- --seed 42 --players 4
+mise run benchmark -- --job Dry --filter '*LifecycleBenchmarks*'
+mise run benchmark -- --job Short --filter '*LifecycleBenchmarks*'
+mise run benchmark -- --job Short --filter '*TurnEngineBenchmarks*'
+```
+
+Run proper measurements sequentially on the same host without simultaneous
+builds/tests/benchmarks. Mutable micro workloads exclude batched checkpoint setup;
+the separately named full synthetic workload includes initialization, composition,
+accepted history and final replay identity hashing. See
+[exact measurement scope/results](benchmarks/slice-004.md). Dry verifies execution
+only. Neither workload establishes authentic full-game throughput.

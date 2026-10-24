@@ -6,7 +6,8 @@ with Rise of Ix and Immortality, competitive 3–4 players. The architecture tar
 deterministic headless simulation, parallel self-play and Python/PyTorch learning.
 
 **Current scope:** SLICE-001 composition, SLICE-002 runtime/setup, SLICE-003
-incremental turn execution and a development-only synthetic lifecycle scenario.
+incremental turn execution and SLICE-004 supported Combat/round/Endgame execution
+with a development-only synthetic lifecycle scenario.
 Authentic Dune initialization remains blocked by incomplete card/leader data.
 The turn preview uses a visibly synthetic inventory and stops on unsupported
 content. The lifecycle preview completes an invented ten-Conflict recipe through
@@ -156,3 +157,9 @@ complete-game target remains **Imperium + Ix + Immortality**.
 See the [roadmap](docs/roadmap.md) and [rule ledger](docs/rules-sources.md).
 Do not commit copyrighted rulebooks/card art, datasets, checkpoints, secrets or
 local experiment output. Contributor/agent conventions live in [AGENTS.md](AGENTS.md).
+
+SLICE-004 integration and synthetic performance evidence are recorded in the
+[complete handoff](docs/handoffs/SLICE-004-result.md) and
+[benchmark report](docs/benchmarks/slice-004.md). Registry definition counts do
+not establish complete inventories. Controller task/final review gates remain
+pending; authentic full-game and RL readiness remain blocked.

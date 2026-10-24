@@ -1,0 +1,248 @@
+# BEGIN SLICE-004 RESULT FOR CHATGPT
+
+## A. Repository State
+
+- Current revision: validation/measurement revision **170a8f21fbce8af435da08673aa087ba5aba3201** on `slice-004-lifecycle`, based on pre-production baseline `3c0229bebcbb3ae7542b15a3b76430e5c7ab745f`; Task 12 began at `bc91a4050abfdce11775017f95461c48acdee5cd`. Documentation/handoff changes follow the measured code revision. This identifies a pre-handoff revision, not this document's own eventual commit SHA. Final task review and whole-branch review remain **pending, controller-owned**. No push, merge or publication performed.
+- Completed stages: P1 causal frames/roles; P2 phase windows; C1 partial sourced lifecycle definitions; C2 Combat opportunities; C3 faction prerequisites/outcomes/rewards/control; L1 recurring rounds; L2 Endgame/result; V1a synthetic runner/CLI. Their eleven task gates were reviewed. V1b integration/benchmark/check evidence is below; V1 final review gate remains pending.
+- Files created or modified: grouped by actual repository paths in the branch file list below. No dependency/tool pin/lock changes in Task 12. The old bounded preview and separate Toy remain operational.
+- Architecture/ADR changes: ADR 0006 accepts the existing resolver's causal frame/role/window extension for the implemented original-base subset. Current architecture, runtime/mechanics, source ledger and roadmap record that subset and its gates. SLICE-003.5 remains historical; only a status delta notice was added. No SLICE-004.5 audit/schema/catalog implementation occurred.
+- Supported game configurations: original Imperium (2020), Standard competitive 3 or 4 seats for the documented supported operations. `RulesetComposer` metadata validation and `GameInitializer` authentic readiness are separate: no authentic full-game configuration is playable. Expansions, other formats and training are outside this slice.
+- Development-only scenarios: `tests/Fixtures/LifecycleFixture.cs` supplies the selected ten-Conflict synthetic recipe, invented main card/Intrigue/reward effects and blank `LeaderRule(..., Synthetic: true)` placeholders; `LifecycleFixtureGame` and `LifecycleFixtureAgent` use the existing `EpisodeRunner`. Source-backed original board-space definitions and supported reserve rules are reused. The unsupported Foldspace copies are replaced by six visibly synthetic reserve copies with rebuilt content/configuration/recipe/fingerprint identities. This is not a pruned authentic deck. The selected ten cards come from an eighteen-definition synthetic Conflict pool.
+- Known limitations: incomplete authentic inventory, starter boxes, leaders, official Conflict classifications/quantities/rewards, unknown PostWin numeric faces, Plot, board gaps, reserve self-trash routing and interaction gates listed below. No authentic complete-game, RL-ready or authentic throughput claim.
+
+
+Branch file list (relative to the pre-production baseline):
+
+- `README.md`
+- `benchmarks/Dune.Benchmarks/Dune.Benchmarks.csproj`
+- `benchmarks/Dune.Benchmarks/LifecycleBenchmarks.cs`
+- `docs/adr/0006-ability-and-decision-execution.md`
+- `docs/architecture.md`
+- `docs/architecture/ability-decision-audit.md`
+- `docs/architecture/ability-execution-design.md`
+- `docs/architecture/runtime-state.md`
+- `docs/architecture/turn-engine.md`
+- `docs/benchmarks/slice-004.md`
+- `docs/handoffs/SLICE-004-result.md`
+- `docs/implemented-mechanics.md`
+- `docs/roadmap.md`
+- `docs/rules-sources.md`
+- `docs/superpowers/plans/2026-10-24-slice-004.md`
+- `docs/superpowers/specs/2026-10-24-slice-004-design.md`
+- `docs/toolchains.md`
+- `mise.toml`
+- `src/Dune.Cli/CliApplication.cs`
+- `src/Dune.Cli/CliLog.cs`
+- `src/Dune.Cli/Dune.Cli.csproj`
+- `src/Dune.Cli/LifecyclePreviewCommand.cs`
+- `src/Dune.Cli/ToyCommand.cs`
+- `src/Dune.Cli/TurnPreviewCommand.cs`
+- `src/Dune.Engine/Properties/AssemblyInfo.cs`
+- `src/Dune.Engine/Runtime/BoardState.cs`
+- `src/Dune.Engine/Runtime/GameObservation.cs`
+- `src/Dune.Engine/Runtime/GameState.cs`
+- `src/Dune.Engine/Runtime/PlayerState.cs`
+- `src/Dune.Engine/Runtime/TrustedGameSnapshot.cs`
+- `src/Dune.Engine/Turns/CombatOutcome.cs`
+- `src/Dune.Engine/Turns/CombatStrength.cs`
+- `src/Dune.Engine/Turns/DecisionWindow.cs`
+- `src/Dune.Engine/Turns/DuneGameResult.cs`
+- `src/Dune.Engine/Turns/EffectExecution.cs`
+- `src/Dune.Engine/Turns/EffectGraphValidator.cs`
+- `src/Dune.Engine/Turns/GameAction.cs`
+- `src/Dune.Engine/Turns/LifecycleRules.cs`
+- `src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs`
+- `src/Dune.Engine/Turns/TurnEngine.Lifecycle.cs`
+- `src/Dune.Engine/Turns/TurnEngine.Rewards.cs`
+- `src/Dune.Engine/Turns/TurnEngine.cs`
+- `src/Dune.Engine/Turns/TurnRules.cs`
+- `src/Dune.Engine/Turns/TurnSnapshot.cs`
+- `tests/Dune.Cli.Tests/LoggingTests.cs`
+- `tests/Dune.Engine.Tests/BoardControlTests.cs`
+- `tests/Dune.Engine.Tests/CombatOutcomeTests.cs`
+- `tests/Dune.Engine.Tests/CombatPriorityTests.cs`
+- `tests/Dune.Engine.Tests/ConflictRewardTests.cs`
+- `tests/Dune.Engine.Tests/Dune.Engine.Tests.csproj`
+- `tests/Dune.Engine.Tests/EffectContinuationTests.cs`
+- `tests/Dune.Engine.Tests/EffectSafetyTests.cs`
+- `tests/Dune.Engine.Tests/EndgameTests.cs`
+- `tests/Dune.Engine.Tests/FactionRewardTests.cs`
+- `tests/Dune.Engine.Tests/GameInitializerTests.cs`
+- `tests/Dune.Engine.Tests/LifecycleDefinitionTests.cs`
+- `tests/Dune.Engine.Tests/LifecycleIntegrationTests.cs`
+- `tests/Dune.Engine.Tests/LifecycleReplayTests.cs`
+- `tests/Dune.Engine.Tests/PhaseDecisionTests.cs`
+- `tests/Dune.Engine.Tests/RoundLifecycleTests.cs`
+- `tests/Dune.Engine.Tests/TurnEngineTests.cs`
+- `tests/Dune.Simulation.Tests/Dune.Simulation.Tests.csproj`
+- `tests/Dune.Simulation.Tests/LifecycleEpisodeTests.cs`
+- `tests/Fixtures/LifecycleFixture.cs`
+- `tests/Fixtures/LifecycleFixtureGame.cs`
+- `tests/Fixtures/TurnEngineFixture.cs`
+
+## B. Execution Architecture
+
+- Actual continuation implementation: a single `TurnEngine` owns a stack of immutable-value `EffectExecutionFrame` records. Only the top frame acts. `SequenceEffect` enforces child-before-parent order; `PlayerOrderedEffect` retains deliberate order choices. `ExecutionContinuation` returns to parent, Agent turn, Reveal turn, Combat opportunity, Conflict rewards, RoundStart or Endgame. No callback persistence, second engine, generic scripting, event sourcing, DI framework or new PRNG.
+- New or modified types and interfaces: `EffectContext`, `EffectExecutionFrame`, `ExecutionContinuation`, `EffectGroupMode`, `DecisionFrame`, `DecisionWindowState`, `DecisionWindowSummary`, `LifecycleRuleSet`, `IntrigueRule`, `ConflictRule`, `FactionRule`, `CombatOutcome`, `ConflictRewardProgress`, `DuneTerminalReason`, `DuneStanding`, `DuneGameResult`. `PlayIntrigueAction` and `PassPriorityAction` extend the existing `GameAction` hierarchy. `IGame`/`EpisodeRunner` remain the existing simulation boundary; production `TurnEngine` does not implement `IGame`. The development-only adapter does.
+- Decision ownership model: `InitiatorId`, `DecisionOwnerId`, `PayerId`, `RecipientId`, physical/definition source and parent frame are bound in `EffectContext`. `ForPlayerEffect` and explicit role overrides preserve those bindings across nested choices/acquisitions. `CurrentPlayerId` identifies a normal Agent/Reveal turn and is null in Combat/Endgame; `DecisionOwnerId` identifies the next chooser. Policies receive observations and permitted legal actions only.
+- Phase/window model: initial explicit StartRound; clockwise PlayerTurns; Combat; Conflict reward frames with a winner-only PostWinRewards window; automatic cleanup/Makers/Recall; recurring RoundStart or Endgame; Completed. Windows hold eligible seats, clockwise cursor, owner, opportunity play/pass evidence and suspended frame. Public summaries omit execution payloads. Automatic transitions add no fabricated policy actions.
+- Effect execution changes: explicit sequence/player order, child-first acquisition, optional/choice roles, retreat, shared Intrigue draw, two sourced Endgame predicates, control, protected Mentat and internal RoundStart defense deployment all use the same typed resolver and validation path. Reveal acquisition interleaving remains; a selected child exclusively owns decisions until it returns.
+- State safety guarantees: recognized illegal/unsupported selected operations preflight before mutation; rejection preserves full trusted state, both RNG checkpoints and accepted history. Bounded feasibility checks conservatively exclude unsupported overlapping mandatory choices/composites. This is not transactional rollback for unexpected engine exceptions, a general feasibility solver or a public snapshot import/search clone API.
+- Relevant source paths: `src/Dune.Engine/Turns/EffectExecution.cs`, `TurnRules.cs`, `EffectGraphValidator.cs`, `GameAction.cs`, `DecisionWindow.cs`, `TurnEngine.cs`, `TurnEngine.Rewards.cs`, `TurnEngine.Lifecycle.cs`; `src/Dune.Engine/Runtime/GameState.cs`, `GameObservation.cs`, `PlayerState.cs`, `BoardState.cs`, `TrustedGameSnapshot.cs`.
+
+## C. Combat Implementation
+
+- Combat eligibility: original troops participate; strength is two per deployed troop plus swords, zero without participating troops. Eligibility refreshes after completed Intrigues/retreat; no unsupported deployment/re-entry card is enabled. Master Tactician retreats bounded own Conflict troops to garrison.
+- Combat priority: First Player clockwise. An opportunity permits multiple plays. Finishing an opportunity after plays rotates without counting a no-play pass; only zero-play opportunities contribute consecutive pass evidence. Any play clears earlier passes. Closure requires all current eligible seats to pass without play. Zero eligible seats continue through the same lifecycle.
+- Intrigue timing: typed Combat, PostWin, Endgame and recognized-but-unsupported Plot. Ambush (+4 swords), Master Tactician (+3 swords OR retreat up to three), and Corner the Market's two independent Endgame VP conditions are source-authored. Calculated Hire remains explicitly unsupported Plot. The scenario uses invented effects and timing; its accepted action counters classify by those known typed definitions.
+- Combat outcome: `CombatOutcome.Calculate` freezes positive-strength placements at closure; zero strength earns no award. IDs inside ties are canonical seat order, not an invented winner tiebreak.
+- Tie handling: first-place ties receive second reward and skip occupied subsequent ranks; second-place ties receive third; a unique third receives a reward only in four-player games; other ranks receive none. A unique first-place winner alone gets PostWin. Positive shared Intrigue draws for tied recipients are gated because supplied sources do not establish hidden-card allocation order.
+- Reward resolution: final Combat pass preflights all recipients before committing. `ConflictRewardProgress` freezes recipients, current recipient, remaining work, closed PostWin opportunities and reward-root identity. Reward effects reuse Gain/Draw/Acquire/optional/choice/foreign/conditional execution; no separate resolver. Finite stock, capacity, mandatory resources and later recipients are reserved conservatively.
+- Post-win effects: one winner-only PlayerOrdered reward root permits remaining reward items and PostWin cards to interleave. Reward/earlier-card gains may fund a later payment. A nested child suspends that exact root/window; passing is legal only after mandatory work and closes it once. Lower-recipient children continue in the same stack without a priority window. Unknown official PostWin numeric faces remain unavailable.
+- Faction/Alliance integration: sourced original Influence saturates at 0..6; upward crossing of two grants VP and downward crossing removes it. Upward crossings of four grant the printed faction bonus in a child frame, preserving original roles. Board Alliance ownership is authoritative; verified first acquisition and strictly higher qualifying takeover update VP. Holder loss below four remains gated, including no qualifying rival. Ambiguous tied/competing signed ownership and dependent conditional influence remain gated.
+- Board control: `BoardSpaceState.ControllerId` and marker supply change on actual replacement; placement bonuses use `BoardRule.ControlReward`. Matching `ConflictRule.ControlSpace` enables optional RoundStart defense before Draw5, using existing payment/child-frame continuation. Explicit control reward effects grant control. Internal supply deployment does not enable re-entry Intrigues.
+- Unsupported mechanics: Plot (including Calculated Hire), unknown faces/classifications, shared-draw tie order, contested Mentat, unsupported composite graph shapes, real leader abilities, KH/Graft, expansion units/timing and future source relationships/modifiers/triggers.
+- Relevant source paths: `src/Dune.Engine/Turns/CombatStrength.cs`, `CombatOutcome.cs`, `LifecycleRules.cs`, `OriginalImperiumTurnRules.cs`, `TurnEngine.Rewards.cs`, `TurnEngine.Lifecycle.cs`; `tests/Dune.Engine.Tests/CombatPriorityTests.cs`, `CombatOutcomeTests.cs`, `ConflictRewardTests.cs`, `FactionRewardTests.cs`, `BoardControlTests.cs`.
+
+## D. Round Lifecycle and Endgame
+
+- Makers: after Combat cleanup, each unoccupied spice-accumulation space gains one bonus spice using resolved board metadata while round occupants still exist. The ordinary harvest operation collects it later. Bounds are preflighted before the closing action commits.
+- Recall: records VP >=10 and/or Conflict-deck-exhausted trigger flags. If triggered, enters Endgame without Agent recall, First Player rotation or another hand. Otherwise reconstructs available Agents from typed ownership/lifetime, clears board occupants and transient combat/reward state, rotates First Player clockwise and starts the next round. Preserve resources, permanent upgrades, Influence, control, once-game records and accumulated spice. Existing Reveal cleanup owns card discard; Recall does not duplicate it.
+- Mentat handling: paid board placement draws even if the token is absent. Ordinary borrowed Mentat returns at nonterminal Recall, spent or unused. A Conflict reward in round R records `ProtectedThroughRound=R+1`, survives R's Recall, and returns at R+1's Recall. Placements spend Mentat, ordinary Agent, then Swordmaster for currently interchangeable uses; this is an explicit engine convention. Terminal cuts preserve final placed/unspent state. Contested award takeover is unsupported.
+- Next-round setup: increment round, discard the previous face-up Conflict, reveal the next, resolve matching defense, draw five through existing deck/discard refill and seeded shuffle. Only the initial `StartRoundAction` is legal/recorded; future setup is automatic. Future enabled Conflict support is checked independently of hidden selected identities.
+- Endgame timing: supported Endgame Intrigues resolve before standings. All seats have clockwise opportunities; multiple order-independent plays per opportunity, reset prior passes after a play, consecutive no-play closure. This is a documented engine convention, not a sourced universal priority rule for interacting cards. Nested foreign/optional children return to the same opportunity.
+- Final scoring: VP, then spice, Solari, water, garrisoned troops. Record only criteria that actually split each progressively tied group. Identical full tuples share competition rank/winner status; seat order canonicalizes output only. Corner the Market evaluates each printed condition separately using owned deck/hand/discard/in-play The Spice Must Flow copies, excluding Reserve/trash.
+- GameResult: detached immutable `DuneGameResult` (`dune-game-result-v1`) with `ImmutableArray<DuneStanding>`/winner IDs, engine/runtime/rules/support/lifecycle versions, setup/configuration/content/ruleset/rules identities, authenticity, both setup seeds, rounds, terminal flags and replay identity. `GetResult()` throws before terminal; Completed rejects all actions and has no decision owner. Trusted result metadata is not a policy observation.
+- Remaining limitations: authentic enabled inventory is incomplete; unresolved source/interaction gates remain. No public snapshot restore/search clone, general terminal reward/training interface, cross-runtime RNG guarantee or expansion lifecycle is supplied.
+
+## E. Content Coverage
+
+- Supported starting cards: 7 authored starter identities. Signet Ring has both boxes authored (Agent dispatch still requires a supported leader); Dune, the Desert Planet has its Agent box authored but Reveal gated. Other obscured starter boxes remain Unsupported. This is not seven fully playable starter identities or a complete ten-card starter deck.
+- Supported Imperium cards: 2 fully authored example definitions, Fremen Camp and Sardaukar Legion. Physical copy inventory is incomplete/unverified. Three reserve definitions are authored: Arrakis Liaison and The Spice Must Flow have complete sourced purchase/effect faces; Foldspace is not supported. No main-deck completeness percentage is inferred.
+- Supported Intrigue cards: 4 authored official definitions, 3 executable complete faces (Ambush, Master Tactician, Corner the Market), 1 unsupported Plot face (Calculated Hire). The full official physical inventory/timing/face coverage remains unknown/incomplete.
+- Supported Conflict cards: **0 official executable Conflict definitions** in `CreateLifecycleRules()`. The fixture has 18 invented definitions and selects a ten-card recipe; those are not official support. Official tier, quantity and reward/classification evidence is still missing.
+- Supported leaders: **0 production `LeaderRule` definitions** in the official registry. Fixture leaders are explicitly synthetic blank placeholders. No authentic leader passive/Signet/setup capability is declared complete.
+- Supported board spaces: **19 authored sourced definitions**, covering Wealth, Stillsuits, Secure Contract, Hall of Oratory, Imperial Basin, Rally Troops, Hardy Warriors, Carthag, Conspire, Heighliner, Arrakeen, Sietch Tabr, Mentat, Swordmaster, High Council, Research Station, Hagga Basin, Great Flat and Sell Melange. Foldspace, Secrets and Selective Breeding remain missing. Faction-dependent operations require lifecycle faction definitions and retain interaction gates.
+- Missing catalog data: complete authentic names/quantities/copy inventory, legible starter boxes, remaining main/Intrigue faces and classifications, Conflict tiers/rewards/quantities and complete leader text/contracts. Embedded metadata is Representative, not a complete playable catalog. Registry counts are mechanically checked by `LifecycleIntegrationTests.OfficialRegistryDefinitionCountsRemainDistinctFromCompleteInventorySupport`; they count definitions, not physical cards or verified boxes. No broader coverage audit was performed.
+- Missing mechanics: Plot, Secrets theft, selected trash/discard and reserve self-trash return routing, conditional/composite graph shapes beyond proven contracts, unresolved Alliance loss/tied shared draws/contested Mentat, KH/Graft/copy binding, persistent modifiers/triggers, expansion gameplay and real leader abilities.
+- Authentic playable configuration status: **none**. Recognized options, validated metadata composition, executable primitives, fully supported faces and complete inventories are separate promises. No authentic deck was pruned or replaced silently to finish a run.
+
+## F. Replay, Privacy and State Safety
+
+- Replay format/version changes: current setup `dune-setup-snapshot-v5`; turn snapshot/replay v7; `original-imperium-turn-support-v12`; official preview `imperium-2020-turn-preview-v12`; official lifecycle authoring v9. Configuration identity remains `dune-configuration-sha256-v1`. Earlier staged schemas/support headers remain explicit rejection rows; runtime/engine/content/configuration/ruleset/rules/seeds mismatches reject before applying an action.
+- Captured execution state: full trusted zones/RNG checkpoints, causal frames/decisions/context roles/source, monotonic frame/effect/window IDs, typed windows/suspension, deployment/once-use data, frozen outcome, reward progress, Agent/Mentat provenance, terminal flags, accepted history and final result. `CaptureReplay()` / `Replay(replay, initialStateFactory, rules)` remain the trusted API. No snapshot-import/search-clone API. Replay uses the pinned runtime and unchanged rules/content/actions; changed policies or runtimes are not promised compatible.
+- Final-action binding: `dune-turn-replay-identity-v1` hashes canonical header plus ordered accepted actions after appending the final closing pass; excludes final-state hash/result to avoid a circular hash. The full final trusted state hash still includes result/history. Removing/changing the closing action invalidates identity/replay.
+- Invalid-action guarantees: integration checks invalid actor/phase/card/option/effect/target/payment/deployment at every accepted cut, including suspended and Completed states, with full trusted JSON/hash and replay unchanged. Existing specific tests retain unaffordable costs, unsupported graph/source/stock/overflow and mandatory-recipient preflight cases. Expected validation rejection preserves state/RNG/history; arbitrary unexpected exceptions are engine defects without a general rollback promise.
+- Hidden-information guarantees: policy projections/action selectors omit physical IDs, hidden opponent hands/Intrigues/decks/order, RNG/seeds, execution context/continuations and privileged history. Nonowners get no pending decisions/legal actions. Counterfactual tests swap nonempty differing hidden opponent identities and shuffle hidden decks/consume RNG without changing the observer's observation, masks or diagnostics; the same checks run after completion. Existing hidden unsupported inventory diagnostics remain identity/order-invariant. Resolved public VP consequences can reveal the consequence of a legitimately resolved condition, not private cards or support metadata. CLI logging stays coarse; no per-action JSON/replay capture was added.
+- Known unresolved safety risks: conservative bounded feasibility can over-exclude viable graphs; unsupported per-instance distinctions need future opaque policy handles before semantics change; no search clone/interop/ML mask encoding has been designed. Concurrent shared-definition tests verify scheduling independence for the chosen synthetic workload, not arbitrary future mutable extension state. Unexpected engine exceptions are not transactional.
+
+## G. Verification and Performance
+
+- Commands executed: `rtk proxy mise run test:engine`; `rtk proxy mise run test:cli`; scoped `rtk proxy mise exec -- dotnet format dune-ai.slnx --no-restore --include tests/Dune.Engine.Tests/LifecycleIntegrationTests.cs benchmarks/Dune.Benchmarks/LifecycleBenchmarks.cs src/Dune.Cli/LifecyclePreviewCommand.cs tests/Dune.Cli.Tests/LoggingTests.cs`; final `rtk proxy mise run check`; `rtk proxy mise run smoke`; `rtk proxy mise run preview:lifecycle -- --seed 42 --players 3` and `--players 4`; `rtk proxy mise run preview:turns -- --seed 42 --players 3` and `--players 4`; Lifecycle and unchanged TurnEngine benchmark Dry then Short commands in the benchmark report; `git diff --check`.
+- Build results: Release solution build passed with 0 warnings and 0 errors under pinned SDK 10.0.402; full C# formatting check passed.
+- .NET test results: 539 engine + 27 simulation + 23 CLI = **589 passed**, 0 failed/skipped, in the final repository check. Focused engine/CLI passes also recorded. Twelve new integration cases cover registry quantities, 3/4-seat prefix execution, eight header mismatches and shared-definition concurrent episodes.
+- Python test results: **13 passed** under pinned Python 3.12.15/uv 0.13.5; Ruff checks passed and seven Python files already formatted.
+- `mise run check`: exit 0 after final C# changes at validation revision `170a8f2`; toolchain/locks, build, all .NET/Python tests, lint and format completed. Raw evidence: `.superpowers/sdd/2026-10-24-slice-004/task-12-check.log`.
+- `mise run smoke`: exit 0; separate Toy completed in 8 turns and replay verified (`task-12-smoke.log`).
+- Dune lifecycle scenario: both seed-42/independent-policy-seed-17 previews exit 0 at 10 rounds with `ConflictDeckExhausted`: 3 seats winner P2, 537 accepted actions including StartRound, 63 placements/38 deployment decisions/22 Combat Intrigue plays/3 PostWin plays/10 optional choices/63 priority passes; 4 seats winner P3, 660 accepted actions, 88 placements/45 deployment decisions/24 Combat plays/4 PostWin plays/9 optional choices/67 priority passes. Replay identities respectively `a752248b859f3b474b77ee3897571293c6c50036a2fd74e381a5c6bcc4b920e5` and `3c7d75a8c90dc5edbbdb6905810abea4855de71f01f272de5603ec466169ea26`. Makers/Recall are automatic consequences; deployment counts include chosen zero where legal. Old bounded 3-seat and 4-seat previews exit 0 after 10 and 6 accepted actions respectively at the expected unsupported-content boundary and verify replay. Logs: `task-12-preview-3.log`, `task-12-preview-4.log`, `task-12-old-preview.log`, `task-12-old-preview-4.log` in the same scratch directory.
+- Benchmark results: Lifecycle Dry16/16 and unchanged TurnEngine Dry4/4 passed; proper same-host ShortRun results follow (one launch, three warmups/measurements). Measured revision `170a8f2`, .NET10.0.13/SDK10.0.402, BDN0.15.8, Ubuntu26.04.1/i9-13900KF/24 physical/32 logical cores, concurrent workstation GC. The two Short runs were sequential with no concurrent project build/test/benchmark. Micro mutable setup/composition/checkpoint driving excluded, 256-engine batches normalized per accepted transition; unchanged TurnEngine batches remain4096. Full invented game includes setup/composition/initial hashing, policy observations/legal selection, all accepted history and terminal replay-identity hashing; final CaptureReplay/full-state hashing and replay reconstruction excluded. No per-action JSON added. Full-game means123.211ms(3p)/135.424ms(4p), allocations353368.3KB/449733.06KB; 3p99.9%error±229.830ms is larger than its mean. These are synthetic measurements, not authentic throughput. All means/errors/StdDev/allocations/GC below; Error is half99.9%CI, GC per1000 operations, KB=1024B. Short mutable iterations and denied high-priority setup limit interpretation. See `docs/benchmarks/slice-004.md` for exact methods/exclusions, baseline and raw artifact paths.
+
+Lifecycle ShortRun (all time columns ns):
+
+| Method                                        | InvocationCount | UnrollFactor | Players | Mean             | Error             | StdDev           | Gen0       | Gen1      | Allocated    |
+|---------------------------------------------- |---------------- |------------- |-------- |-----------------:|------------------:|-----------------:|-----------:|----------:|-------------:|
+| **UnchangedLegalEnumeration**                     | **Default**         | **16**           | **3**       |     **228,373.7 ns** |     **126,073.06 ns** |      **6,910.49 ns** |    **47.3633** |   **11.7188** |    **872.92 KB** |
+| RankingTieDistribution                        | Default         | 16           | 3       |         338.4 ns |           6.60 ns |          0.36 ns |     0.1001 |         - |      1.84 KB |
+| FullSyntheticLifecycleIncludingInitialization | Default         | 16           | 3       | 123,211,288.3 ns | 229,830,264.12 ns | 12,597,772.35 ns | 19000.0000 | 8000.0000 |  353368.3 KB |
+| DepthThreeForeignChild                        | 1               | 1            | 3       |      20,259.5 ns |       2,638.83 ns |        144.64 ns |          - |         - |     48.34 KB |
+| CombatPlay                                    | 1               | 1            | 3       |      20,729.9 ns |      42,775.75 ns |      2,344.68 ns |          - |         - |        51 KB |
+| CombatPass                                    | 1               | 1            | 3       |      14,424.2 ns |      19,122.63 ns |      1,048.18 ns |          - |         - |     26.77 KB |
+| CombatChildResume                             | 1               | 1            | 3       |      21,351.1 ns |      26,695.68 ns |      1,463.28 ns |          - |         - |     44.88 KB |
+| RewardRoundTransition                         | 1               | 1            | 3       |      23,514.7 ns |       4,886.15 ns |        267.83 ns |          - |         - |     42.68 KB |
+| **UnchangedLegalEnumeration**                     | **Default**         | **16**           | **4**       |     **240,425.1 ns** |     **114,711.40 ns** |      **6,287.72 ns** |    **48.3398** |   **11.9629** |    **890.55 KB** |
+| RankingTieDistribution                        | Default         | 16           | 4       |         377.9 ns |           8.22 ns |          0.45 ns |     0.1111 |         - |      2.05 KB |
+| FullSyntheticLifecycleIncludingInitialization | Default         | 16           | 4       | 135,423,765.0 ns |   5,535,314.52 ns |    303,409.27 ns | 24000.0000 | 8000.0000 | 449733.06 KB |
+| DepthThreeForeignChild                        | 1               | 1            | 4       |      26,280.5 ns |         873.49 ns |         47.88 ns |          - |         - |     51.48 KB |
+| CombatPlay                                    | 1               | 1            | 4       |      23,865.3 ns |      54,758.74 ns |      3,001.51 ns |          - |         - |     54.14 KB |
+| CombatPass                                    | 1               | 1            | 4       |      11,965.9 ns |      28,286.31 ns |      1,550.47 ns |          - |         - |      29.7 KB |
+| CombatChildResume                             | 1               | 1            | 4       |      21,491.3 ns |      32,023.22 ns |      1,755.30 ns |          - |         - |     48.02 KB |
+| RewardRoundTransition                         | 1               | 1            | 4       |      21,288.4 ns |      12,964.43 ns |        710.62 ns |          - |         - |     47.02 KB |
+
+Unchanged TurnEngine ShortRun:
+
+| Method                 | InvocationCount | UnrollFactor | Mean     | Error     | StdDev   | Gen0    | Gen1   | Allocated |
+|----------------------- |---------------- |------------- |---------:|----------:|---------:|--------:|-------:|----------:|
+| LegalActionEnumeration | Default         | 16           | 96.02 μs | 28.748 μs | 1.576 μs | 18.4326 | 4.5166 | 340.68 KB |
+| RoundStart             | 1               | 1            | 26.67 μs |  3.737 μs | 0.205 μs |  1.2207 | 0.2441 |  26.74 KB |
+| AgentPlacement         | 1               | 1            | 31.11 μs |  7.049 μs | 0.386 μs |  1.7090 | 0.2441 |  34.37 KB |
+| EffectResolution       | 1               | 1            | 27.58 μs |  3.411 μs | 0.187 μs |  2.1973 | 0.4883 |  44.46 KB |
+
+Pre-production unchanged-harness baseline at `3c0229b` on the same host/runtime:
+
+| Method                 | InvocationCount | UnrollFactor | Mean     | Error    | StdDev   | Gen0   | Allocated |
+|----------------------- |---------------- |------------- |---------:|---------:|---------:|-------:|----------:|
+| LegalActionEnumeration | Default         | 16           | 36.49 μs | 1.215 μs | 0.067 μs | 5.4321 | 100.53 KB |
+| RoundStart             | 1               | 1            | 24.50 μs | 2.358 μs | 0.129 μs | 0.9766 |  19.91 KB |
+| AgentPlacement         | 1               | 1            | 22.59 μs | 2.985 μs | 0.164 μs | 0.9766 |  21.36 KB |
+| EffectResolution       | 1               | 1            | 19.68 μs | 5.865 μs | 0.321 μs | 0.9766 |  19.88 KB |
+
+The unchanged harness's sampled means rose from 36.49/24.50/22.59/19.68 us to 96.02/26.67/31.11/27.58 us for legal enumeration/RoundStart/placement/optional resolution respectively. Legal enumeration is approximately **2.63x** the sampled baseline mean and **3.39x** its allocations (100.53 -> 340.68 KB). Other sampled mean ratios are approximately 1.09x/1.38x/1.40x; uncertainty remains explicit in the tables, so ratios are descriptive rather than a statistical guarantee.  This is a measured total-branch cost increase on unchanged synthetic inputs. The slice adds causal/lifecycle/safety behavior, but these measurements do not isolate the cause of any individual increase. No optimization was attempted. Retain it as a performance concern for profiling representative workloads; do not infer authentic game throughput, peak RSS, worker scaling or training speed. The lifecycle legal fixture has richer enabled content and cannot be substituted for the unchanged harness in this comparison. Full-game allocation is managed allocation per game, not retained/peak memory; its 3-seat confidence interval is especially wide.
+- Regressions or unresolved failures: No unresolved code/check/scenario failures. During implementation, a test-only `.Length` misuse was corrected to `.Count`; raw rule serialization of default `ImmutableArray` was replaced by canonical rules-identity comparison; the concurrent test switched from a seed-specific acquisition target to shared seed-independent scenario rules. An incorrect combined mise task invocation was replaced by individual existing task commands. These initial failed attempts are not counted as passes. Final task review and whole-branch review are pending controller actions; no review approval is inferred from tests. No remote CI/push/merge/publication was run.
+
+## H. SLICE-004.5 Recommendations
+
+Recommend Card Catalog & Ability Coverage Audit against the actual lifecycle APIs; do not implement that audit/schema in this slice.
+
+- What must NOT be re-audited: SLICE-003.5's API map, capability categories and expansion case-study architecture, and this slice's tested causal/role/window/reward/round/result contracts. Reconcile only implementation deltas and content/interaction evidence.
+- Missing card and leader data: prioritize verifiable complete starter and real-leader paths, official main/Intrigue inventory and copy quantities, Conflict tiers/rewards/quantities, unknown PostWin faces and omitted board spaces. Preserve source applicability/edition and authenticity distinctions.
+- Missing reusable effect primitives: audit selected discard/trash, reserve return routing, theft and supported Plot operations against actual faces before adding primitives. Keep shared stock, recipients, information boundaries, turn/round lifetime and preflight behavior explicit.
+- Missing composite and special abilities: classify mandatory/optional/choice/sequence/player order/conditional shapes; identify conservative finite-stock/capacity conflicts. KH occupied-space exceptions, Graft/copy bindings, modifier scope and semantic triggers remain separately sourced future work; no generic interpreter is recommended.
+- Known interaction gaps: Alliance loss below four, tied positive shared Intrigue draw ordering, contested Mentat takeover, condition-dependent Influence, overlapping mandatory choices and unknown priority among interacting Endgame/PostWin cards. Resolve source gaps before enabling them; narrow gates with deliberate versions/tests.
+- Recommended machine-readable coverage schema: propose per definition/physical quantity, owning product/version/applicability, source PDF/page/face legibility, metadata completeness, per Agent/Reveal/Acquire/passive/Signet/setup/timing box, primitive/composite prerequisites, target/role/source relationships, support/verification/test identifiers, interaction exclusions, blocker reason and authentic fixture availability. Separate authored definitions, complete boxes and complete enabled inventory. This is a recommendation only; no schema added.
+- Recommended implementation batches: (1) inventory/source reconciliation and evidence gaps; (2) complete starter plus at least one real leader with setup/passive/Signet; (3) complete selected Conflict/Intrigue/main-deck inventory using existing primitives; (4) smallest sourced missing primitives/board actions; (5) special composites/interactions with targeted privacy/replay/state-safety tests; (6) authentic 3/4-seat deterministic episodes and representative performance validation before training/bridge decisions.
+- Important prerequisites for authentic full-game simulation: a complete supported authentic enabled inventory, sourced resolution of ordering gates, authentic initialization, legal-action completeness for that configuration, repeatable full-game tests, reproducible manifests and actual measured authentic workloads. Python/PettingZoo/transport and learning remain later, evidence-driven work.
+
+## I. Risks and Open Questions
+
+- Description: authentic catalog/leader/Conflict evidence is incomplete. Impact: authentic setup/full-game self-play unavailable. Blocking for authentic play; nonblocking for visibly synthetic engine verification. Next action: the SLICE-004.5 source/coverage audit and bounded content batches.
+- Description: source-gated Alliance loss, tied positive shared draws and contested Mentat; Plot/unknown PostWin faces. Impact: supported subset excludes reachable authentic paths. Blocking for a configuration that enables them. Next action: authoritative source clarification, deliberate version narrowing and direct behavioral/privacy tests; never invent ordering or fake no-op content.
+- Description: conservative composite feasibility is intentionally incomplete. Impact: some viable shapes may be excluded; future unbounded solver complexity could threaten safety/performance. Nonblocking for documented fixtures, blocking for unsupported faces. Next action: classify actual catalog needs before narrow extensions, preserve preflight/invariant tests.
+- Description: opportunity schedules and interchangeable-Agent spending are engine conventions within documented scope. Impact: unsupported interacting cards or Agent-specific restrictions could invalidate assumptions. Blocking before enabling such content. Next action: source those interactions and version semantics before expanding support.
+- Description: benchmark ShortRun sample size, setup exclusions, synthetic data and host variability, plus observed unchanged-harness cost growth (legal mean about 2.63x, allocations about 3.39x baseline). Impact: higher sampled engine cost; cannot extrapolate to authentic self-play or identify causes/optimize by assumption. Nonblocking. Next action: use representative authentic/multiworker measurements only once authentic content exists; retain current raw evidence.
+- Description: review gates remain pending. Impact: branch is not final-review approved. Blocking for final integration/handoff approval. Next action: controller's Task 12 review, fixes/rechecks if required, then whole-branch reviewer and handoff status update.
+- Description: unexpected exceptions have no general rollback guarantee, and no public search-clone contract exists. Impact: a failed internal invariant is an engine defect; future search cannot assume trusted replay hashes equal history-free position keys. Nonblocking for supported validated episodes; blocking for unplanned search API use. Next action: preserve narrow validation guarantees and design clone/position equality only for a concrete later consumer.
+
+Every controller ruling from the implementation ledger is preserved below, including its stated consequence if wrong:
+
+1. Ruling: introduce turn replay/snapshot v2 with Task1's frame shape, rather than waiting until Task2 — prevents any committed causal-frame state being labeled with v1 semantics — if wrong, version/golden assertions must be amended in Task2, with no published compatibility promise.
+
+2. Ruling: migrate CompleteGraphRejectsDuplicateMandatoryStockDemandBeforePlacementMutation optional/choice cases1/2 from eager rejection to selected-branch assertions, preserving mandatory case0 and unchanged interleaved-purchase reservation test — the old cases encode the audit's conservative legal-action over-exclusion and contradict the approved optional-decline/viable-choice semantics — if wrong, those paths would need conservative support gating again; mandatory stock immutability remains protected by replacement tests.
+
+3. Ruling: conservatively reject explicitly Unsupported unresolved overlapping mandatory Choices competing for finite stock, resource capacity, or one-time permanent operations when bounded checks cannot prove safe continuation — documentation alone cannot justify admitting a known zero-action/duplicate-grant path, and a general feasibility solver is out of scope — cost if wrong is over-excluding some actually viable composite graphs; preserve proven single-choice/optional-decline paths, document diagnostics and narrow supported graph contract for004.5.
+
+4. Ruling: if P2 real-action suspended-window replay requires planned C1 definition declarations (LifecycleRuleSet/IntrigueRule/etc.) or the planned IntrigueResolving zone, allow their minimal declarations/wiring in Task3 rather than add test-only actions, fake effects or a separate execution harness — this is dependency/file ownership adjustment within approved interfaces, while official source authoring/support checks remain Task4 and Combat-specific loop/outcome/rewards remain later — cost if wrong is a somewhat larger P2 review diff, with no additional gameplay scope authorized.
+
+5. Ruling: for Combat, PassPriorityAction after OpportunityPlays>0 finishes/rotates a played opportunity without adding consecutive no-play pass evidence; zero-play opportunities' Pass actions count — I p12 says play any number OR pass, and example has Abby play Ambush, John later pass, then Abby receives another pass opportunity before closure;003.5 flow also distinguishes finish-after-play vs no-play pass — if wrong, pass-count/closure action prefixes would require a versioned correction; lock one-seat and multi-seat source example in tests. Endgame uses same documented engine convention; Task8 owns winner-only PostWinRewards finish semantics separately.
+
+6. Ruling: treat committed P1v2 contracts as an explicit boundary and bump P2 setup snapshot/turn snapshot/turn replay/default support/official preview to v3 — new phase vocabulary, resolving zone, window state and action semantics need a format revision, not only changed hashes — cost if wrong is extra intermediate-version churn; no old replay is silently accepted, and config/content/composition/Toy versions remain unchanged. Preliminary planv2 target amended accordingly. Later incompatible serialized-state changes require deliberate subsequent revisions.
+
+7. Ruling: original Influence movement saturates at0..6, preserving legal faction-space access at track top — I7 moves cubes on the finite source board and source geometry establishes6; inventing an extra access restriction would incorrectly narrow ordinary legal actions — if this bounded-movement interpretation is disproved by authoritative clarification, version the operation and revise endpoint tests; record the inference explicitly rather than claiming verbatim text.
+
+8. Ruling: gate holder Influence loss below4 even without qualifying rival instead of assuming token return — supplied I7 establishes first-at4/rising-opponent transfer but no automatic below4 return; user forbids invented gaps — if later source clarifies return, narrow the gate with versioned operation/tests; cost now is explicitly unsupported rare loss paths, not incorrect Alliance scoring.
+
+9. Ruling: Task8 uses actual C1 ConditionalEffect(EndgameCondition, Effects) with its two sourced SpiceMustFlow predicates instead of creating plan-illustrative EffectCondition; may land shared conditional runtime now and minimal planned ProtectedThroughRound field needed for reward Mentat — keeps one resolver/condition contract and honest next-round lifetime; Task9/10 still own Recall/fullEndgame — if wrong, boundary/file ownership needs adjustment, not new gameplay scope; no speculative condition/modifier framework.
+
+10. Ruling: treat tied positive shared Intrigue draws as ordering-sensitive and gate beforeCombatclosure until sourced tie draw order exists — canonical seat order allocates distinct hidden card identities from shared stock, and supplied I12 gives rewards without establishing allocation order; user requires unresolved interactions gated — if an authoritative order is later verified, narrow gate/version/tests; cost now is unsupported tied Intrigue reward paths, explicitly documented for authentic self-play prerequisites.
+
+11. Ruling: Task9 may introduce minimal planned DuneTerminalReason flags declaration before Task10 result class — Recall must persist exact trigger(s) now and a temporary duplicate enum/int would create needless migration; Task10 still owns finalscoring/result — if wrong, only declaration/fileownership changes, not gameplay scope; capture realreason intrustedturnstate and reuseit.
+
+## J. Final Assessment
+
+1. Is the Combat and round lifecycle complete for the documented supported scope? Implemented and tested for the bounded, sourced operations plus visibly synthetic enabled fixtures; final review remains pending. Unresolved source/content/composite paths are explicitly unsupported, so this is not complete original Imperium rules coverage.
+2. Can a deterministic development game reach a terminal result? Yes: the 3-seat and 4-seat seed-42 ten-Conflict scenarios reach normal Recall exhaustion, complete Endgame and verify full replay through the existing runner. Exact evidence is in G.
+3. Is any authentic original Imperium configuration fully playable? No. Authentic initialization remains gated by incomplete inventories and abilities.
+4. What prevents authentic large-scale self-play, if anything? Complete sourced catalog/leader/Conflict coverage, unresolved interaction ordering and missing primitives/board operations, then authentic legal-action/full-game validation. No Python bridge/training/manifest or search infrastructure is claimed ready.
+5. What should SLICE-004.5 prioritize? Evidence-backed per-box/inventory/interaction coverage, complete starter/real-leader paths and Conflict data, then smallest reusable missing operations and authentic episodes. Reuse existing architecture; do not repeat SLICE-003.5.
+6. What is the most important remaining architectural risk? Expanding complex content beyond bounded preflight/continuation proofs, especially overlapping finite-stock choices and hidden-condition/priority interactions, can admit dead ends or leak private information. Keep unresolved paths gated and extend one sourced interaction at a time with replay/privacy/rejection evidence.
+
+# END SLICE-004 RESULT FOR CHATGPT

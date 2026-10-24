@@ -1,5 +1,13 @@
 # SLICE-003.5: ability and decision architecture audit
 
+> Historical SLICE-003.5 assessment retained below. SLICE-004 subsequently
+> implemented causal child-before-parent frames, separated decision/payer/recipient
+> roles, phase-aware windows, Combat/rewards, recurring rounds and Endgame for
+> documented supported content. See [current architecture](turn-engine.md),
+> [ADR 0006](../adr/0006-ability-and-decision-execution.md) and
+> [handoff](../handoffs/SLICE-004-result.md). KH/Graft/scoped-modifier and catalog
+> gaps remain; this is a delta notice, not a repeated audit.
+
 Audited 2026-10-24 against revision `3082e3b` (initial working tree clean). This is
 a documentation-only assessment. No Combat, KH, Graft, expansion runtime, or card
 catalog implementation is included. The [handoff](../handoffs/SLICE-003.5-result.md)

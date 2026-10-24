@@ -1,10 +1,10 @@
 # ADR 0006: extend the existing ability and decision executor
 
 - Date: 2026-10-24
-- Status: Proposed for SLICE-004 prerequisites; runtime changes are not implemented
+- Status: Accepted; implemented and tested for the SLICE-004 supported original-base scope; final branch review pending
 - Scope: Ability composition, causal decisions, timing and narrow rule exceptions
 
-## Context
+## Context at the SLICE-003.5 decision
 
 SLICE-003 has typed effects and a single `TurnEngine` over existing state. It can
 transfer decision ownership, replay nested choices and prioritize acquire children.
@@ -22,10 +22,12 @@ editions are in [case studies](../architecture/complex-ability-case-studies.md).
 
 ## Decision
 
-Recommend evolving the existing typed resolver, actions and pending state. Add
-explicit causal sequence/player-order frames and phase/window continuations;
-separate decision owner, payer, recipient, target and executing/definition source
-where needed. Combat priority and nested decisions use that same mechanism.
+Evolve the existing typed resolver, actions and pending state. SLICE-004
+implements explicit causal sequence/player-order frames, phase/window
+continuations and separate initiator, decision owner, payer and recipient roles
+with physical/definition provenance for the supported original-base lifecycle.
+Combat priority and nested decisions use that same mechanism. Richer target and
+executing/copy-source relationships remain future work when sourced content needs them.
 Persist value state sufficient for trusted snapshot/replay, not callbacks.
 
 Keep primitive effects reusable, composites typed and limited, and special handlers
@@ -49,7 +51,7 @@ declare any additional expansion or real leader supported.
 | Separate Combat effect/action engine                         | Duplicates validation, private decisions and replay without a demonstrated need. Reject.                                                                                  |
 | Full generic script/workflow/event-sourcing framework        | Large interpretation, persistence and performance surface; no existing consumer requires it. Reject.                                                                      |
 | Dedicated KH action/one handler per card                     | Appropriate narrow handlers may exist, but standalone mutation paths duplicate placement logic and trivial handlers duplicate primitives. Reject as general architecture. |
-| Existing resolver + explicit contexts/frames/windows/queries | Reuses working contracts and adds only demonstrated missing semantics. Selected recommendation.                                                                           |
+| Existing resolver + explicit contexts/frames/windows/queries | Reuses working contracts and adds only demonstrated missing semantics. Selected and implemented for supported original-base execution.                                                                           |
 
 ## Consequences and performance
 
@@ -68,10 +70,28 @@ and scoped queries with the existing baseline before optimization.
 
 ## Known limits and unresolved decisions
 
-This is a proposed design, not code approval for SLICE-004 or a completed engine.
-Exact KH occupied-destination exceptions, dynamic participant re-entry/pass details,
-and simultaneous/post-win ordering beyond supplied examples require evidence for
-enabled content. The full catalog/leader inventory remains incomplete. No generic
+Implementation was authorized by the reviewed SLICE-004 plan. This does not certify a complete authentic engine.
+KH occupied-destination exceptions, dynamic participant re-entry and
+simultaneous/post-win ordering beyond supplied examples still require evidence
+before enabling content. The full catalog/leader inventory remains incomplete. No generic
 trigger bus, new PRNG, public snapshot restore, ML encoding or expansion-state
-framework is selected. Update this ADR's status only after the external design
-review and corresponding verified implementation milestones.
+framework is selected. The implementation uses `EffectExecutionFrame`, `ExecutionContinuation`,
+`EffectContext` and `DecisionWindowState` within `TurnEngine`, with explicit
+`InitiatorId`, `DecisionOwnerId`, `PayerId` and `RecipientId`.
+
+## SLICE-004 evidence and retained gates
+
+`LifecycleReplayTests`, `EffectContinuationTests`, Combat/Conflict reward/faction/round/Endgame
+tests and `LifecycleIntegrationTests` verify causal suspension, deterministic
+replay, rejection, hidden-information boundaries and independent episodes.
+The current boundary is setup v5, turn/replay v7, support/preview v12, authoring v9.
+`DuneGameResult` and replay identity are independently v1; final action identity
+excludes final-state hash to avoid circular hashing.
+
+[Measurements](../benchmarks/slice-004.md) distinguish unchanged micro workloads
+from synthetic full games. No optimization, dependency or per-action JSON was
+added. The catalog/leader/Conflict evidence, Plot, holder loss, tied positive
+shared Intrigue draws, contested Mentat and conservative composite-graph gates
+remain explicit. No expansion capability, general trigger framework, unexpected
+exception rollback, authentic complete-game or RL-ready claim follows.
+Task review and final whole-branch review are controller-owned and pending.

@@ -5,22 +5,25 @@ and Uprising AI. SLICE-001 adds
 [ruleset composition](architecture/ruleset-composition.md); SLICE-002 adds
 [typed runtime state and deterministic setup](architecture/runtime-state.md).
 SLICE-003 adds an [incremental turn engine](architecture/turn-engine.md) with a
-[documented supported subset](implemented-mechanics.md), private decisions and replay. **Only the separate toy game is
-fully playable.** Authentic setup remains blocked
-by incomplete content; the Dune CLI scenario explicitly stops at unsupported data.
-Complete gameplay and training remain roadmap work.
+[documented supported subset](implemented-mechanics.md), private decisions and replay. SLICE-004 adds supported Combat, recurring rounds and Endgame. The separate toy
+and explicitly synthetic ten-Conflict lifecycle scenario are executable through
+the existing runner. Authentic setup remains blocked by incomplete content;
+the bounded Dune turn preview still stops at unsupported data. Authentic full-game
+play and training remain roadmap work.
 The design favors correctness, reproducibility and clear ownership before
 throughput optimizations.
 
 SLICE-003.5 adds an [ability/decision architecture audit](architecture/ability-decision-audit.md),
-[proposed execution design and next-slice plans](architecture/ability-execution-design.md),
+[execution design and next-slice plans](architecture/ability-execution-design.md),
 [sourced complex-mechanic case studies](architecture/complex-ability-case-studies.md),
-and [external-review handoff](handoffs/SLICE-003.5-result.md). These are assessments
-and proposals; Combat and the comprehensive catalog audit remain unimplemented.
+and [external-review handoff](handoffs/SLICE-003.5-result.md). The original assessment is historical; SLICE-004 implements the supported causal
+execution and lifecycle subset. The comprehensive catalog/ability audit remains
+SLICE-004.5 work. See the [SLICE-004 handoff](handoffs/SLICE-004-result.md) and
+[measurements](benchmarks/slice-004.md).
 
 ```mermaid
 flowchart LR
-    E[Dune.Engine: contracts + Toy] --> S[Dune.Simulation: agents + runners]
+    E[Dune.Engine: contracts + Toy + Dune turns] --> S[Dune.Simulation: agents + runners]
     S --> C[Dune.Cli: headless episode]
     S --> B[BenchmarkDotNet]
     P[Python: future AEC adapter] -. measured batch bridge, future .-> S

@@ -1,7 +1,11 @@
 # Proposed ability and decision execution design
 
-SLICE-003.5 design recommendation, 2026-10-24. **None of the new types or flows
-below is implemented.** Actual APIs and support are in the
+SLICE-003.5 design recommendation, 2026-10-24, with SLICE-004 status delta.
+Causal frames, explicit roles, phase windows, supported Combat/reward/Recall and
+Endgame are implemented and tested; illustrative proposal names below are not
+a declaration that every proposed interface exists. Scoped modifiers, KH, Graft,
+expansion mechanics and SLICE-004.5 remain future work. Current APIs are in the
+[turn architecture](turn-engine.md); historical findings are in the
 [audit](ability-decision-audit.md); official mechanic evidence is in the
 [case studies](complex-ability-case-studies.md). See
 [ADR0006](../adr/0006-ability-and-decision-execution.md).

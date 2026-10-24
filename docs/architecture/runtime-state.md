@@ -1,9 +1,10 @@
 # Runtime setup and state (SLICE-002)
 
 Original **Dune: Imperium (2020)** Standard competitive setup supports three or
-four seats and fixed or random unique leaders. The implementation stops immediately
-before Round Start. No Agent/Reveal turns, combat, card/leader effects or Dune
-legal-action API exists. Toy remains the only playable environment.
+four seats and fixed or random unique leaders. This setup boundary stops immediately
+before Round Start; the later turn engine implements Agent/Reveal, supported
+Combat/round/Endgame execution and legal actions. Toy and the explicitly synthetic
+lifecycle scenario are executable; authentic full-game initialization remains gated.
 
 ## Lifecycle and readiness
 
@@ -149,3 +150,17 @@ Initialization benchmarks use synthetic metadata with authentic setup quantities
 Composition is outside the measured operation; validation and mutable setup remain
 inside it. This is infrastructure performance, not a complete-card/game benchmark.
 See [baseline results](../benchmarks/slice-002-initialization.md).
+
+## SLICE-004 runtime delta
+
+The current trusted setup schema is `dune-setup-snapshot-v5`. Agent state now
+tracks ordinary ownership, acquired/available Swordmasters and available Mentat;
+placements record `AgentKind` and Mentat records `ProtectedThroughRound`.
+Public phase/decision summaries include Combat/PostWin/Endgame and terminal
+reason flags; `CurrentPlayerId` can be null while `DecisionOwnerId` is present.
+Played Intrigue faces in the resolving zone are public; their physical IDs and
+causal execution/window payloads remain privileged. Turn schemas and result contracts are documented in the
+[turn engine](turn-engine.md). Observations remain detached after completion;
+private hands/decks, physical card IDs, RNG, role payloads, seeds, history and
+replay identity never become policy inputs. Shared immutable definitions do not
+authorize sharing mutable episode state.

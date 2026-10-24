@@ -1,4 +1,4 @@
-# SLICE-003 / SLICE-004 C3b implemented mechanics and support matrix
+# SLICE-004 implemented mechanics and support matrix
 
 The original Imperium (2020) turn engine is a **development preview**. No selected
 configuration is authentic complete gameplay or RL-ready. Tests can use explicitly
@@ -8,14 +8,14 @@ synthetic inventory and effects; these do not establish full rules coverage.
 | --- | --- | --- |
 | Setup | Existing Standard competitive 3–4 player recipe; fixed/random assignments | Authentic full inventory and leader setup/abilities incomplete |
 | Round Start | Top Conflict reveal, draw5, empty-deck recycling and seeded shuffle | Real Conflict/leader start triggers need complete supported data |
-| Scheduling | Clockwise, early Reveal, skip Revealed, multi-decision turn; lifecycle Combat priority | Stops before Conflict rewards |
+| Scheduling | Clockwise, early Reveal, skip Revealed, multi-decision turn; lifecycle Combat priority | Authentic full inventory remains blocked |
 | Agent | Visible-card access, costs first, occupancy, influence and once-per-game restrictions | Only sourced card boxes/spaces; omitted actions diagnosed |
-| Effects | Typed primitive gains, draw, recruit, influence, optional payment/choice, nested owners, acquisition | Unique complex effects and higher faction threshold dependencies gated |
+| Effects | Typed primitive gains, draw, recruit, influence, optional payment/choice, nested owners, acquisition | Conservative composite graphs and unresolved Alliance loss gated |
 | Reveal | Hand only, choice of effect order, interleaved purchases, multiple acquisitions, row refill, Reserve, cleanup | Unknown starter/market boxes stay unsupported |
-| Deployment | Finite supply/garrison/Conflict, choose zero through turn recruits plus two old troops | No combat resolution or other unit types |
-| Strength | Two per troop plus swords, zero without troops; refresh after applied supported effects including nested decisions | No reward execution |
-| Combat outcome | Frozen positive-strength placements, official tie reward tiers and winner at Combat closure | Reward execution and cleanup unsupported |
-| Combat priority (support v5) | First Player clockwise; repeated plays/passes; Ambush +4 swords; Master Tactician +3 swords or bounded own retreat to garrison; completed-card eligibility refresh | No deployment/re-entry Intrigues, expansion units, post-win window, or authentic complete deck |
+| Deployment | Finite supply/garrison/Conflict, choose zero through turn recruits plus two old troops | No expansion units or combat re-entry |
+| Strength | Two per troop plus swords, zero without troops; refresh after applied supported effects including nested decisions | Frozen outcomes and rewards use supported lifecycle definitions |
+| Combat outcome | Frozen positive-strength placements, official tie reward tiers and winner at Combat closure | Reward/round/result path supported; official Conflict registry empty |
+| Combat priority (support v12) | First Player clockwise; repeated plays/passes; Ambush +4 swords; Master Tactician +3 swords or bounded own retreat to garrison; completed-card eligibility refresh | Winner PostWin window supported; no deployment/re-entry Intrigues, expansion units or authentic complete deck |
 | Privacy | Detached owner/public views; no physical-ID ranges, hidden order, RNG or privileged history | No ML encoding or fixed action vocabulary |
 | Replay | Versioned accepted history, initial factory, pending-context hash and final comparison | Pinned runtime/content/support versions only; no event sourcing |
 
@@ -64,9 +64,12 @@ I pp.9–11 for general cost/deployment/control/Reveal rules.
 | The Great Flat | Spice Trade; water2; Combat | Spice3 + accumulated bonus; deployment |
 | Sell Melange | Spice Trade; choose2/3/4/5 spice first | Gain6/8/10/12 Solari respectively; one exchange |
 
-Carthag, Conspire, Foldspace, Heighliner, Mentat, Secrets, Selective Breeding and
-Swordmaster spaces are not enabled by this sourced preset. Generic primitives may
-support parts of their mechanics; that does not make a missing space executable.
+Carthag, Conspire, Heighliner, Mentat and Swordmaster are now enabled sourced
+definitions (see the rule ledger). Carthag recruits1/draws Intrigue1; Conspire
+costs4 spice for Emperor influence1/Solari5/recruit2/Intrigue1; Heighliner costs6
+spice for Guild influence1/recruit5/water2 and deployment; Mentat costs2 Solari
+for draw1 and the available token; Swordmaster costs8 Solari once per game.
+Foldspace, Secrets and Selective Breeding remain unsupported board spaces.
 No board subset is advertised as the complete 22-space official legal action set.
 
 ## CLI and eligible configurations
@@ -86,6 +89,27 @@ game. Neither command authorizes training on incomplete Dune mechanics.
 See [rule ledger](rules-sources.md), [turn architecture](architecture/turn-engine.md)
 and [roadmap](roadmap.md) for evidence and remaining work.
 
-The C2 runtime support revision is v5; partial lifecycle authoring is v3. Existing
-serialized v3 state/replay shapes remain, and earlier support semantics reject
-before replay. The ordinary `Create()` preview keeps lifecycle disabled.
+Current support/preview semantics are v12, partial lifecycle authoring v9, setup
+v5 and turn/replay v7; earlier headers reject before replay. The ordinary
+`Create()` preview keeps lifecycle disabled.
+
+## Definition counts and inventory limits
+
+`LifecycleIntegrationTests.OfficialRegistryDefinitionCountsRemainDistinctFromCompleteInventorySupport`
+locks current registry counts: 12 `CardRule` definitions (7 starter identities,
+3 reserves, 2 Imperium examples), 19 board definitions, 0 production leaders;
+4 `IntrigueRule` definitions (3 executable complete faces, 1 explicitly unsupported
+Plot face), 0 official `ConflictRule` definitions and 4 faction definitions.
+Counts are authored definitions, not boxed physical inventory or complete-game
+coverage. Among starters only Signet Ring has both boxes authored, and its Agent
+box still requires an unsupported real leader; Dune Desert Planet has its Agent
+box only. The two reserve purchase faces and two example Imperium cards are
+fully authored; Foldspace is not. Complete official physical inventories remain
+unverified/incomplete; no percentage is inferred.
+
+Supported lifecycle mechanics include Combat tie tiers, winner PostWin reward
+interleaving, lower-recipient child effects, control/defense, Makers, typed Agent
+Recall, round rotation/draws, terminal triggers and immutable final standings.
+Source gates remain for holder loss below four, tied positive shared Intrigue
+draw order, contested Mentat, Plot, reserve self-trash routing and unsupported
+composite/future content. [SLICE-004 handoff](handoffs/SLICE-004-result.md).

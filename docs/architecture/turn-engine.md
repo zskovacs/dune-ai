@@ -1,6 +1,7 @@
 # Turn engine, legal actions and effects
 
-SLICE-003 adds a bounded original Imperium (2020) turn executor. It reuses the
+SLICE-003 introduced the original Imperium (2020) turn executor; SLICE-004 extends
+its supported lifecycle. It reuses the
 SLICE-002 `GameState`, `PlayerState`, physical `CardInstance`, `CardZone`, setup and
 seeded RNG. **No authentic configuration is fully playable or eligible for RL
 training.** Missing inventory, unverified card boxes and leader abilities remain
@@ -12,7 +13,7 @@ explicit gates. See [coverage](../implemented-mechanics.md) and [ADR 0004](../ad
 executable definitions. `StartRound()`, `Observe(player)`, `LegalActions(player)`
 and `Step(action)` provide the sequential interaction boundary. `GameState` remains
 privileged; agents get `TurnObservation`, never the state, seeds or replay records.
-Without a lifecycle definition, the bounded preview stops at `CombatBoundary`.
+Without a lifecycle definition, the bounded preview stops at a nonterminal `Combat` boundary.
 Supported lifecycle definitions continue through recurring rounds and Endgame to
 the terminal result described below. The generic full-episode interface and Toy
 remain unchanged.
@@ -39,6 +40,8 @@ nested choice to another player.
 | `RevealAction` | Reveal all remaining hand cards and enqueue their Reveal effects |
 | `AcquireCardAction` | Buy a visible row/Reserve card during Reveal |
 | `EndRevealAction` | Finish acquisition and cleanup after required effects resolve |
+| `PlayIntrigueAction` | Play a supported own card in Combat, winner PostWin, or Endgame |
+| `PassPriorityAction` | Finish the current opportunity; consecutive no-play passes close all-seat windows |
 
 A card selector uses visible content identity plus its duplicate index in the
 visible zone. It never contains the raw physical ID allocated by setup in sorted
@@ -79,11 +82,13 @@ Recruitment moves at most the available supply into garrison. Deployment at a
 Combat space permits any troops recruited this turn plus up to two troops that
 were already in garrison. A player chooses the count explicitly. Preliminary
 Combat strength uses participating troop contributions and swords, with zero
-strength when no troop participates. No combat rewards, Intrigue responses,
-Makers, Recall or termination are executed here.
+strength when no troop participates. With lifecycle definitions, the same engine
+resolves Combat rewards, Intrigues, Makers, Recall and Endgame; without them the
+old bounded preview remains.
 
-Faction influence at two grants its VP. Dependencies at the higher alliance/bonus
-threshold remain gated until implemented. This is an explicit restricted preview,
+Faction influence at two grants its VP. Lifecycle faction definitions enable
+recurring threshold-four rewards and sourced Alliance transfers; unresolved holder
+losses remain gated. This is an explicit restricted preview,
 not a modified faction rule. Every production leader needs complete supported
 passive and Signet behavior; metadata or a name does not authorize a no-op leader.
 
@@ -129,11 +134,15 @@ framework, reflection dispatcher, event-sourcing system or custom PRNG was added
 See [benchmark report](../benchmarks/slice-003.md) for measured scope and limits.
 
 SLICE-003.5 verifies these extension limits in the
-[ability and decision audit](ability-decision-audit.md). Nested option ownership
-and acquisition priority work today; general causal continuation, Combat priority
-windows, source/recipient role separation and scoped modifiers are proposed in
-[ADR 0006](../adr/0006-ability-and-decision-execution.md), not implemented support.
+[ability and decision audit](ability-decision-audit.md). It remains a historical
+assessment. SLICE-004 implements causal continuation, explicit
+decision/payer/recipient roles and Combat windows in
+[ADR 0006](../adr/0006-ability-and-decision-execution.md). Scoped modifiers, KH
+and Graft remain proposals.
 
+
+The following stage subsections record deliberate version evolution; current
+contracts are setup v5, turn/replay v7, support/preview v12 and authoring v9.
 
 ### SLICE-004 faction prerequisites
 
@@ -163,8 +172,9 @@ trusted fields; the v3 snapshot and replay schemas remain unchanged.
 
 Combat closure now freezes `CombatOutcome` in the trusted turn snapshot from current
 unit and sword strength, including the zero-eligible path. Rankings use official
-tie reward positions while tied player IDs serialize in seat order. The engine
-continues to stop before rewards and cleanup. The added trusted field advances
+tie reward positions while tied player IDs serialize in seat order. Reward
+execution and recurring cleanup now follow the frozen outcome as described below.
+The added trusted field advances
 turn snapshot and replay schemas to v4, and turn support/preview semantics to v8;
 setup remains v3 and lifecycle authoring remains v5.
 
@@ -197,7 +207,7 @@ RoundStart defense uses the existing OptionalPayment/child-frame machinery and a
 typed RoundStart continuation before five-card draws. `DeployFromSupplyEffect`
 is reserved for that internal decision and does not enable Combat deployment or
 re-entry cards. A Conflict Mentat award records `ProtectedThroughRound` now;
-Task 9 owns Agent-kind provenance, recurring round transitions and Recall.
+Agent-kind provenance, recurring round transitions and Recall are implemented below.
 
 This advances setup snapshots to v4, turn snapshots/replays to v5, turn
 preview/support to v10 and lifecycle authoring to v7 (including the tied shared-draw
@@ -291,3 +301,24 @@ accepted actions, excluding the final-state hash and result. Construction occurs
 after appending the closing action, avoiding both circular hashing and omitted
 final passes. Earlier replay versions are rejected explicitly. `TurnEngine` does
 not implement the generic simulation `IGame` contract.
+
+## SLICE-004 final integration evidence
+
+`LifecycleIntegrationTests.EveryAcceptedPrefixReplaysNestedForeignRewardsThroughNaturalEndgame`
+reconstructs every accepted prefix of an actual 3/4-seat ten-round synthetic game,
+including nested acquisition, foreign optional payment, PostWin and Endgame. It
+compares canonical trusted state/hash, both RNG checkpoints, result, next owner
+and ordered legal arrays; it checks rejected input and policy redaction at every cut.
+`ConcurrentEpisodesShareOnlyImmutableDefinitionsAndRemainScheduleIndependent`
+shares resolved definitions/rules while retaining independent mutable episode state.
+
+`tests/Fixtures/LifecycleFixtureGame.cs` is a development-only `IGame` adapter for
+the existing `EpisodeRunner`, with `LifecycleFixtureAgent` choosing only from
+public observations/legal actions. Engine production types do not depend on
+Simulation. The CLI reports accepted Combat/PostWin card plays by typed fixture
+timing and labels Makers/Recall as automatic round consequences. Counts are
+observations of the selected run, not promises about arbitrary seeds.
+
+See [SLICE-004 measurements](../benchmarks/slice-004.md) and the
+[complete handoff](../handoffs/SLICE-004-result.md). No public snapshot-import or
+search-clone API and no unexpected-exception rollback guarantee is introduced.

@@ -436,3 +436,33 @@ replay rejection rows remain, with v6/support-v11 and v7/support-v11 added.
 The trusted result records both environment and leader seeds plus existing
 configuration/content/ruleset identities, versions and synthetic authenticity.
 Official catalog, leader, Conflict-tier, Plot and unknown post-win face gaps remain.
+
+## SLICE-004 V1 integration delta
+
+No new official rule is introduced by Task 12. The preceding P1–L2 rows retain
+exact supplied sources and behavioral identifiers. The development scenario
+(`tests/Fixtures/LifecycleFixture.cs`, `LifecycleFixtureGame.cs`) has invented
+main cards, Intrigue timing/effects, Conflict rewards and explicitly synthetic
+blank leaders. It reuses the sourced original board-space and supported reserve
+operations. The synthetic reserve replacement rebuilds metadata/recipe/content/
+configuration/fingerprint identities; it does not alter the official catalog.
+
+`LifecycleIntegrationTests.EveryAcceptedPrefixReplaysNestedForeignRewardsThroughNaturalEndgame`
+adds normal 3/4-player ten-round execution with nested Acquire/foreign payment
+and Endgame: every prefix compares full trusted state/hash, ordered legal
+actions, owner, both RNG checkpoints and final result. Every cut also rejects
+invalid actor/phase/card/option/target/payment/deployment/effect input without
+state/history/RNG mutation and checks redaction against changed hidden cards,
+deck order and RNG. Existing `LifecycleDefinitionTests`, `ConflictRewardTests`,
+`FactionRewardTests`, `RoundLifecycleTests` and `EndgameTests` retain unsupported
+graph, unaffordable cost, ordering and terminal rejection gates.
+
+`ConcurrentEpisodesShareOnlyImmutableDefinitionsAndRemainScheduleIndependent`
+shares immutable definitions/rules across serial/parallel episode schedules.
+`OfficialRegistryDefinitionCountsRemainDistinctFromCompleteInventorySupport`
+verifies registry quantities without claiming catalog completeness. CLI coverage
+uses accepted canonical actions and typed fixture timings, not declared phase
+names as proof of a path for arbitrary seeds. Makers/Recall are automatic
+consequences. Benchmarks, exact checks and pending review gates are in the
+[SLICE-004 report](benchmarks/slice-004.md) and [handoff](handoffs/SLICE-004-result.md).
+No SLICE-003.5 re-audit or SLICE-004.5 audit/schema implementation was performed.
