@@ -50,6 +50,57 @@ interfaces (especially PettingZoo AEC and OpenSpiel) before adding a custom one.
 Document a custom alternative's reason in an ADR. Do not add dependencies that
 merely replace simple built-in behavior, or custom test/logging/config frameworks.
 
+## Structured diagnostics
+
+Use `Microsoft.Extensions.Logging.ILogger<T>` for operational diagnostics and
+configure Serilog/sinks at the CLI composition root. Keep user-facing command
+results/help on stdout and operational console events on stderr. Persist logs
+with bounded rolling-file size/retention; document configuration and flush/dispose
+on normal shutdown. Preserve nonzero failure exit codes. Report a full unexpected
+exception once at its owning error boundary; expected cancellation and supported
+partial-preview stops are distinct from engine defects.
+
+Use stable event IDs/names, message templates and structured scalar properties.
+Prefer source-generated `[LoggerMessage]` methods. Guard expensive argument
+construction with `IsEnabled` before serialization, hashing or snapshot capture;
+source generation cannot prevent argument evaluation at the call site.
+
+Keep engine transitions, legal-action enumeration and simulation hot loops free
+of default per-action logging. Use coarse command/batch summaries and failure
+events. Library logging, if needed later, depends on ILogger abstractions and
+defaults to a no-op; benchmark disabled and enabled paths before instrumenting a
+hot path. Do not add asynchronous queues without measured need and explicit
+overflow/drop, shutdown and failure-durability policies.
+
+Do not destructure game state, observations, hands, replay histories, private
+seeds or raw command arguments into routine logs. Use diagnostic status/code and
+cheap context already available to the caller. Developer logs are local artifacts,
+excluded from Git and never policy/agent input. Never capture replay/state merely
+to compute a log field. Sink failures must be visible rather than silently giving
+the impression that persistent logging succeeded.
+
+## JSON and deterministic formats
+
+Use the runtime's `System.Text.Json` as the default serializer. Reuse the existing
+read-only `ConfigurationJson.Options` for the established configuration/content/
+replay contracts. Reuse options and metadata caches; do not construct serializer
+options per call or add a second JSON stack on the assumption that it is faster.
+
+Evaluate alternatives against representative project payloads, elapsed time,
+allocations and required behavior before changing a runtime dependency. Newtonsoft.Json
+requires a concrete missing feature or a material measured compatible benefit;
+an isolated benchmark dependency does not make it an application default. Preserve
+strict unknown-member handling, enum validation, explicit polymorphic allowlists
+and hidden-information tests. Avoid unrestricted runtime type-name deserialization.
+
+Canonical JSON bytes participate in configuration/ruleset identities, snapshots
+and replay checks. Preserve ordering, naming, escaping, null/default behavior,
+enum values and `$action`/`$effect` discriminators. A format/serializer change
+requires deliberate versioning and golden-hash/round-trip/privacy verification;
+semantic JSON equivalence alone does not preserve a SHA-256 identity. Consider
+source-generated serialization for stable measured workloads only when it retains
+these contracts. Keep diagnostic log JSON separate from canonical game JSON.
+
 ## Performance
 
 Performance-critical paths may warrant specialized implementations **after

@@ -7,5 +7,6 @@
     <Compile Include="../../tests/Fixtures/TurnEngineFixture.cs" Link="Fixtures/TurnEngineFixture.cs" />
     <ProjectReference Include="../../src/Dune.Simulation/Dune.Simulation.csproj" />
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 </Project>

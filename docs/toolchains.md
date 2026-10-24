@@ -16,23 +16,24 @@ backends can also record URLs/checksums. This is not a promise of hermetic OS in
 
 ## Daily commands
 
-| Task                       | Responsibility                                               |
-|----------------------------|--------------------------------------------------------------|
-| `mise run setup`           | Locked NuGet restore and `uv sync --locked` into `.venv`     |
-| `mise run toolchain-check` | Reject tool declaration/executable drift and stale locks     |
-| `mise run build`           | Release build of the whole .NET solution, analyzers enabled  |
-| `mise run test`            | xUnit and pytest suites                                      |
-| `mise run test:engine`     | Focused xUnit engine suite                                   |
-| `mise run test:simulation` | Focused xUnit simulation suite                               |
-| `mise run test:dotnet`     | All C# tests                                                 |
-| `mise run test:python`     | Python boundary tests                                        |
-| `mise run lint`            | Ruff static checks; C# analyzers also run during build/check |
-| `mise run format`          | Apply C# and Python formatting                               |
-| `mise run format-check`    | Verify formatting without modifying source                   |
-| `mise run benchmark`       | BenchmarkDotNet baseline in Release                          |
-| `mise run smoke`           | Complete autonomous two-player toy game                      |
+| Task                       | Responsibility                                                  |
+|----------------------------|-----------------------------------------------------------------|
+| `mise run setup`           | Locked NuGet restore and `uv sync --locked` into `.venv`        |
+| `mise run toolchain-check` | Reject tool declaration/executable drift and stale locks        |
+| `mise run build`           | Release build of the whole .NET solution, analyzers enabled     |
+| `mise run test`            | xUnit and pytest suites                                         |
+| `mise run test:engine`     | Focused xUnit engine suite                                      |
+| `mise run test:simulation` | Focused xUnit simulation suite                                  |
+| `mise run test:cli`        | CLI logging, persistence and command-boundary tests             |
+| `mise run test:dotnet`     | All C# tests                                                    |
+| `mise run test:python`     | Python boundary tests                                           |
+| `mise run lint`            | Ruff static checks; C# analyzers also run during build/check    |
+| `mise run format`          | Apply C# and Python formatting                                  |
+| `mise run format-check`    | Verify formatting without modifying source                      |
+| `mise run benchmark`       | BenchmarkDotNet baseline in Release                             |
+| `mise run smoke`           | Complete autonomous two-player toy game                         |
 | `mise run preview:turns`   | Partial original Imperium turn preview with synthetic inventory |
-| `mise run check`           | Tool/lock checks, build, tests, lint and formatting          |
+| `mise run check`           | Tool/lock checks, build, tests, lint and formatting             |
 
 Tasks use native dependencies and propagate exit codes. A single invocation
 deduplicates shared prerequisites. Build/test/format use the same solution and
@@ -56,6 +57,35 @@ See the [baseline report](benchmarks/slice-003.md) for synthetic fixture scope,
 batch setup exclusions, runtime/hardware, measured results and remaining costs.
 Use `mise run preview:turns -- --seed 42 --players 3` to inspect a partial sourced
 decision trace. Missing official card effects are explicit stopping conditions.
+
+## CLI diagnostics
+
+The default CLI logger writes human-readable operational messages to stderr and
+structured JSON-line events to `artifacts/logs/dune-*.jsonl`. Command results/help
+remain on stdout. Files roll daily and at 10 MiB; up to 14 are retained. The file
+sink supports concurrent CLI processes and is flushed/disposed on ordinary exit.
+Artifacts are ignored by Git. Time/run IDs are host diagnostics, never engine
+state or replay-hash inputs.
+
+`DUNE_LOG_DIRECTORY` overrides the output directory relative to the working
+directory (or accepts an absolute path). `DUNE_LOG_LEVEL` accepts case-insensitive
+Microsoft logging levels: Trace, Debug, Information (default), Warning, Error,
+Critical, None. None uses no-op logging and skips file/directory setup. Enabled
+logging validates the required file before executing the command; invalid level
+or file configuration fails visibly. Runtime sink failures have a stderr fallback
+and force a nonzero exit. Expected unsupported preview content is a warning,
+separate from unexpected exceptions; cancellation is also classified separately.
+`CommandCompleted.ExitCode` records the command's result. A later sink/flush failure
+can override the final process exit to 1; the stderr sink-failure message reports
+that distinction without recursively logging through the failing pipeline.
+
+Use `mise run test:cli` for focused persistence, filtering, privacy and error-boundary
+verification. See [ADR 0005](adr/0005-structured-logging-json-policy.md) and the
+[JSON comparison](benchmarks/logging-json.md). To rerun that comparison:
+
+```sh
+mise run benchmark -- --job Short --filter '*JsonBenchmarks*'
+```
 
 ## Python ownership
 

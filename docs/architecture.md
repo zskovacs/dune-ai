@@ -108,6 +108,23 @@ seeds. Each result records its actual episode policy seed; replay a policy run
 with `Run(result.Seed, config, result.AgentSeed)`. Input order defines episode
 identity, and worker scheduling never changes the policy streams.
 
+## Operational diagnostics
+
+The CLI owns the operational logging pipeline: source-generated Microsoft ILogger
+events backed by Serilog, human-readable stderr output and bounded rolling JSONL
+files. Normal command output remains on stdout. Run IDs correlate command events,
+typed preview diagnostics and unexpected exceptions; normal exit flushes/disposes
+sinks. Expected Unsupported preview boundaries remain partial successes, while
+other failure diagnostics and unexpected exceptions retain nonzero failure exits.
+
+Logging adds no dependencies, callbacks or per-action events to Engine/Simulation
+hot loops. Routine fields use existing scalar context and diagnostic codes;
+snapshot capture, hashing and private-state/replay serialization are not performed
+just to log. Host timestamps/run IDs do not participate in deterministic state.
+Log JSON is a separate diagnostic format from canonical game JSON. See
+[ADR 0005](adr/0005-structured-logging-json-policy.md), [configuration](toolchains.md#cli-diagnostics)
+and the [JSON comparison](benchmarks/logging-json.md).
+
 ## Python and RL boundary
 
 `training.agents`, `training.environments` and `training.experiments` are package
@@ -148,8 +165,9 @@ evaluates low-overhead batched interoperability and OpenSpiel's possible role.
 | hatchling                               | Small standard Python package build backend; uv owns package resolution                     |
 | mise / uv                               | Toolchain/task orchestration versus package/environment ownership                           |
 
-Only development/test/benchmark packages are installed beyond the language
-runtimes. PyTorch (BSD-style), PettingZoo (MIT), OpenSpiel (Apache-2.0) and pythonnet (MIT) are established candidates
+Engine and Simulation use only the language runtime. The CLI adds ILogger/Serilog
+for console/file diagnostics; test and benchmark dependencies remain separate.
+PyTorch (BSD-style), PettingZoo (MIT), OpenSpiel (Apache-2.0) and pythonnet (MIT) are established candidates
 for future milestones; evaluate the precise
 version's compatibility/license when adding it. No unused ML bridge is installed.
 

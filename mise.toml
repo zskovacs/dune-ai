@@ -37,6 +37,11 @@ description = "Run all .NET tests"
 depends = ["build"]
 run = "dotnet test dune-ai.slnx --configuration Release --no-build --no-restore"
 
+[tasks."test:cli"]
+description = "Run CLI command and structured logging tests"
+depends = ["build"]
+run = "dotnet test tests/Dune.Cli.Tests --configuration Release --no-build --no-restore"
+
 [tasks."test:engine"]
 depends = ["build"]
 run = "dotnet test tests/Dune.Engine.Tests --configuration Release --no-build --no-restore"

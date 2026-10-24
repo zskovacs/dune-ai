@@ -4,12 +4,15 @@ using Dune.Engine.Configuration;
 using Dune.Engine.Fixtures;
 using Dune.Engine.Runtime;
 using Dune.Engine.Turns;
+using Microsoft.Extensions.Logging;
 
 namespace Dune.Cli;
 
-internal static class TurnPreviewCommand
+internal sealed class TurnPreviewCommand
 {
-    internal static int Run(string[] args)
+    private TurnPreviewCommand() { }
+
+    internal static int Run(string[] args, ILogger<TurnPreviewCommand> logger)
     {
         var seed = 42;
         var players = 4;
@@ -17,12 +20,12 @@ internal static class TurnPreviewCommand
         {
             if (i + 1 >= args.Length || !int.TryParse(args[i + 1], NumberStyles.Integer,
                 CultureInfo.InvariantCulture, out var value))
-                return Usage();
+                return Usage(logger);
             switch (args[i])
             {
                 case "--seed": seed = value; break;
                 case "--players" when value is 3 or 4: players = value; break;
-                default: return Usage();
+                default: return Usage(logger);
             }
         }
 
@@ -41,7 +44,7 @@ internal static class TurnPreviewCommand
         var start = engine.StartRound();
         if (!start.IsSuccess)
         {
-            PrintDiagnostics(start.Diagnostics);
+            PrintDiagnostics(start.Diagnostics, logger);
             return 1;
         }
         Console.WriteLine("Round 1: revealed a synthetic Conflict; each player drew five cards.");
@@ -62,7 +65,8 @@ internal static class TurnPreviewCommand
                 var diagnostics = engine.SupportDiagnostics(owner);
                 if (diagnostics.IsEmpty)
                     throw new InvalidOperationException("No legal decision or support diagnostic at Player Turns.");
-                PrintDiagnostics(diagnostics);
+                PrintDiagnostics(diagnostics, logger);
+                if (diagnostics.Any(diagnostic => diagnostic.Status != StepStatus.Unsupported)) return 1;
                 stoppedUnsupported = true;
                 break;
             }
@@ -75,7 +79,10 @@ internal static class TurnPreviewCommand
             var phase = engine.Phase;
             var result = engine.Step(action);
             if (!result.IsSuccess)
-                throw new InvalidOperationException("Generated legal action failed: " + Describe(action));
+            {
+                LogDiagnostics(result.Diagnostics, logger);
+                throw new InvalidOperationException("Generated legal action failed.");
+            }
             Console.WriteLine("  action " + Describe(action));
             if (engine.Phase != phase) Console.WriteLine($"  phase {phase} -> {engine.Phase}");
         }
@@ -83,7 +90,8 @@ internal static class TurnPreviewCommand
         var replay = TurnEngine.Replay(record, Create, rules);
         if (!replay.IsSuccess || replay.Engine!.CaptureTrustedSnapshot().Hash != engine.CaptureTrustedSnapshot().Hash)
         {
-            PrintDiagnostics(replay.Diagnostics);
+            PrintDiagnostics(replay.Diagnostics, logger);
+            CliLog.ReplayFailed(logger);
             Console.Error.WriteLine("Preview replay verification failed.");
             return 1;
         }
@@ -91,19 +99,35 @@ internal static class TurnPreviewCommand
         Console.WriteLine(stoppedUnsupported
             ? "PARTIAL EXECUTION: stopped at an unsupported content boundary before completing Player Turns."
             : "Stopped at the Combat boundary; Combat, Makers, Recall and game completion are not implemented.");
+        CliLog.PreviewSummary(logger, players, record.Actions.Length, stoppedUnsupported);
         return 0;
     }
 
     private static string Describe(GameAction action) => JsonSerializer.Serialize(action, ConfigurationJson.Options);
 
-    private static void PrintDiagnostics(IEnumerable<TurnDiagnostic> diagnostics)
+    private static void PrintDiagnostics(IEnumerable<TurnDiagnostic> diagnostics, ILogger logger)
     {
         foreach (var diagnostic in diagnostics)
+        {
+            LogDiagnostic(diagnostic, logger);
             Console.WriteLine($"  {diagnostic.Status} [{diagnostic.Code}]: {diagnostic.Message}");
+        }
     }
 
-    private static int Usage()
+    internal static void LogDiagnostics(IEnumerable<TurnDiagnostic> diagnostics, ILogger logger)
     {
+        foreach (var diagnostic in diagnostics) LogDiagnostic(diagnostic, logger);
+    }
+
+    private static void LogDiagnostic(TurnDiagnostic diagnostic, ILogger logger)
+    {
+        var level = diagnostic.Status == StepStatus.ContentError ? LogLevel.Error : LogLevel.Warning;
+        CliLog.PreviewDiagnostic(logger, level, diagnostic.Status, diagnostic.Code);
+    }
+
+    private static int Usage(ILogger logger)
+    {
+        CliLog.ArgumentsRejected(logger);
         Console.Error.WriteLine("Usage: Dune.Cli --turn-preview [--seed INT] [--players 3|4]");
         return 2;
     }

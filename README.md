@@ -1,7 +1,7 @@
 # Dune AI
 
-A local research monorepo for future autonomous play of **Dune: Imperium** and
-**Dune: Imperium – Uprising**. The first complete-game target is original Imperium
+A local research monorepo for future autonomous play of **Dune: Imperium** and **Dune: Imperium – Uprising**. The first
+complete-game target is original Imperium
 with Rise of Ix and Immortality, competitive 3–4 players. The architecture targets
 deterministic headless simulation, parallel self-play and Python/PyTorch learning.
 
@@ -38,25 +38,56 @@ CI uses the same mise tasks through the official `jdx/mise-action`.
 
 ## Developer tasks
 
-| Command                 | Purpose                                                           |
-|-------------------------|-------------------------------------------------------------------|
-| `mise run setup`        | Restore .NET and sync Python dependencies with locks enforced     |
-| `mise run build`        | Build all six .NET projects in Release                            |
-| `mise run test`         | Run xUnit and pytest tests                                        |
-| `mise run lint`         | Ruff; C# analyzers also run during build/check                    |
-| `mise run format`       | Apply C# and Python formatting                                    |
-| `mise run format-check` | Check formatting without editing source                           |
-| `mise run benchmark`    | Run BenchmarkDotNet baseline                                      |
-| `mise run smoke`        | Run a seeded headless toy game with two random agents             |
+| Command                  | Purpose                                                           |
+|--------------------------|-------------------------------------------------------------------|
+| `mise run setup`         | Restore .NET and sync Python dependencies with locks enforced     |
+| `mise run build`         | Build all .NET projects in Release                                |
+| `mise run test`          | Run xUnit and pytest tests                                        |
+| `mise run lint`          | Ruff; C# analyzers also run during build/check                    |
+| `mise run format`        | Apply C# and Python formatting                                    |
+| `mise run format-check`  | Check formatting without editing source                           |
+| `mise run benchmark`     | Run BenchmarkDotNet baseline                                      |
+| `mise run smoke`         | Run a seeded headless toy game with two random agents             |
 | `mise run preview:turns` | Run a partial Dune turn preview with explicit support diagnostics |
-| `mise run check`        | Validate tool/lock consistency, build, tests, lint and formatting |
+| `mise run check`         | Validate tool/lock consistency, build, tests, lint and formatting |
 
-Focused tasks: `test:engine`, `test:simulation`, `test:dotnet`, `test:python`,
+Focused tasks: `test:engine`, `test:simulation`, `test:cli`, `test:dotnet`, `test:python`,
 and `toolchain-check`. Use `mise tasks` to list task descriptions. Benchmark
 timings are separate from correctness checks; see the performance notes in the
 [architecture](docs/architecture.md).
 For a quick harness check, use `mise run benchmark -- --job Dry --filter '*'`.
 Dry timings are not a reliable performance comparison.
+
+## Structured diagnostics
+
+The CLI keeps command results/help on stdout. Operational events use Microsoft's
+ILogger API with Serilog: readable stderr output and rolling JSON-line files under
+`artifacts/logs/`. Run IDs correlate command start/completion, typed support
+diagnostics and unexpected failures. Expected partial previews remain distinct
+from engine defects. Ordinary logs do not serialize private game state or replay.
+
+The default minimum level is `Information`. Set `DUNE_LOG_LEVEL` and
+`DUNE_LOG_DIRECTORY` to override the level and output directory, for example:
+
+```sh
+DUNE_LOG_LEVEL=Debug DUNE_LOG_DIRECTORY=artifacts/logs mise run preview:turns
+```
+
+Levels are case-insensitive: `Trace`, `Debug`, `Information`, `Warning`, `Error`,
+`Critical`, and `None`. `None` disables logs and skips log-directory/file setup.
+Enabled logging writes daily `dune-*.jsonl` files, rolls at 10 MiB and retains up
+to 14 files, with shared-file support for concurrent CLI processes. Invalid
+configuration or unavailable required log files fail visibly. Runtime sink
+failures are reported on stderr and produce a nonzero process exit.
+
+Logging is synchronous; normal command exit flushes/disposes the sinks.
+It is configured in the CLI and adds no per-action
+logging to engine/simulation hot loops. See [the logging/JSON ADR](docs/adr/0005-structured-logging-json-policy.md).
+
+System.Text.Json remains the runtime JSON default. The [project comparison](docs/benchmarks/logging-json.md)
+found no compatible workload favoring JSON.NET; Newtonsoft.Json is used only by
+the comparison benchmark. Existing canonical bytes, hashes and replay formats
+are preserved. Future serializer choices require measured compatible benefits.
 
 ## Repository layout
 
@@ -73,7 +104,8 @@ Dry timings are not a reliable performance comparison.
 │   └── Dune.Cli/                # headless executable
 ├── tests/
 │   ├── Dune.Engine.Tests/
-│   └── Dune.Simulation.Tests/
+│   ├── Dune.Simulation.Tests/
+│   └── Dune.Cli.Tests/
 ├── training/
 │   ├── agents/
 │   ├── environments/            # action-mask utility; future AEC adapter
