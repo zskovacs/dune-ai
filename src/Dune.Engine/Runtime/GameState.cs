@@ -5,7 +5,9 @@ namespace Dune.Engine.Runtime;
 
 public enum GamePhase
 {
-    BeforeRoundStart
+    BeforeRoundStart,
+    PlayerTurns,
+    CombatBoundary
 }
 
 public enum ContentAuthenticity

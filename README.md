@@ -5,10 +5,12 @@ A local research monorepo for future autonomous play of **Dune: Imperium** and
 with Rise of Ix and Immortality, competitive 3–4 players. The architecture targets
 deterministic headless simulation, parallel self-play and Python/PyTorch learning.
 
-**Current scope:** SLICE-001 configuration/composition and SLICE-002 base runtime
-state, deterministic setup, private observations and trusted snapshots. Authentic
-Dune initialization remains blocked by incomplete card data; setup tests and
-benchmarks use explicitly synthetic fixtures. The two-player **toy token game** is executable.
+**Current scope:** SLICE-001 composition, SLICE-002 runtime/setup and SLICE-003
+incremental turn execution, legal actions, effects and deterministic replay.
+Authentic Dune initialization remains blocked by incomplete card/leader data.
+The turn preview uses a visibly synthetic inventory and stops on unsupported
+content; tests exercise complete Player Turns with test-only synthetic effects.
+The two-player **toy token game** is executable.
 No Dune configuration is playable. No Python/engine bridge, neural model, PPO or
 MCTS exists. The toy game uses invented rules.
 
@@ -46,6 +48,7 @@ CI uses the same mise tasks through the official `jdx/mise-action`.
 | `mise run format-check` | Check formatting without editing source                           |
 | `mise run benchmark`    | Run BenchmarkDotNet baseline                                      |
 | `mise run smoke`        | Run a seeded headless toy game with two random agents             |
+| `mise run preview:turns` | Run a partial Dune turn preview with explicit support diagnostics |
 | `mise run check`        | Validate tool/lock consistency, build, tests, lint and formatting |
 
 Focused tasks: `test:engine`, `test:simulation`, `test:dotnet`, `test:python`,
@@ -105,8 +108,12 @@ and stable fingerprints. See the [rules index](docs/rules-index.md),
 [content-source assessment](docs/content/sources.md). Validated composition is
 separate from gameplay readiness; all Dune results remain nonplayable.
 
-See the [runtime setup architecture](docs/architecture/runtime-state.md). Next is
-a verified content inventory and Round Start for original Imperium; the eventual
+See the [runtime setup architecture](docs/architecture/runtime-state.md),
+[turn engine](docs/architecture/turn-engine.md) and
+[implemented mechanics matrix](docs/implemented-mechanics.md). Run
+`mise run preview:turns -- --seed 42 --players 4` for the partial development
+scenario and replay. A complete verified inventory and leader/card effects remain
+required before authentic play. The eventual
 complete-game target remains **Imperium + Ix + Immortality**.
 See the [roadmap](docs/roadmap.md) and [rule ledger](docs/rules-sources.md).
 Do not commit copyrighted rulebooks/card art, datasets, checkpoints, secrets or

@@ -31,6 +31,7 @@ backends can also record URLs/checksums. This is not a promise of hermetic OS in
 | `mise run format-check`    | Verify formatting without modifying source                   |
 | `mise run benchmark`       | BenchmarkDotNet baseline in Release                          |
 | `mise run smoke`           | Complete autonomous two-player toy game                      |
+| `mise run preview:turns`   | Partial original Imperium turn preview with synthetic inventory |
 | `mise run check`           | Tool/lock checks, build, tests, lint and formatting          |
 
 Tasks use native dependencies and propagate exit codes. A single invocation
@@ -48,6 +49,13 @@ Extra benchmark arguments are forwarded by mise unchanged. A dry job runs one
 measurement to verify execution; use the default task for normal measurement.
 Reports are written to ignored `BenchmarkDotNet.Artifacts/`. Process-priority
 warnings in an unprivileged session do not require elevated setup.
+
+SLICE-003 workloads can be selected with
+`mise run benchmark -- --job Short --filter '*TurnEngineBenchmarks*'`.
+See the [baseline report](benchmarks/slice-003.md) for synthetic fixture scope,
+batch setup exclusions, runtime/hardware, measured results and remaining costs.
+Use `mise run preview:turns -- --seed 42 --players 3` to inspect a partial sourced
+decision trace. Missing official card effects are explicit stopping conditions.
 
 ## Python ownership
 

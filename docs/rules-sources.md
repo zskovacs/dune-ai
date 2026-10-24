@@ -91,3 +91,80 @@ seeded setup and first-player independence;
 `ObservationsRedactNonemptyOpponentPrivateZonesAndRemainDetached` covers visibility;
 `TrustedSnapshotContainsAllPhysicalCardsSeedsAndTemporaryState` covers privileged
 comparison data. Content failures have direct tests and never return partial state.
+
+## SLICE-003 source verification boundary
+
+I and A below retain the exact local 2020 editions and **one-based PDF pages**
+from the source index. Card art was inspected locally; it is not redistributed.
+The starter fan on I p.3 verifies access icons but obscures most effect boxes.
+No effect is inferred from a card name. The initial seven starter identities and
+copy counts remain verified setup metadata, separately from executable effects.
+
+| Mechanic | Official source | Executable scope | Behavioral evidence |
+| --- | --- | --- | --- |
+| Round Start | [I p.8](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=8) | Reveal top Conflict, draw five from own deck, first player begins | Turn engine tests |
+| Recycling empty deck | [I p.6](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=6), [A p.1](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=1) | Reuse existing draw/reshuffle operation, preserve physical identity | CardZoneTests; turn engine tests |
+| Turn scheduling | [I p.8](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=8) | Clockwise Agent or early Reveal, skip Revealed, stop before Combat | Turn engine tests |
+| Placement restrictions and ordering | [I p.9](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=9) | Icon access, vacant space, mandatory payment first, player chooses effect order | Turn engine tests; sourced examples tests |
+| Optional arrow payments | [I p.9](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=9), [A p.1](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=1) | Pay or decline, exact nested effect context | Turn engine tests; Fremen Camp example |
+| Finite recruitment and deployment | [I p.10](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=10) | Supply -> garrison; Combat space deploy any recruits this turn plus up to two old troops; zero permitted | Turn engine tests |
+| Reveal and acquisitions | [I p.11](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=11) | Remaining hand only, ordered effects; purchases before/between/after, multiple cards, refill row, acquire to discard, discard all in-play | Turn engine tests |
+| Combat strength | [I p.11](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=11) | Two per deployed troop plus swords, zero without troops; no battle resolution | Turn engine tests |
+| Influence threshold | [I p.7](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7) | Crossing two grants VP; unsupported higher threshold dependencies must stay gated | Turn engine tests |
+| Board space definitions | [A p.2](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=2) | Exact per-space requirements/costs/rewards in implementation matrix | Sourced examples tests |
+| Control/bonus spice | [I p.10](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=10), [A p.2](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=2) | Arrakeen/Imperial Basin controller receives bonus; harvest takes accumulated bonus spice | Sourced examples tests |
+| Signet Ring | [I p.3](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=3), [A p.1](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=1) | Three access icons, Reveal 1 Persuasion; Agent use requires complete leader ability contract | Sourced examples tests |
+| Dune, the Desert Planet | [I p.3](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=3), [I p.10](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=10) | Spice Trade; explicitly no additional Agent effect in Imperial Basin example; obscured Reveal stays gated | Sourced examples tests |
+| Arrakis Liaison / The Spice Must Flow | [I p.3](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=3) | Complete faces: Liaison cost2/access Landsraad+City/Reveal2 Persuasion; Flow cost9/acquire1 VP/Reveal1 spice | Sourced examples tests |
+| Fremen Camp / Sardaukar Legion | [I p.9](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=9) | Complete faces and examples: Camp optional2 spice ->3 recruits, Reveal2 Persuasion+1 sword; Legion2 recruits, Reveal1 Persuasion+2 swords | Sourced examples tests |
+
+Unverified starter boxes, Foldspace effects, Intrigue play and all real leader
+contracts remain unsupported. The p.3 fan's visible access icons are not evidence
+for the obscured boxes. No complete authentic game or RL environment is enabled.
+Engineering decisions (seeds, selectors, replay schema, diagnostics and synthetic
+fixture inventory) are not official game rules; see ADR 0004.
+
+Direct SLICE-003 behavioral tests:
+
+- [`TurnEngineTests`](../tests/Dune.Engine.Tests/TurnEngineTests.cs):
+  `RoundStartDrawsFiveRevealsConflictAndSchedulesClockwise`,
+  `PlacementChecksAccessCostsOccupancyInfluenceAndOncePerGameBeforeMutation`,
+  `EffectOrderAllowsBoardGainToFundOptionalCardPayment`,
+  `NestedOptionalDecisionsPreserveOwnerIndependentOfActivePlayer`,
+  `DeploymentAllowsRecruitsAndOnlyTwoOldGarrisonTroops`,
+  `RevealUsesOnlyHandAndAllowsPurchasesBetweenEffectsWithAcquireRewardsAndRefill`,
+  `RevealStrengthIgnoresSwordsWithoutTroopsAndKeepsDeployedStrength`,
+  `DrawRecyclesDiscardDeterministicallyAndEpisodesRemainIsolated`,
+  `DeterministicReplayBindsRulesRuntimeConfigSeedsAndPendingDecisions`, and
+  `LegalEnumerationAndObservationsAreReadOnlyPrivateAndDoNotExposePhysicalIds`.
+  These use visibly synthetic card/board definitions to isolate primitives; they
+  do not establish the named board-space/card catalog's coverage on their own.
+- [`OriginalImperiumTurnRulesTests`](../tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs)
+  executes the sourced preset: `FremenCampCanDeclineItsOptionalSpicePayment`,
+  `FremenCampPaymentPrecedesItsRecruitment`, `SellMelangeUsesTheChosenExchange`,
+  `HallOfOratoryAddsOnePersuasionOnReveal`,
+  `SietchTabrRequiresTwoFremenInfluenceAndDoesNotGrantInfluence`,
+  `HighCouncilCostsFiveSolariAndAddsTwoPersuasionOnReveal`,
+  `CrossingTwoInfluenceGrantsOneVictoryPoint`,
+  `NamedImperiumCardsRevealTheirSourcedPersuasionAndSwords`, and
+  `RevealCanBuyMultipleLiaisonsAndFlowButNotFoldspace`.
+  The helper substitutes two explicitly one-copy test inventory entries for named
+  examples and uses synthetic leaders; it never claims their boxed counts or
+  replaces missing starter abilities.
+
+Additional direct named-space/card tests in `OriginalImperiumTurnRulesTests`:
+`HardyWarriorsPaysWaterAndCanDeployRecruitsPlusTwoOldTroops`,
+`ImperialBasinHarvestsBonusAndPaysItsController`,
+`ArrakeenRecruitsOneTroopAndDrawsOneCard`,
+`BoardSpaceGuideAppliesMandatoryCostsRewardsAndPlacement` (Stillsuits, Rally Troops,
+Research Station, Hagga Basin, The Great Flat and Secure Contract), and
+`SignetRingRevealsOnePersuasion`. The exact method names in the linked test source
+are authoritative; the synthetic blank access card isolates the sourced board rule.
+
+Acquire timing (A p.1) is pinned by an immediate Spice Must Flow VP assertion in
+`RevealCanBuyMultipleLiaisonsAndFlowButNotFoldspace`, with nested-priority tests
+`AcquireOptionalDecisionBlocksOuterRevealEffectsAndPurchasesUntilResolved` and
+`NestedAcquireGainCompletesBeforeParentAcquireDecisionAndOuterReveal`.
+`CommutativeSameOwnerAgentGainsResolveWithoutExtraActions` verifies that only
+order-independent Agent gains drain automatically; Reveal acquisition interleaving
+and meaningful optional-cost ordering retain explicit decisions.

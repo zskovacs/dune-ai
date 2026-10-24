@@ -3,9 +3,12 @@
 This repository supports infrastructure and configuration for future Dune: Imperium
 and Uprising AI. SLICE-001 adds
 [ruleset composition](architecture/ruleset-composition.md); SLICE-002 adds
-[typed runtime state and deterministic setup](architecture/runtime-state.md). **Only the separate
-toy game is playable.** Authentic setup remains blocked by incomplete content. Executable Dune gameplay
-and training remain roadmap work.
+[typed runtime state and deterministic setup](architecture/runtime-state.md).
+SLICE-003 adds an [incremental turn engine](architecture/turn-engine.md) with a
+[documented supported subset](implemented-mechanics.md), private decisions and replay. **Only the separate toy game is
+fully playable.** Authentic setup remains blocked
+by incomplete content; the Dune CLI scenario explicitly stops at unsupported data.
+Complete gameplay and training remain roadmap work.
 The design favors correctness, reproducibility and clear ownership before
 throughput optimizations.
 

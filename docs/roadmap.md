@@ -11,8 +11,8 @@ BenchmarkDotNet. The invented Toy rules remain an independent regression example
 Typed configuration, sourced representative module composition, explicit conflict
 handling, immutable content metadata, deterministic fingerprints and configuration
 presets. All seven supplied rulebooks are indexed; compatibility, content-source
-assessment, leader-policy boundary and implementation status are documented.
-**No Dune configuration is playable.** Supported metadata resolution is narrower
+assessment, leader-policy boundary and implementation status are documented. **No Dune configuration is playable.**
+Supported metadata resolution is narrower
 than the recognized official product/mode/format vocabulary. See the
 [composition architecture](architecture/ruleset-composition.md),
 [rules index](rules-index.md), [matrix](compatibility-matrix.md), and
@@ -28,16 +28,32 @@ initialization benchmarks use internal synthetic content with authentic quantiti
 The public initializer remains blocked by the incomplete authentic catalog. No
 Dune game is playable. See [runtime architecture](architecture/runtime-state.md).
 
-## SLICE-003 — audited content and Round Start
+## SLICE-003 — turn engine development preview
 
-Complete source/permission decisions and verify base card identities/copy counts,
-Conflict tiers, remaining leaders and any leader-specific setup instructions. Keep
-real initialization blocked until that gate passes. Implement Round Start only:
-reveal the top Conflict, draw five cards per player, advance round/phase and create
-the first decision owner. Add privacy/reshuffle/round transition and versioned replay
-tests. Then scope the first bounded Agent action with sourced costs/effects and
-legal-action/observation contracts; do not combine all board/card effects at once.
-The original+Ix+Immortality complete-game target remains unchanged.
+Round Start, clockwise Agent/early Reveal scheduling, incremental legal decisions,
+typed effect resolution, optional payment/order/deployment, interleaved card
+acquisition, preliminary strength, private observations and versioned replay are
+implemented for a documented subset. Sourced board/card examples and test-only
+synthetic effect fixtures verify the engine through the Combat boundary. The CLI
+executes a partial sourced sequence with synthetic inventories and stops explicitly
+at missing card evidence. See [coverage](implemented-mechanics.md),
+[architecture](architecture/turn-engine.md) and [benchmarks](benchmarks/slice-003.md).
+
+**Not a complete authentic game or RL-ready environment.** The existing content
+gate remains: audit full card/Conflict inventories, obscured starting effects,
+remaining leaders and passive/Signet/setup contracts. No missing effect receives a
+substitute. The original+Ix+Immortality complete-game target remains unchanged.
+
+## SLICE-004 — phase completion and content gates
+
+Resolve the outstanding source evidence and implement at least one complete
+authentic leader/first-round content path before claiming a playable environment.
+Then add Combat Intrigue priority/pass decisions, strength changes, ties/rewards,
+troop returns, Makers bonus spice, Recall (Agents/cards/First Player), round reset
+and full-game termination/ranking with explicit supported content. Extend replay
+and privacy tests across these phase boundaries. Higher faction threshold bonuses,
+alliances and remaining base spaces/cards need complete sourced implementations;
+no expansion mechanic or training algorithm should be used to bypass those gates.
 
 ## Complete-game target
 

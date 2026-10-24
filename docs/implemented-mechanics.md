@@ -1,0 +1,85 @@
+# SLICE-003 implemented mechanics and support matrix
+
+The original Imperium (2020) turn engine is a **development preview**. No selected
+configuration is authentic complete gameplay or RL-ready. Tests can use explicitly
+synthetic inventory and effects; these do not establish full rules coverage.
+
+| Area | Operational subset | Remaining boundary |
+| --- | --- | --- |
+| Setup | Existing Standard competitive 3–4 player recipe; fixed/random assignments | Authentic full inventory and leader setup/abilities incomplete |
+| Round Start | Top Conflict reveal, draw5, empty-deck recycling and seeded shuffle | Real Conflict/leader start triggers need complete supported data |
+| Scheduling | Clockwise, early Reveal, skip Revealed, multi-decision turn | Stops before Combat execution |
+| Agent | Visible-card access, costs first, occupancy, influence and once-per-game restrictions | Only sourced card boxes/spaces; omitted actions diagnosed |
+| Effects | Typed primitive gains, draw, recruit, influence, optional payment/choice, nested owners, acquisition | Unique complex effects and higher faction threshold dependencies gated |
+| Reveal | Hand only, choice of effect order, interleaved purchases, multiple acquisitions, row refill, Reserve, cleanup | Unknown starter/market boxes stay unsupported |
+| Deployment | Finite supply/garrison/Conflict, choose zero through turn recruits plus two old troops | No combat resolution or other unit types |
+| Strength | Two per troop plus swords, zero without troops | No Combat Intrigue or outcome/reward ranking |
+| Privacy | Detached owner/public views; no physical-ID ranges, hidden order, RNG or privileged history | No ML encoding or fixed action vocabulary |
+| Replay | Versioned accepted history, initial factory, pending-context hash and final comparison | Pinned runtime/content/support versions only; no event sourcing |
+
+## Cards
+
+| Card | Agent support | Reveal/Acquire support | Evidence |
+| --- | --- | --- | --- |
+| Convincing Argument | No access icons; obscured effect text gated | Obscured Reveal gated | I p.3 fan verifies component/access only |
+| Dagger | Landsraad icon; Agent box gated | Reveal gated | I p.3 fan |
+| Diplomacy | Four faction icons; Agent box gated | Reveal gated | I p.3 fan |
+| Dune, the Desert Planet | Spice Trade; no Agent effect | Reveal gated | I pp.3,10 explicit example |
+| Reconnaissance | City icon; Agent box gated | Reveal gated | I p.3 fan |
+| Seek Allies | Four faction icons; effect text gated | Reveal gated | I p.3 fan; do not invent missing trash text |
+| Signet Ring | Landsraad/City/Spice Trade; dispatch requires supported leader | Reveal 1 Persuasion | I p.3 full face; A p.1 |
+| Arrakis Liaison | Landsraad/City, no Agent effect | Cost2; Reveal2 Persuasion | I p.3 full face |
+| The Spice Must Flow | No Agent icons | Cost9; acquire1 VP; Reveal1 spice | I p.3 full face |
+| Foldspace | Gated | Never bought with Persuasion; box effects gated | I pp.3,11 |
+| Fremen Camp | City/Spice Trade; optional2 spice -> recruit3 | Cost4; Reveal2 Persuasion + sword1 | I p.9 full example face |
+| Sardaukar Legion | Emperor/Landsraad; recruit2 | Cost5; Reveal1 Persuasion + swords2 | I p.9 full example face |
+
+The two example Imperium cards have executable definitions, not a claimed complete
+boxed copy inventory. The main content catalog remains Representative. There is
+no import of third-party text, dataset or artwork. All real leaders remain gated;
+explicit synthetic test/development leaders are distinct identities with no
+official abilities. They never stand in for an unsupported named leader.
+
+## Board spaces
+
+All definitions below use **A p.2**, the original Imperium Player Aid (2020), plus
+I pp.9–11 for general cost/deployment/control/Reveal rules.
+
+| Space | Requirements/cost | Effects |
+| --- | --- | --- |
+| Wealth | Emperor access | Emperor influence1, Solari2 |
+| Stillsuits | Fremen access; Combat | Fremen influence1, water1; deployment choice |
+| Secure Contract | Spice Trade | Solari3 |
+| Hall of Oratory | Landsraad | Recruit1; +1 Persuasion at Reveal while Agent is here |
+| Imperial Basin | Spice Trade; Combat | Spice1 + accumulated bonus; controller gains spice1; deployment |
+| Rally Troops | Landsraad; Solari4 | Recruit4; no deployment |
+| Hardy Warriors | Fremen; water1; Combat | Fremen influence1, recruit2; deployment |
+| Arrakeen | City; Combat | Recruit1, draw1; controller gains Solari1; deployment |
+| Sietch Tabr | City; Fremen influence >=2; Combat | Recruit1, water1; no Fremen influence gain |
+| High Council | Landsraad; Solari5; once/game | Permanent seat; Reveal +2 Persuasion |
+| Research Station | City; water2; Combat | Draw3; deployment |
+| Hagga Basin | Spice Trade; water1; Combat | Spice2 + accumulated bonus; deployment |
+| The Great Flat | Spice Trade; water2; Combat | Spice3 + accumulated bonus; deployment |
+| Sell Melange | Spice Trade; choose2/3/4/5 spice first | Gain6/8/10/12 Solari respectively; one exchange |
+
+Carthag, Conspire, Foldspace, Heighliner, Mentat, Secrets, Selective Breeding and
+Swordmaster spaces are not enabled by this sourced preset. Generic primitives may
+support parts of their mechanics; that does not make a missing space executable.
+No board subset is advertised as the complete 22-space official legal action set.
+
+## CLI and eligible configurations
+
+`mise run preview:turns -- --seed 42 --players 4` explicitly links the same
+synthetic setup inventory as tests/benchmarks. It executes verified available
+placements, logs legal decisions and transitions, then stops when unverified card
+or leader data blocks progress. It verifies replay of the accepted partial trace.
+The command exits successfully when it demonstrates and identifies this expected
+support boundary; an engine/replay defect exits unsuccessfully.
+
+Complete Player Turns and Combat-boundary scheduling are exercised using
+**test-only synthetic effect fixtures**. This is engine verification, not an
+authentic first-round demo. The existing toy command remains a separate invented
+game. Neither command authorizes training on incomplete Dune mechanics.
+
+See [rule ledger](rules-sources.md), [turn architecture](architecture/turn-engine.md)
+and [roadmap](roadmap.md) for evidence and remaining work.

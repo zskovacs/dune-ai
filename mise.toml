@@ -85,3 +85,8 @@ depends = ["toolchain-check", "test", "lint", "format-check"]
 
 [settings]
 lockfile = true
+
+[tasks."preview:turns"]
+description = "Run the partial original Imperium turn preview (synthetic inventory; unsupported mechanics stop)"
+depends = ["build"]
+run = "dotnet run --project src/Dune.Cli --configuration Release --no-build --no-restore -- --turn-preview"

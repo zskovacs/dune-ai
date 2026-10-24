@@ -25,7 +25,7 @@ quantity does not require duplicate definitions or shared mutable card state.
 | Quantity | Physical multiplicity of this definition; setup recipes specify per-player counts and destinations separately. |
 | Availability | Allowed base games, required expansions/modules and explicit exclusions. Empty restrictions mean no added restriction, not proof of official universal compatibility. |
 | Sources | Local PDF identity and 1-based PDF page, with section/interpretation where useful. |
-| Implementation status | Metadata versus implemented behavior; no bundled card has executable effects. |
+| Implementation status | Metadata status; separate typed executable coverage is tracked in the mechanics matrix. |
 | Verification status | Which claims have actually been checked, distinct from behavior implementation. |
 
 Exact serialized property names and enum values are defined by the C# records and
@@ -78,8 +78,10 @@ entries, original Imperium now has:
 | Conflict | 0 | 0 | 18 (4 I / 10 II / 4 III) |
 
 The four other leader identities/metadata and all shared-deck card identities,
-copy counts and Conflict tiers need audited evidence. No card/leader effects are
-implemented. A complete inventory does not imply complete gameplay; leader-specific
+copy counts and Conflict tiers need audited evidence. SLICE-003 adds a separate
+typed executable subset, documented in the [mechanics matrix](../implemented-mechanics.md).
+This does not promote the representative metadata or verify obscured starter boxes.
+Leader effects remain unsupported. A complete inventory does not imply complete gameplay; leader-specific
 setup instructions also need review before authentic content is enabled.
 
 `ConflictTier` is optional typed metadata on a definition; runtime setup requires

@@ -1,14 +1,17 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Dune.Engine.Toy;
+using Dune.Cli;
 using Dune.Simulation;
 
-const string usage = "Usage: Dune.Cli [--seed INT] | --help";
+const string usage = "Usage: Dune.Cli [--seed INT] | --turn-preview [--seed INT] [--players 3|4] | --help";
+if (args.Length > 0 && args[0] == "--turn-preview") return TurnPreviewCommand.Run(args[1..]);
 var seed = 42;
 if (args.Length == 1 && args[0] == "--help")
 {
     Console.WriteLine(usage);
     Console.WriteLine("Run an invented two-player toy token game. Default seed: 42.");
+    Console.WriteLine("--turn-preview runs sourced Dune turn mechanics with a visibly synthetic inventory and stops on unsupported content.");
     return 0;
 }
 if (args.Length != 0 && (args.Length != 2 || args[0] != "--seed" ||
