@@ -326,7 +326,7 @@ unfinished current root and lower recipients. See
 `MissingConflictOrRewardDefinitionCannotDisappearAtFinalPass`,
 `PostWinCardCannotConsumeStockOrCapacityNeededByUnfinishedMandatoryReward`.
 
-Conservative gates remain for tied foreign-role/scarce awards and tied competing
+Conservative gates remain for tied positive shared Intrigue draws, tied foreign-role/scarce awards and tied competing
 faction gains beyond simple positive tracks below four with no incumbent, conflicting control recipients, unavailable markers/Mentat,
 mandatory choices containing scarce operations, conditional children beyond
 nonnegative direct gains, and unsupported shared Intrigue recycling. These are
@@ -334,9 +334,9 @@ implementation limits, with no substitute awards or invented priority rule.
 Completion still stops in nonterminal Combat before Task 9 cleanup.
 
 Trusted setup snapshots advance to v4 for Mentat lifetime; turn snapshots/replays
-to v5 for reward progress and reward/window linkage; preview/support to v9 and
-partial lifecycle authoring to v6. All older replay rejection rows are retained,
-including the immediately previous v4/support-v8 pair. Strict JSON allowlists and
+to v5 for reward progress and reward/window linkage; preview/support is now v10 and
+partial lifecycle authoring v7 after the tied shared-draw safety revision. All older replay rejection rows are retained,
+including v4/support-v8 and v5/support-v9 pairs. Strict JSON allowlists and
 unknown-member/enum rejection remain in force.
 
 Simple nonnegative direct/Sequence/PlayerOrdered Influence grants to tied seats
@@ -347,3 +347,21 @@ canonical seat scheduling is preserved through explicit Sequence preflight.
 covers three/four players, direct/wrapped grants, threshold VP, canonical scheduling
 and replay. Shared faction work with an incumbent, signed/branch-dependent work
 or any possible crossing of four remains conservatively gated.
+
+Tied same-tier awards containing any positive shared Intrigue draw are rejected
+before Combat closes: I p.12 establishes tier awards but does not establish an
+order for distributing distinct hidden Intrigue identities among tied players.
+Canonical seat scheduling is reserved for independent grants. The ordering check
+uses the existing faction projector for actual threshold children and a bounded
+walk through Sequence/PlayerOrdered, payment/choice, acquisition and Signet work.
+Unreached faction bonuses below four do not gate an independent own-track grant;
+`DrawIntrigueEffect(0)` stays a no-op. Unique/untied recipients retain shared draws
+in their established reward order.
+`TiedPositiveSharedIntrigueDrawsRejectBeforeAnyStateRandomHistoryOrReplayMutation`,
+`TiedZeroIntrigueDrawsRemainNoOpsIncludingWrappedEffects`,
+`IndependentTiedFactionTracksDoNotTriggerOrReserveTheirUnreachedIntrigueBonus`,
+`UniqueWinnerAndUntiedLowerRecipientStillReceiveTheirIntrigueDrawsInRewardOrder`
+verify these boundaries. Lower-recipient reward frames now report actual candidate
+support diagnostics rather than the generic lifecycle stop;
+`LowerRecipientSupportDiagnosticsReflectPendingChoicesInsteadOfGenericLifecycleStop`
+checks both supported work and an unavailable optional Intrigue draw.

@@ -165,7 +165,9 @@ public sealed partial class TurnEngine
         AssertInvariants();
         if (_state.Phase == GamePhase.BeforeRoundStart && _lifecycleStartupDiagnostic is { } startup)
             return [startup];
-        if (_state.Phase != GamePhase.PlayerTurns && _state.DecisionWindow is null)
+        if (_state.Phase != GamePhase.PlayerTurns && _state.DecisionWindow is null &&
+            !(_state.Phase == GamePhase.Combat && _frames.Count > 0 &&
+                _frames[0].Continuation.Kind == ExecutionContinuationKind.ConflictRewards))
             return _state.Phase is GamePhase.Combat or GamePhase.Endgame
                 ? [Unsupported("lifecycle-support", "The lifecycle continuation is not implemented for this ruleset.")]
                 : [];

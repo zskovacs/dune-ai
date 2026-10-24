@@ -197,7 +197,17 @@ re-entry cards. A Conflict Mentat award records `ProtectedThroughRound` now;
 Task 9 owns Agent-kind provenance, recurring round transitions and Recall.
 
 This advances setup snapshots to v4, turn snapshots/replays to v5, turn
-preview/support to v9 and lifecycle authoring to v6. The official lifecycle
+preview/support to v10 and lifecycle authoring to v7 (including the tied shared-draw
+safety revision). The official lifecycle
 registry remains partial and no authentic configuration becomes playable.
 Reward completion deliberately remains nonterminal Combat until Task 9 provides
 cleanup; Task 10 supplies terminal scoring/result behavior.
+
+Canonical tied-seat reward scheduling excludes positive shared Intrigue draws: no
+supplied rule establishes tied distribution of distinct hidden cards. Preflight
+expands actual threshold children through the existing faction projector, then
+checks wrappers/acquisition/Signet work with a bounded traversal. Zero draws and
+unreached faction bonuses remain harmless; unique and untied reward draws remain
+supported. Active lower-recipient ConflictRewards frames use normal candidate
+support diagnostics even without a priority window. This safety revision changes
+support/authoring semantics only; setup/turn/replay shapes stay v4/v5/v5.

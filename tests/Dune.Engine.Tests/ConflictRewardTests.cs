@@ -466,6 +466,128 @@ public sealed class ConflictRewardTests
         Reject(engine, new PassPriorityAction(2));
     }
 
+    [Theory]
+    [InlineData("direct")]
+    [InlineData("sequence-ordered")]
+    [InlineData("optional")]
+    [InlineData("choice")]
+    [InlineData("acquire")]
+    [InlineData("signet")]
+    [InlineData("faction-child")]
+    public void TiedPositiveSharedIntrigueDrawsRejectBeforeAnyStateRandomHistoryOrReplayMutation(string path)
+    {
+        var state = CombatState([8, 8, 4]);
+        var rules = LifecycleFixture.Rules(state);
+        var market = state.Shared.ImperiumRow.Cards[0];
+        Effect effect = path switch
+        {
+            "sequence-ordered" => new SequenceEffect([new PlayerOrderedEffect([new DrawIntrigueEffect(1)])]),
+            "optional" => new OptionalPaymentEffect(new(), [new DrawIntrigueEffect(1)]),
+            "choice" => new ChoiceEffect([new("Draw", new(), [new DrawIntrigueEffect(1)])]),
+            "acquire" => new AcquireEffect(market.Definition),
+            "signet" => new SignetEffect(),
+            "faction-child" => new InfluenceEffect(Faction.BeneGesserit),
+            _ => new DrawIntrigueEffect(1),
+        };
+        if (path == "acquire") rules = CardEffects(rules, market.Definition, acquire: [new DrawIntrigueEffect(1)]);
+        if (path == "signet") rules = rules with
+        { Leaders = [.. rules.Leaders.Select(x => x with { SignetEffects = [new DrawIntrigueEffect(1)] })] };
+        if (path == "faction-child")
+        {
+            rules = rules with { Lifecycle = rules.Lifecycle! with { Factions = OriginalImperiumTurnRules.CreateLifecycleRules().Factions } };
+            foreach (var player in state.Players)
+                player.Influence = [.. player.Influence.Select(x => x.Faction == Faction.BeneGesserit ? x with { Amount = 3 } : x)];
+        }
+        var engine = new TurnEngine(state, Rewards(rules, 2, [effect]));
+        Apply(engine, new PassPriorityAction(0));
+        Apply(engine, new PassPriorityAction(1));
+        var before = engine.CaptureTrustedSnapshot().CanonicalJson;
+        var replayBefore = JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options);
+        var randomBefore = state.Random.Checkpoint;
+        var leadersRandomBefore = state.LeadersRandom.Checkpoint;
+        Assert.DoesNotContain(engine.LegalActions(2), x => x is PassPriorityAction);
+        Assert.Equal("conflict-reward-order", Assert.Single(engine.SupportDiagnostics(2)).Code);
+        var result = engine.Step(new PassPriorityAction(2));
+        Assert.Equal(StepStatus.Unsupported, result.Status);
+        Assert.Equal("conflict-reward-order", Assert.Single(result.Diagnostics).Code);
+        Assert.Equal(before, engine.CaptureTrustedSnapshot().CanonicalJson);
+        Assert.Equal(replayBefore, JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options));
+        Assert.Equal(randomBefore, state.Random.Checkpoint);
+        Assert.Equal(leadersRandomBefore, state.LeadersRandom.Checkpoint);
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.CombatOutcome);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TiedZeroIntrigueDrawsRemainNoOpsIncludingWrappedEffects(bool wrapped)
+    {
+        var state = CombatState([8, 8, 4]);
+        Effect effect = wrapped ? new SequenceEffect([new PlayerOrderedEffect([new DrawIntrigueEffect(0)])]) : new DrawIntrigueEffect(0);
+        var engine = new TurnEngine(state, Rewards(LifecycleFixture.Rules(state), 2, [effect]));
+        var deck = state.Shared.IntrigueDeck.Cards.ToArray();
+        CloseCombat(engine);
+        FinishRewards(engine);
+        Assert.Equal(deck, state.Shared.IntrigueDeck.Cards);
+        Assert.All(state.Players, x => Assert.Empty(x.Intrigue.Cards));
+    }
+
+    [Fact]
+    public void IndependentTiedFactionTracksDoNotTriggerOrReserveTheirUnreachedIntrigueBonus()
+    {
+        var state = CombatState([8, 8, 4]);
+        foreach (var player in state.Players)
+            player.Influence = [.. player.Influence.Select(x => x.Faction == Faction.BeneGesserit ? x with { Amount = 1 } : x)];
+        var rules = LifecycleFixture.Rules(state);
+        rules = rules with { Lifecycle = rules.Lifecycle! with { Factions = OriginalImperiumTurnRules.CreateLifecycleRules().Factions } };
+        var engine = new TurnEngine(state, Rewards(rules, 2, [new InfluenceEffect(Faction.BeneGesserit)]));
+        var deck = state.Shared.IntrigueDeck.Cards.ToArray();
+        CloseCombat(engine);
+        FinishRewards(engine);
+        Assert.Equal(2, state.Players[0].Influence.Single(x => x.Faction == Faction.BeneGesserit).Amount);
+        Assert.Equal(2, state.Players[1].Influence.Single(x => x.Faction == Faction.BeneGesserit).Amount);
+        Assert.Equal(deck, state.Shared.IntrigueDeck.Cards);
+    }
+
+    [Fact]
+    public void UniqueWinnerAndUntiedLowerRecipientStillReceiveTheirIntrigueDrawsInRewardOrder()
+    {
+        GameState Create() => CombatState([8, 6, 4]);
+        var state = Create();
+        var rules = Rewards(Rewards(LifecycleFixture.Rules(state), 1, [new DrawIntrigueEffect(1)]), 2, [new DrawIntrigueEffect(1)]);
+        var expected = state.Shared.IntrigueDeck.Cards.Take(2).Select(x => x.Id).ToArray();
+        var engine = new TurnEngine(state, rules);
+        CloseCombat(engine);
+        Resolve<DrawIntrigueEffect>(engine);
+        CheckReplay(engine, Create, rules);
+        Apply(engine, new PassPriorityAction(0));
+        Assert.Equal(expected[0], Assert.Single(state.Players[0].Intrigue.Cards).Id);
+        Assert.Equal(expected[1], Assert.Single(state.Players[1].Intrigue.Cards).Id);
+        Assert.Null(engine.DecisionOwnerId);
+        CheckReplay(engine, Create, rules);
+    }
+
+    [Fact]
+    public void LowerRecipientSupportDiagnosticsReflectPendingChoicesInsteadOfGenericLifecycleStop()
+    {
+        var state = CombatState([8, 6, 4]);
+        var rules = Rewards(LifecycleFixture.Rules(state), 1, []);
+        rules = Rewards(rules, 2, [new OptionalPaymentEffect(new(), [new DrawIntrigueEffect(state.Shared.IntrigueDeck.Count + 1)])]);
+        var engine = new TurnEngine(state, rules);
+        CloseCombat(engine);
+        Apply(engine, new PassPriorityAction(0));
+        Assert.Null(engine.Observe(0).Game.Window);
+        Assert.Contains(engine.LegalActions(1), x => x is ResolveEffectAction);
+        Assert.Empty(engine.SupportDiagnostics(1));
+        Assert.Empty(engine.SupportDiagnostics(0));
+        Resolve<OptionalPaymentEffect>(engine);
+        Assert.Equal("intrigue-empty", Assert.Single(engine.SupportDiagnostics(1)).Code);
+        Assert.Empty(engine.SupportDiagnostics(0));
+        Apply(engine, new ChooseOptionAction(1, 0));
+        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
+    }
+
     internal static GameState CombatState(int[] strengths)
     {
         return PrepareCombat(LifecycleFixture.CreateState(strengths.Length), strengths);

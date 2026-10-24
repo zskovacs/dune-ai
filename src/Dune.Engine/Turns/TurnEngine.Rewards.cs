@@ -315,7 +315,7 @@ public sealed partial class TurnEngine
             // Canonical seat order is only an engineering schedule for independent awards. Never resolve
             // a scarce target, competing Alliance, or foreign-role funding by inventing a priority rule.
             if (entries.Any(x => RewardOrderingSensitive(x.Effects, x.PlayerId)))
-                return Unsupported("conflict-reward-order", "Tied cross-player or scarce awards require a sourced ordering ruling.");
+                return Unsupported("conflict-reward-order", "Tied shared-deck, cross-player or scarce awards require a sourced ordering ruling.");
             var footprints = entries.SelectMany(x => x.Effects.SelectMany(effect => InfluenceFootprint(effect, x.PlayerId, 0))).ToArray();
             foreach (var sharedFaction in footprints.GroupBy(x => x.Faction).Where(x => x.Select(i => i.Owner).Distinct().Count() > 1))
             {
@@ -342,19 +342,29 @@ public sealed partial class TurnEngine
         _ => !InfluenceFootprint(effect, owner, 0).Any(),
     };
 
-    private bool RewardOrderingSensitive(IEnumerable<Effect> effects, int owner) => effects.Any(effect => effect switch
+    private bool RewardOrderingSensitive(IEnumerable<Effect> effects, int owner)
     {
-        TakeMentatEffect or ControlSpaceEffect or ForPlayerEffect => true,
-        SequenceEffect sequence => RewardOrderingSensitive(sequence.Effects, owner),
-        PlayerOrderedEffect ordered => RewardOrderingSensitive(ordered.Effects, owner),
-        OptionalPaymentEffect optional => optional.DecisionOwnerId is { } chooser && chooser != owner ||
-            optional.PayerId is { } payer && payer != owner || optional.RecipientId is { } recipient && recipient != owner ||
-            RewardOrderingSensitive(optional.Effects, owner),
-        ChoiceEffect choice => choice.Options.Any(x => RewardOrderingSensitive(x.Effects, owner)),
-        AcquireEffect acquire => RewardOrderingSensitive(_cards[acquire.Card].AcquireEffects, owner),
-        SignetEffect => RewardOrderingSensitive(_leaders[Player(owner).Leader].SignetEffects, owner),
-        _ => false,
-    });
+        // Expand actual threshold children through the existing faction projector, preserving causal
+        // order. An untriggered Intrigue bonus below four must not exclude independent tied tracks.
+        var projection = ProjectFactionWork([((Effect)new PlayerOrderedEffect([.. effects]), owner, owner, (BoardSpaceId?)null)]);
+        if (projection.Error is not null) return true;
+        return Sensitive(((PlayerOrderedEffect)projection.Work[0].Effect).Effects, owner, 0);
+
+        bool Sensitive(IEnumerable<Effect> children, int recipient, int depth) => depth > 32 || children.Any(effect => effect switch
+        {
+            DrawIntrigueEffect { Amount: > 0 } => true,
+            TakeMentatEffect or ControlSpaceEffect or ForPlayerEffect => true,
+            SequenceEffect sequence => Sensitive(sequence.Effects, recipient, depth + 1),
+            PlayerOrderedEffect ordered => Sensitive(ordered.Effects, recipient, depth + 1),
+            OptionalPaymentEffect optional => optional.DecisionOwnerId is { } chooser && chooser != recipient ||
+                optional.PayerId is { } payer && payer != recipient || optional.RecipientId is { } target && target != recipient ||
+                Sensitive(optional.Effects, recipient, depth + 1),
+            ChoiceEffect choice => choice.Options.Any(x => Sensitive(x.Effects, recipient, depth + 1)),
+            AcquireEffect acquire => Sensitive(_cards[acquire.Card].AcquireEffects, recipient, depth + 1),
+            SignetEffect => Sensitive(_leaders[Player(recipient).Leader].SignetEffects, recipient, depth + 1),
+            _ => false,
+        });
+    }
 
     private void BeginConflictRewards()
     {
