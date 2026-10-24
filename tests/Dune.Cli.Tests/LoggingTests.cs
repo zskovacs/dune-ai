@@ -72,6 +72,10 @@ public sealed class LoggingTests : IDisposable
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("SYNTHETIC DEVELOPMENT SCENARIO", result.Stdout);
         Assert.Contains("Result: 10 rounds", result.Stdout);
+        Assert.Matches("observed Combat Intrigue plays [1-9][0-9]*", result.Stdout);
+        Assert.Matches("observed PostWin Intrigue plays [1-9][0-9]*", result.Stdout);
+        Assert.Contains("zero means that path was not observed", result.Stdout);
+        Assert.Contains("Automatic round consequences: Makers and Recall", result.Stdout);
         Assert.Contains("Replay verified:", result.Stdout);
         Assert.Equal(new[] { "CommandStarted", "LifecycleSummary", "CommandCompleted" }, Events().Select(EventName));
         var summary = Assert.Single(Events(), e => EventName(e) == "LifecycleSummary");

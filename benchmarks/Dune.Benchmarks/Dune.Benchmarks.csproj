@@ -5,6 +5,8 @@
   <ItemGroup>
     <Compile Include="../../tests/Fixtures/OriginalImperiumFixture.cs" Link="Fixtures/OriginalImperiumFixture.cs" />
     <Compile Include="../../tests/Fixtures/TurnEngineFixture.cs" Link="Fixtures/TurnEngineFixture.cs" />
+    <Compile Include="../../tests/Fixtures/LifecycleFixture.cs" Link="Fixtures/LifecycleFixture.cs" />
+    <Compile Include="../../tests/Fixtures/LifecycleFixtureGame.cs" Link="Fixtures/LifecycleFixtureGame.cs" />
     <ProjectReference Include="../../src/Dune.Simulation/Dune.Simulation.csproj" />
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
