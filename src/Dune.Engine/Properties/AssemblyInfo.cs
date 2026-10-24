@@ -4,3 +4,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Dune.Benchmarks")]
 // The explicit --turn-preview command links the same labeled synthetic inventory as tests/benchmarks.
 [assembly: InternalsVisibleTo("Dune.Cli")]
+[assembly: InternalsVisibleTo("Dune.Simulation.Tests")]

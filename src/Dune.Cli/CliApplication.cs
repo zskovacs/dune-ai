@@ -5,6 +5,7 @@ internal static class CliApplication
     internal static int Run(string[] args)
     {
         var command = args.Length > 0 && args[0] == "--turn-preview" ? "TurnPreview"
+            : args.Length > 0 && args[0] == "--lifecycle-preview" ? "LifecyclePreview"
             : args.Length == 1 && args[0] == "--help" ? "Help" : "Toy";
         CliLogging logging;
         try
@@ -25,6 +26,8 @@ internal static class CliApplication
             {
                 var result = command == "TurnPreview"
                     ? TurnPreviewCommand.Run(args[1..], logging.CreateLogger<TurnPreviewCommand>())
+                    : command == "LifecyclePreview"
+                    ? LifecyclePreviewCommand.Run(args[1..], logging.CreateLogger<LifecyclePreviewCommand>())
                     : ToyCommand.Run(args, logging.CreateLogger<ToyCommand>());
                 return logging.HasSinkFailure ? 1 : result;
             });

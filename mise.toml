@@ -95,3 +95,8 @@ lockfile = true
 description = "Run the partial original Imperium turn preview (synthetic inventory; unsupported mechanics stop)"
 depends = ["build"]
 run = "dotnet run --project src/Dune.Cli --configuration Release --no-build --no-restore -- --turn-preview"
+
+[tasks."preview:lifecycle"]
+description = "Run a complete synthetic Dune lifecycle scenario through the episode runner"
+depends = ["build"]
+run = "dotnet run --project src/Dune.Cli --configuration Release --no-build --no-restore -- --lifecycle-preview"

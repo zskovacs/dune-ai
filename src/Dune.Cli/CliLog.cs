@@ -31,4 +31,7 @@ internal static partial class CliLog
 
     [LoggerMessage(1201, LogLevel.Information, "Preview verified for {PlayerCount} players after {AcceptedActions} actions; unsupported boundary: {StoppedUnsupported}", EventName = "PreviewSummary")]
     internal static partial void PreviewSummary(ILogger logger, int playerCount, int acceptedActions, bool stoppedUnsupported);
+
+    [LoggerMessage(1300, LogLevel.Information, "Synthetic lifecycle verified for {PlayerCount} players after {Rounds} rounds and {AgentActions} policy actions", EventName = "LifecycleSummary")]
+    internal static partial void LifecycleSummary(ILogger logger, int playerCount, int rounds, int agentActions);
 }

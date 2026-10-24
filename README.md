@@ -5,14 +5,14 @@ complete-game target is original Imperium
 with Rise of Ix and Immortality, competitive 3–4 players. The architecture targets
 deterministic headless simulation, parallel self-play and Python/PyTorch learning.
 
-**Current scope:** SLICE-001 composition, SLICE-002 runtime/setup and SLICE-003
-incremental turn execution, legal actions, effects and deterministic replay.
+**Current scope:** SLICE-001 composition, SLICE-002 runtime/setup, SLICE-003
+incremental turn execution and a development-only synthetic lifecycle scenario.
 Authentic Dune initialization remains blocked by incomplete card/leader data.
 The turn preview uses a visibly synthetic inventory and stops on unsupported
-content; tests exercise complete Player Turns with test-only synthetic effects.
-The two-player **toy token game** is executable.
-No Dune configuration is playable. No Python/engine bridge, neural model, PPO or
-MCTS exists. The toy game uses invented rules.
+content. The lifecycle preview completes an invented ten-Conflict recipe through
+the existing episode runner and verifies replay. The two-player **toy token game**
+is separately executable. No authentic Dune configuration is playable, and no
+Python/engine bridge, neural model, PPO or MCTS exists.
 
 ## Native Linux quick start
 
@@ -49,6 +49,7 @@ CI uses the same mise tasks through the official `jdx/mise-action`.
 | `mise run benchmark`     | Run BenchmarkDotNet baseline                                      |
 | `mise run smoke`         | Run a seeded headless toy game with two random agents             |
 | `mise run preview:turns` | Run a partial Dune turn preview with explicit support diagnostics |
+| `mise run preview:lifecycle` | Run a complete synthetic Dune lifecycle scenario and verify replay |
 | `mise run check`         | Validate tool/lock consistency, build, tests, lint and formatting |
 
 Focused tasks: `test:engine`, `test:simulation`, `test:cli`, `test:dotnet`, `test:python`,
@@ -57,6 +58,11 @@ timings are separate from correctness checks; see the performance notes in the
 [architecture](docs/architecture.md).
 For a quick harness check, use `mise run benchmark -- --job Dry --filter '*'`.
 Dry timings are not a reliable performance comparison.
+
+Run `mise run preview:lifecycle -- --seed 42 --players 3` for the development-only
+ten-Conflict scenario. Its main decks, leaders and rewards are invented; it uses
+supported sourced board-space rules and reserves;
+the command lists blockers to authentic complete-game play.
 
 ## Structured diagnostics
 

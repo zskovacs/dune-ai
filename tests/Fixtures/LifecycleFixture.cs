@@ -78,6 +78,52 @@ internal static class LifecycleFixture
     internal static TurnRuleSet RulesWithOriginalBoard(GameState state) => Rules(state) with
     { Spaces = OriginalImperiumTurnRules.Create().Spaces };
 
+    /// <summary>A complete invented ten-Conflict recipe for the CLI and runner demonstration.</summary>
+    internal static GameState CreateScenarioState(int players, int seed)
+    {
+        var state = CreateState(players, seed);
+        var cards = state.Shared.IntrigueDeck.Cards.OrderBy(x => x.Definition.Value, StringComparer.Ordinal)
+            .Take(players * 3).ToArray();
+        for (var player = 0; player < players; player++)
+            foreach (var card in cards.Skip(player * 3).Take(3))
+                state.Shared.IntrigueDeck.MoveTo(card.Id, state.Players[player].Intrigue);
+        return state;
+    }
+
+    internal static TurnRuleSet ScenarioRules(GameState state)
+    {
+        var rules = Rules(state);
+        var postWin = state.Definition.Content.Where(x => x.Category == ContentCategory.IntrigueCard)
+            .OrderBy(x => x.Id.Value, StringComparer.Ordinal).Take(12)
+            .Where((_, index) => index % 3 == 2).Select(x => x.Id).ToHashSet();
+        return rules with
+        {
+            // Invented card effects; board-space effects use the existing source-verified definitions.
+            Version = "synthetic-lifecycle-scenario-v1",
+            Cards = [.. rules.Cards.Select(x => x.Id.Value.StartsWith("fixture:imperiumcard:", StringComparison.Ordinal)
+                ? x with { AgentEffects = [], RevealEffects = [new GainEffect(ResourceKind.Persuasion, 1),
+                    new GainEffect(ResourceKind.Swords, 1)] } : x)],
+            Spaces = OriginalImperiumTurnRules.Create().Spaces,
+            Lifecycle = rules.Lifecycle! with
+            {
+                Version = "synthetic-lifecycle-scenario-v1",
+                Intrigues = [.. rules.Lifecycle!.Intrigues.Select(x => x with
+                {
+                    Timing = postWin.Contains(x.Id) ? IntrigueTiming.PostWin : IntrigueTiming.Combat,
+                    Effects = postWin.Contains(x.Id) ? [new GainEffect(ResourceKind.Spice, 1)]
+                        : [new GainEffect(ResourceKind.Swords, 1)]
+                })],
+                Conflicts = [.. rules.Lifecycle.Conflicts.Select(x => x with
+                {
+                    Rewards = [new(1, [new GainEffect(ResourceKind.Solari, 3),
+                        new OptionalPaymentEffect(new(Solari: 1), [new GainEffect(ResourceKind.Water, 1)])]),
+                        new(2, [new GainEffect(ResourceKind.Solari, 2)]),
+                        new(3, [new GainEffect(ResourceKind.Solari, 1)])]
+                })]
+            }
+        };
+    }
+
     internal static LifecycleRuleSet LifecycleRules(GameState state) => new("synthetic-lifecycle-tests-v1",
         [.. state.Definition.Content.Where(x => x.Category == ContentCategory.IntrigueCard).Select(x =>
             new IntrigueRule(x.Id, IntrigueTiming.Combat, new(), [], Sources))],

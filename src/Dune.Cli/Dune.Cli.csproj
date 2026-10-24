@@ -10,6 +10,9 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <InternalsVisibleTo Include="Dune.Cli.Tests" />
     <Compile Include="../../tests/Fixtures/OriginalImperiumFixture.cs" Link="Development/OriginalImperiumFixture.cs" />
+    <Compile Include="../../tests/Fixtures/TurnEngineFixture.cs" Link="Development/TurnEngineFixture.cs" />
+    <Compile Include="../../tests/Fixtures/LifecycleFixture.cs" Link="Development/LifecycleFixture.cs" />
+    <Compile Include="../../tests/Fixtures/LifecycleFixtureGame.cs" Link="Development/LifecycleFixtureGame.cs" />
     <ProjectReference Include="../Dune.Simulation/Dune.Simulation.csproj" />
   </ItemGroup>
 </Project>

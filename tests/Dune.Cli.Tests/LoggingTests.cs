@@ -66,6 +66,32 @@ public sealed class LoggingTests : IDisposable
     }
 
     [Fact]
+    public async Task Lifecycle_preview_logs_only_coarse_summary_and_rejects_invalid_options()
+    {
+        var result = await Run("Information", "--lifecycle-preview", "--seed", "42", "--players", "3");
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("SYNTHETIC DEVELOPMENT SCENARIO", result.Stdout);
+        Assert.Contains("Result: 10 rounds", result.Stdout);
+        Assert.Contains("Replay verified:", result.Stdout);
+        Assert.Equal(new[] { "CommandStarted", "LifecycleSummary", "CommandCompleted" }, Events().Select(EventName));
+        var summary = Assert.Single(Events(), e => EventName(e) == "LifecycleSummary");
+        Assert.Equal(3, Properties(summary).GetProperty("PlayerCount").GetInt32());
+        Assert.Equal(10, Properties(summary).GetProperty("Rounds").GetInt32());
+        var log = File.ReadAllText(Directory.GetFiles(_directory, "*.jsonl").Single());
+        Assert.DoesNotContain("ReplayIdentity", log);
+        Assert.DoesNotContain("EnvironmentSeed", log);
+        Assert.DoesNotContain("PolicySeed", log);
+        Assert.DoesNotContain("FinalStateHash", log);
+        DeleteLogs();
+
+        var invalid = await Run("Information", "--lifecycle-preview", "--players", "2");
+        Assert.Equal(2, invalid.ExitCode);
+        Assert.Empty(invalid.Stdout);
+        Assert.Contains("Usage: Dune.Cli --lifecycle-preview", invalid.Stderr);
+        Assert.Equal(new[] { "CommandStarted", "ArgumentsRejected", "CommandCompleted" }, Events().Select(EventName));
+    }
+
+    [Fact]
     public async Task Concurrent_processes_share_valid_jsonl_with_distinct_run_ids()
     {
         var results = await Task.WhenAll(Run("Information", "--seed", "1"), Run("Information", "--seed", "2"));

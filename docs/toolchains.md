@@ -33,6 +33,7 @@ backends can also record URLs/checksums. This is not a promise of hermetic OS in
 | `mise run benchmark`       | BenchmarkDotNet baseline in Release                             |
 | `mise run smoke`           | Complete autonomous two-player toy game                         |
 | `mise run preview:turns`   | Partial original Imperium turn preview with synthetic inventory |
+| `mise run preview:lifecycle` | Complete synthetic lifecycle scenario through the episode runner |
 | `mise run check`           | Tool/lock checks, build, tests, lint and formatting             |
 
 Tasks use native dependencies and propagate exit codes. A single invocation

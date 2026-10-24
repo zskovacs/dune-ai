@@ -12,13 +12,14 @@ internal sealed class ToyCommand
 
     internal static int Run(string[] args, ILogger<ToyCommand> logger)
     {
-        const string usage = "Usage: Dune.Cli [--seed INT] | --turn-preview [--seed INT] [--players 3|4] | --help";
+        const string usage = "Usage: Dune.Cli [--seed INT] | --turn-preview [--seed INT] [--players 3|4] | --lifecycle-preview [--seed INT] [--players 3|4] | --help";
         var seed = 42;
         if (args.Length == 1 && args[0] == "--help")
         {
             Console.WriteLine(usage);
             Console.WriteLine("Run an invented two-player toy token game. Default seed: 42.");
             Console.WriteLine("--turn-preview runs sourced Dune turn mechanics with a visibly synthetic inventory and stops on unsupported content.");
+            Console.WriteLine("--lifecycle-preview runs a complete invented ten-Conflict development scenario through the existing episode runner.");
             return 0;
         }
         if (args.Length != 0 && (args.Length != 2 || args[0] != "--seed" ||

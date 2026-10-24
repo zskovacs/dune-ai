@@ -13,5 +13,9 @@
     </PackageReference>
     <Using Include="Xunit" />
     <ProjectReference Include="../../src/Dune.Simulation/Dune.Simulation.csproj" />
+    <Compile Include="../Fixtures/OriginalImperiumFixture.cs" Link="Fixtures/OriginalImperiumFixture.cs" />
+    <Compile Include="../Fixtures/TurnEngineFixture.cs" Link="Fixtures/TurnEngineFixture.cs" />
+    <Compile Include="../Fixtures/LifecycleFixture.cs" Link="Fixtures/LifecycleFixture.cs" />
+    <Compile Include="../Fixtures/LifecycleFixtureGame.cs" Link="Fixtures/LifecycleFixtureGame.cs" />
   </ItemGroup>
 </Project>
