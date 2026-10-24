@@ -309,6 +309,21 @@ reconstructs every accepted prefix of an actual 3/4-seat ten-round synthetic gam
 including nested acquisition, foreign optional payment, PostWin and Endgame. It
 compares canonical trusted state/hash, both RNG checkpoints, result, next owner
 and ordered legal arrays; it checks rejected input and policy redaction at every cut.
+Natural empty private Hands in Combat/Endgame/Completed are recorded and asserted,
+not counted as nonempty counterfactual coverage.
+`RealSelectedWindowActionsReachPhaseTimingCostAndGraphGuards` adds real-card,
+correct-actor window rejection cases with exact diagnostics, unaffordable card and
+optional payments, and funded/supported positive controls. Its explicitly synthetic
+initial-window seams do not imply that unsupported content passes full startup;
+`UnsupportedEnabledFaceRejectsAtSetupBeforeAnyWindowCanBeReached` verifies that gate.
+`SupportedDrawsProvideDistinctNonemptyHiddenFacesAcrossNaturalWindowsAndCompletion`
+uses supported Combat/Endgame draws in actual 3/4-seat ten-round fixtures to provide
+nonempty opponent Hand/Intrigue/Deck at PlayerTurns, Combat, PostWin, Endgame and
+Completed. Coverage guards require every cut; each exchanged face must differ,
+all zone counts/public state must match, and observations/masks/diagnostics remain
+equal after hidden exchanges and a verified RNG checkpoint change. Final action
+binding is checked directly against the canonical replay-identity payload,
+independently of the final-state hash.
 `ConcurrentEpisodesShareOnlyImmutableDefinitionsAndRemainScheduleIndependent`
 shares resolved definitions/rules while retaining independent mutable episode state.
 

@@ -453,7 +453,18 @@ and Endgame: every prefix compares full trusted state/hash, ordered legal
 actions, owner, both RNG checkpoints and final result. Every cut also rejects
 invalid actor/phase/card/option/target/payment/deployment/effect input without
 state/history/RNG mutation and checks redaction against changed hidden cards,
-deck order and RNG. Existing `LifecycleDefinitionTests`, `ConflictRewardTests`,
+deck order and RNG. Naturally empty Hands are explicitly tracked in the prefix
+run. The dedicated natural supported-draw fixture
+`SupportedDrawsProvideDistinctNonemptyHiddenFacesAcrossNaturalWindowsAndCompletion`
+requires nonempty differing opponent Hand/Intrigue/Deck at 3/4 seats in
+PlayerTurns, Combat, PostWinRewards, Endgame and Completed, with matching counts/public state and a
+verified changed RNG checkpoint. `RealSelectedWindowActionsReachPhaseTimingCostAndGraphGuards`
+uses real IDs and exact diagnostics, cost/payment positive controls and unsupported
+selected graphs in all three Intrigue windows. Those initial-window cases are
+explicit synthetic seams; `UnsupportedEnabledFaceRejectsAtSetupBeforeAnyWindowCanBeReached`
+separately proves full startup rejection. Final closing-action replay-identity
+binding is checked directly against the existing canonical payload, without
+relying on final-state mismatch. Existing `LifecycleDefinitionTests`, `ConflictRewardTests`,
 `FactionRewardTests`, `RoundLifecycleTests` and `EndgameTests` retain unsupported
 graph, unaffordable cost, ordering and terminal rejection gates.
 

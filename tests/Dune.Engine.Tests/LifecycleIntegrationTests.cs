@@ -1,5 +1,8 @@
+using System.Collections.Immutable;
+using System.Security.Cryptography;
 using System.Text.Json;
 using Dune.Engine.Configuration;
+using Dune.Engine.Content;
 using Dune.Engine.Fixtures;
 using Dune.Engine.Runtime;
 using Dune.Engine.Turns;
@@ -39,6 +42,7 @@ public sealed class LifecycleIntegrationTests
         var foreign = false;
         var acquire = false;
         var depth = 0;
+        var emptyPrivateZones = new HashSet<(GamePhase Phase, string Zone)>();
         for (var step = 0; ; step++)
         {
             Assert.True(step < 2000);
@@ -65,7 +69,7 @@ public sealed class LifecycleIntegrationTests
                 Assert.Equal(engine.LegalActions(player), copy.LegalActions(player));
             AssertInvalidMatrix(engine, players);
             AssertPrivateProjection(engine, state);
-            AssertHiddenCounterfactual(copy, reproducedState);
+            AssertHiddenCounterfactual(copy, reproducedState, emptyPrivateZones);
             if (engine.IsTerminal) break;
             Apply(engine, Select(engine));
         }
@@ -78,7 +82,16 @@ public sealed class LifecycleIntegrationTests
         Assert.True(foreign);
         Assert.True(acquire);
         Assert.True(depth >= 3);
+        Assert.Contains((GamePhase.Combat, "Hand"), emptyPrivateZones);
+        Assert.Contains((GamePhase.Endgame, "Hand"), emptyPrivateZones);
+        Assert.Contains((GamePhase.Completed, "Hand"), emptyPrivateZones);
         var final = engine.CaptureReplay();
+        string Identity(TurnReplay record) => Convert.ToHexStringLower(SHA256.HashData(
+            JsonSerializer.SerializeToUtf8Bytes(TurnReplayIdentityData.From(record), ConfigurationJson.Options)));
+        Assert.Equal(Identity(final), engine.GetResult().ReplayIdentity);
+        Assert.NotEqual(Identity(final with { Actions = final.Actions.RemoveAt(final.Actions.Length - 1) }),
+            engine.GetResult().ReplayIdentity);
+        Assert.Equal(Identity(final with { FinalStateHash = "not-an-identity-input" }), engine.GetResult().ReplayIdentity);
         var preceding = TurnEngine.Replay(final with { Actions = final.Actions.RemoveAt(final.Actions.Length - 1) },
             () => LifecycleFixture.CreateScenarioState(players, 42), rules);
         Assert.False(preceding.IsSuccess); // The late closing action participates in final hash/result identity.
@@ -148,6 +161,203 @@ public sealed class LifecycleIntegrationTests
         Assert.NotEqual(actual[0], actual[2]);
         Assert.Equal(definitionBefore, Json(definition));
         Assert.Equal(rulesBefore, new TurnEngine(LifecycleFixture.CreateScenarioState(3, 42), rules).CaptureReplay().RulesIdentity);
+    }
+
+    [Theory]
+    [InlineData(DecisionWindowKind.Combat)]
+    [InlineData(DecisionWindowKind.PostWinRewards)]
+    [InlineData(DecisionWindowKind.Endgame)]
+    public void RealSelectedWindowActionsReachPhaseTimingCostAndGraphGuards(DecisionWindowKind kind)
+    {
+        var (state, engine, card) = IsolatedWindow(kind);
+        Assert.Equal(kind, engine.Observe(0).Game.Window!.Kind);
+        Assert.Equal(0, engine.DecisionOwnerId);
+        var main = state.Players[0].Hand.Cards.Single();
+        var placement = new PlaceAgentAction(0, Card(main), Space("secure-contract"));
+        Assert.Contains(Space("secure-contract"), state.Board.Spaces.Select(space => space.Definition.Id));
+        AssertRejected(engine, state, placement, StepStatus.Illegal, "window-action");
+        AssertRejected(engine, state, new RevealAction(0), StepStatus.Illegal, "window-action");
+        // Positive control: this exact real hand selector/space/actor is legal during PlayerTurns.
+        var normal = LifecycleFixture.CreateState();
+        var normalEngine = new TurnEngine(normal, LifecycleFixture.Rules(normal));
+        Apply(normalEngine, new StartRoundAction());
+        Assert.Contains(placement, normalEngine.LegalActions(0));
+        Apply(normalEngine, placement);
+
+        var wrongTiming = IsolatedWindow(kind, timing: kind == DecisionWindowKind.Combat ? IntrigueTiming.Endgame : IntrigueTiming.Combat);
+        AssertRejected(wrongTiming.Engine, wrongTiming.State, new PlayIntrigueAction(0, Card(wrongTiming.Card)),
+            StepStatus.Illegal, "intrigue-timing");
+
+        var poor = IsolatedWindow(kind, cost: new(Water: 2));
+        var poorPlay = new PlayIntrigueAction(0, Card(poor.Card));
+        Assert.DoesNotContain(poorPlay, poor.Engine.LegalActions(0));
+        AssertRejected(poor.Engine, poor.State, poorPlay, StepStatus.Illegal, "intrigue-cost");
+        var funded = IsolatedWindow(kind, cost: new(Water: 2), water: 2);
+        var fundedPlay = new PlayIntrigueAction(0, Card(funded.Card));
+        Assert.Contains(fundedPlay, funded.Engine.LegalActions(0));
+        Apply(funded.Engine, fundedPlay);
+        Assert.Equal(0, funded.State.Players[0].Resources.Water);
+
+        var unsupported = IsolatedWindow(kind, effects:
+            [new SequenceEffect([new GainEffect(ResourceKind.Solari, 1), new UnsupportedEffect("Invented unsupported selected child")])]);
+        AssertRejected(unsupported.Engine, unsupported.State, new PlayIntrigueAction(0, Card(unsupported.Card)),
+            StepStatus.Unsupported, "effect-support");
+        var supported = IsolatedWindow(kind, effects: [new SequenceEffect([new GainEffect(ResourceKind.Solari, 1)])]);
+        var supportedPlay = new PlayIntrigueAction(0, Card(supported.Card));
+        Assert.Contains(supportedPlay, supported.Engine.LegalActions(0));
+        Apply(supported.Engine, supportedPlay);
+
+        foreach (var water in new[] { 1, 2 })
+        {
+            var payment = IsolatedWindow(kind, water: water,
+                effects: [new OptionalPaymentEffect(new(Water: 2), [new GainEffect(ResourceKind.Solari, 1)])]);
+            Apply(payment.Engine, new PlayIntrigueAction(0, Card(payment.Card)));
+            var resolve = Assert.Single(payment.Engine.LegalActions(0).OfType<ResolveEffectAction>());
+            Apply(payment.Engine, resolve);
+            Assert.NotNull(payment.Engine.Observe(0).Decision);
+            var pay = new ChooseOptionAction(0, 1);
+            if (water == 1)
+            {
+                Assert.DoesNotContain(pay, payment.Engine.LegalActions(0));
+                AssertRejected(payment.Engine, payment.State, pay, StepStatus.Illegal, "option");
+                Assert.Contains(new ChooseOptionAction(0, 0), payment.Engine.LegalActions(0));
+            }
+            else
+            {
+                Assert.Contains(pay, payment.Engine.LegalActions(0));
+                Apply(payment.Engine, pay);
+                Assert.Equal(0, payment.State.Players[0].Resources.Water);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(IntrigueTiming.Combat)]
+    [InlineData(IntrigueTiming.PostWin)]
+    [InlineData(IntrigueTiming.Endgame)]
+    public void UnsupportedEnabledFaceRejectsAtSetupBeforeAnyWindowCanBeReached(IntrigueTiming timing)
+    {
+        var state = LifecycleFixture.CreateState();
+        var rules = LifecycleFixture.Rules(state);
+        var selected = state.Shared.IntrigueDeck.Cards[0].Definition;
+        rules = rules with
+        {
+            Lifecycle = rules.Lifecycle! with
+            {
+                Intrigues = [.. rules.Lifecycle.Intrigues.Select(rule => rule.Id == selected ? rule with
+        { Timing = timing, Effects = [new UnsupportedEffect("Invented startup-only unsupported face")] } : rule)]
+            }
+        };
+        var engine = new TurnEngine(state, rules);
+        AssertRejected(engine, state, new StartRoundAction(), StepStatus.Unsupported, "lifecycle-deck-support");
+        Assert.Equal(GamePhase.BeforeRoundStart, engine.Phase);
+        Assert.Null(engine.Observe(0).Game.Window);
+    }
+
+    [Theory]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void SupportedDrawsProvideDistinctNonemptyHiddenFacesAcrossNaturalWindowsAndCompletion(int players)
+    {
+        GameState Create() => LifecycleFixture.CreateScenarioState(players, 42);
+        var state = Create();
+        var rules = LifecycleFixture.ScenarioRules(state);
+        var combat = state.Players[0].Intrigue.Cards[0].Definition;
+        var endgame = state.Players[2].Intrigue.Cards[^1].Definition;
+        rules = rules with
+        {
+            Lifecycle = rules.Lifecycle! with
+            {
+                Intrigues = [.. rules.Lifecycle.Intrigues.Select(rule => rule.Id == combat ? rule with
+        { Effects = [new ForPlayerEffect(1, [new DrawEffect(2)])] } : rule.Id == endgame ? rule with
+        { Timing = IntrigueTiming.Endgame, Effects = [new ForPlayerEffect(1, [new DrawEffect(2), new DrawIntrigueEffect(2)])] } : rule)]
+            }
+        };
+        var engine = new TurnEngine(state, rules);
+        var covered = new HashSet<string>();
+        var required = new[] { "PlayerTurns", "Combat", "PostWinRewards", "Endgame", "Completed" };
+        for (var step = 0; ; step++)
+        {
+            Assert.True(step < 2000);
+            var checkpoint = engine.IsTerminal ? "Completed" : engine.Observe(0).Game.Window?.Kind.ToString() ?? engine.Phase.ToString();
+            var opponent = state.Players[1];
+            if (required.Contains(checkpoint) && !covered.Contains(checkpoint) &&
+                opponent.Hand.Count > 0 && opponent.Intrigue.Count > 0 && opponent.Deck.Count > 0)
+            {
+                GameState? paired = null;
+                var replayed = TurnEngine.Replay(engine.CaptureReplay(), () => paired = Create(), rules);
+                Assert.True(replayed.IsSuccess, string.Join(";", replayed.Diagnostics));
+                AssertHiddenCounterfactual(replayed.Engine!, paired!, requireNonemptyOpponent: true);
+                AssertPrivateProjection(replayed.Engine!, paired!);
+                covered.Add(checkpoint);
+            }
+            if (engine.IsTerminal) break;
+            Apply(engine, Select(engine));
+        }
+        Assert.Equal(required.Order(), covered.Order()); // Missing/nonempty same-face cases cannot silently count.
+        Assert.True(state.Players[1].Hand.Count > 0);
+        Assert.True(state.Players[1].Intrigue.Count > 0);
+        Assert.True(state.Players[1].Deck.Count > 0);
+    }
+
+    /// <summary>Explicit synthetic initial-window seam, not proof that unsupported content passes startup.</summary>
+    private static (GameState State, TurnEngine Engine, CardInstance Card) IsolatedWindow(DecisionWindowKind kind,
+        IntrigueTiming? timing = null, ResourceCost? cost = null, ImmutableArray<Effect>? effects = null, int water = 1)
+    {
+        var state = LifecycleFixture.CreateState();
+        state.Phase = kind == DecisionWindowKind.Endgame ? GamePhase.Endgame : GamePhase.Combat;
+        state.Round = 1;
+        state.Players[0].Resources = state.Players[0].Resources with { Water = water };
+        state.Players[0].Deck.TryDrawTo(state.Players[0].Hand);
+        state.Shared.IntrigueDeck.TryDrawTo(state.Players[0].Intrigue);
+        state.Conflict.Deck.TryDrawTo(state.Conflict.Revealed);
+        // Isolate this one Conflict; there is no future round whose full-deck support could gate closure.
+        while (state.Conflict.Deck.Count > 0)
+            state.Conflict.Deck.MoveTo(state.Conflict.Deck.Cards[0].Id, state.Conflict.Unused);
+        foreach (var player in state.Players)
+            player.Units = player.Units with
+            {
+                TroopsInSupply = player.Units.TroopsInSupply - (player.Id == 0 ? 2 : 1),
+                TroopsInConflict = player.Id == 0 ? 2 : 1
+            };
+        var card = state.Players[0].Intrigue.Cards.Single();
+        var rules = LifecycleFixture.Rules(state);
+        var actualTiming = timing ?? (kind == DecisionWindowKind.Combat ? IntrigueTiming.Combat
+            : kind == DecisionWindowKind.PostWinRewards ? IntrigueTiming.PostWin : IntrigueTiming.Endgame);
+        rules = rules with
+        {
+            Lifecycle = rules.Lifecycle! with
+            {
+                Intrigues = [.. rules.Lifecycle.Intrigues.Select(rule => rule.Id == card.Definition ? rule with
+            { Timing = actualTiming, Cost = cost ?? new(), Effects = effects ?? [] } : rule)],
+                Conflicts = [.. rules.Lifecycle.Conflicts.Select(rule => rule with { Rewards = [new(1, []), new(2, []), new(3, [])] })]
+            }
+        };
+        var engine = new TurnEngine(state, rules);
+        if (kind == DecisionWindowKind.PostWinRewards)
+        {
+            Apply(engine, new PassPriorityAction(0));
+            Apply(engine, new PassPriorityAction(1));
+            Apply(engine, new PassPriorityAction(2));
+        }
+        Assert.Equal(kind, engine.Observe(0).Game.Window!.Kind);
+        return (state, engine, card);
+    }
+
+    private static void AssertRejected(TurnEngine engine, GameState state, GameAction action, StepStatus status, string code)
+    {
+        var snapshot = engine.CaptureTrustedSnapshot();
+        var replay = Json(engine.CaptureReplay());
+        var random = state.Random.Checkpoint;
+        var leaders = state.LeadersRandom.Checkpoint;
+        var result = engine.Step(action);
+        Assert.Equal(status, result.Status);
+        Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
+        Assert.Equal(snapshot.CanonicalJson, engine.CaptureTrustedSnapshot().CanonicalJson);
+        Assert.Equal(snapshot.Hash, engine.CaptureTrustedSnapshot().Hash);
+        Assert.Equal(random, state.Random.Checkpoint);
+        Assert.Equal(leaders, state.LeadersRandom.Checkpoint);
+        Assert.Equal(replay, Json(engine.CaptureReplay()));
     }
 
     private static TurnRuleSet IntegrationRules(GameState state)
@@ -241,33 +451,58 @@ public sealed class LifecycleIntegrationTests
         }
     }
 
-    private static void AssertHiddenCounterfactual(TurnEngine engine, GameState state)
+    private static void AssertHiddenCounterfactual(TurnEngine engine, GameState state,
+        HashSet<(GamePhase Phase, string Zone)>? emptyZones = null, bool requireNonemptyOpponent = false)
     {
         const int observer = 0;
         var before = Json(engine.Observe(observer));
+        var publicBefore = Json(engine.Observe(observer).Game with { Hand = [], Intrigue = [] });
+        var randomBefore = state.Random.Checkpoint;
+        var counts = state.Zones.Select(zone => (zone.Id, zone.Count)).ToArray();
         var legal = engine.LegalActions(observer);
         var diagnostics = engine.SupportDiagnostics(observer);
         foreach (var player in state.Players.Skip(1))
         {
-            Swap(player.Hand, state.Shared.ImperiumDeck);
-            Swap(player.Deck, state.Shared.ImperiumDeck);
-            Swap(player.Intrigue, state.Shared.IntrigueDeck);
+            Change(player.Hand, state.Shared.ImperiumDeck, "Hand");
+            Change(player.Deck, state.Shared.ImperiumDeck, "Deck");
+            Change(player.Intrigue, state.Shared.IntrigueDeck, "Intrigue");
             player.Deck.Shuffle(state.Random);
+
+            void Change(CardZone zone, CardZone stock, string name)
+            {
+                // Full-prefix replay honestly preserves naturally empty private zones. The dedicated
+                // draw fixture requires all three zones of opponent 1 and cannot silently skip them.
+                if (zone.Count == 0)
+                {
+                    Assert.False(requireNonemptyOpponent && player.Id == 1, $"Missing nonempty {name} in {engine.Phase}.");
+                    emptyZones?.Add((engine.Phase, name));
+                    return;
+                }
+                SwapDistinct(zone, stock);
+            }
         }
         state.Shared.ImperiumDeck.Shuffle(state.Random);
         state.Shared.IntrigueDeck.Shuffle(state.Random);
+        Assert.NotEqual(randomBefore, state.Random.Checkpoint);
+        Assert.Equal(counts, state.Zones.Select(zone => (zone.Id, zone.Count)));
+        Assert.Equal(publicBefore, Json(engine.Observe(observer).Game with { Hand = [], Intrigue = [] }));
         Assert.Equal(before, Json(engine.Observe(observer)));
         Assert.Equal(legal, engine.LegalActions(observer));
         Assert.Equal(diagnostics, engine.SupportDiagnostics(observer));
     }
 
-    private static void Swap(CardZone first, CardZone second)
+    private static void SwapDistinct(CardZone first, CardZone second)
     {
-        if (first.Count == 0 || second.Count == 0) return;
-        var a = first.Cards[0].Id;
-        var b = second.Cards[^1].Id;
-        first.MoveTo(a, second);
-        second.MoveTo(b, first);
+        Assert.NotEmpty(first.Cards);
+        var before = first.Cards.Select(card => card.Definition).ToArray();
+        var a = first.Cards[0];
+        var b = second.Cards.FirstOrDefault(card => card.Definition != a.Definition);
+        Assert.NotNull(b); // A same-face physical-ID exchange is never counted as privacy evidence.
+        Assert.NotEqual(a.Definition, b.Definition);
+        first.MoveTo(a.Id, second);
+        second.MoveTo(b.Id, first);
+        Assert.False(before.SequenceEqual(first.Cards.Select(card => card.Definition)));
+        Assert.Contains(b.Definition, first.Cards.Select(card => card.Definition));
     }
 
     private static string Json<T>(T value) => JsonSerializer.Serialize(value, ConfigurationJson.Options);
