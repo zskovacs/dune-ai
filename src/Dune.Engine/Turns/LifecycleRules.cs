@@ -13,6 +13,7 @@ public sealed record IntrigueRule(ContentId Id, IntrigueTiming Timing, ResourceC
 public sealed record ConflictRewardTier(int Tier, ImmutableArray<Effect> Effects);
 public sealed record ConflictRule(ContentId Id, ConflictTier Tier, ImmutableArray<ConflictRewardTier> Rewards,
     BoardSpaceId? ControlSpace, ImmutableArray<SourceReference> Sources);
+/// <summary>Printed reward on every upward crossing of four; earned rewards survive subsequent Influence loss.</summary>
 public sealed record FactionRule(Faction Faction, int MaximumInfluence, ImmutableArray<Effect> ThresholdFourReward,
     ImmutableArray<SourceReference> Sources);
 public sealed record LifecycleRuleSet(string Version, ImmutableArray<IntrigueRule> Intrigues,

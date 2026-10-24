@@ -41,7 +41,7 @@ public sealed class EffectGraphValidator
                 case ConditionalEffect conditional when !Enum.IsDefined(conditional.Condition):
                 case DrawEffect { Amount: < 0 }:
                 case RecruitEffect { Amount: < 0 }:
-                case InfluenceEffect influence when influence.Amount < 0 || !Enum.IsDefined(influence.Faction):
+                case InfluenceEffect influence when !Enum.IsDefined(influence.Faction):
                     diagnostics.Add(new(StepStatus.ContentError, "effect", "Effect amount or enum is invalid."));
                     break;
                 case SequenceEffect sequence: Visit(sequence.Effects, depth + 1, jsonDepth + 2, path, diagnostics); break;
@@ -69,13 +69,10 @@ public sealed class EffectGraphValidator
                     Visit(conditional.Effects, depth + 1, jsonDepth + 2, path, diagnostics);
                     diagnostics.Add(new(StepStatus.Unsupported, "effect-support", "Conditional scoring is not implemented."));
                     break;
-                case DrawIntrigueEffect:
-                    diagnostics.Add(new(StepStatus.Unsupported, "effect-support", "This sourced lifecycle primitive is not implemented."));
-                    break;
                 case UnsupportedEffect unsupported:
                     diagnostics.Add(new(StepStatus.Unsupported, "effect-support", unsupported.Reason));
                     break;
-                case RetreatEffect or GainEffect or DrawEffect or RecruitEffect or InfluenceEffect or TrashSelfEffect or AcquireEffect or
+                case RetreatEffect or GainEffect or DrawEffect or DrawIntrigueEffect or RecruitEffect or InfluenceEffect or TrashSelfEffect or AcquireEffect or
                     HighCouncilEffect or SwordmasterEffect or HarvestSpiceEffect or SignetEffect:
                     break;
                 default: diagnostics.Add(new(StepStatus.Unsupported, "effect-type", "This effect primitive is unsupported.")); break;

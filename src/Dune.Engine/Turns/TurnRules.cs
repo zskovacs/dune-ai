@@ -61,7 +61,7 @@ public sealed record HarvestSpiceEffect : Effect;
 public sealed record UnsupportedEffect(string Reason) : Effect;
 /// <summary>Choose 0..Maximum deployed recipient troops to return to their garrison during Combat.</summary>
 public sealed record RetreatEffect(int Maximum) : Effect;
-// Source authoring contracts only. These remain unsupported until their owning runtime tasks.
+/// <summary>Draw from the shared Intrigue deck without unverified recycling.</summary>
 public sealed record DrawIntrigueEffect(int Amount) : Effect;
 public enum EndgameCondition { OwnAtLeastTwoSpiceMustFlow, OwnMoreSpiceMustFlowThanEachOpponent }
 public sealed record ConditionalEffect(EndgameCondition Condition, ImmutableArray<Effect> Effects) : Effect;
@@ -90,5 +90,5 @@ public sealed record TurnRuleSet(string Version, ImmutableArray<CardRule> Cards,
 {
     public CombatStrengthRule Strength { get; init; } = new();
     public LifecycleRuleSet? Lifecycle { get; init; }
-    public string SupportVersion { get; init; } = "original-imperium-turn-support-v5";
+    public string SupportVersion { get; init; } = "original-imperium-turn-support-v6";
 }

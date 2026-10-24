@@ -130,3 +130,26 @@ SLICE-003.5 verifies these extension limits in the
 and acquisition priority work today; general causal continuation, Combat priority
 windows, source/recipient role separation and scoped modifiers are proposed in
 [ADR 0006](../adr/0006-ability-and-decision-execution.md), not implemented support.
+
+
+### SLICE-004 faction prerequisites
+
+Sourced lifecycle faction definitions activate bounded signed Influence, recurring
+threshold-four bonuses and authoritative Board.Alliances ownership. Influence uses
+0..6 saturation; preview rules lacking a faction definition retain their threshold
+gate. A threshold reward pushes a P1 child frame with the effect's original roles
+and returns before the parent continues. The primitive drain re-reads the top frame
+after pushing that child.
+
+A private, preflight-only faction projection exposes threshold work to the existing
+bounded resource, acquisition-stock, permanent-upgrade and funding checks. Its
+acquisition reservation marker never enters execution or canonical serialization.
+Suspended Sequence order is preserved across decisions; unordered competing signed, cross-player
+or differently bound payer influence and subsequent influence dependent on conditional ownership
+remain explicit unsupported gates. Intrigue draws reserve the shared deck jointly;
+no supplied source establishes shared-deck recycling, so unavailable mandatory draws
+reject before mutation while optional declines remain legal. Holder-loss cases with
+qualifying rival ownership or ties remain gated pending source clarification.
+
+This changes turn/support semantics to v6 and lifecycle authoring to v4 without new
+trusted fields; the v3 snapshot and replay schemas remain unchanged.

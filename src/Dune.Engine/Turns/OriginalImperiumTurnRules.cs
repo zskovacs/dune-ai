@@ -10,14 +10,14 @@ namespace Dune.Engine.Turns;
 /// </summary>
 public static class OriginalImperiumTurnRules
 {
-    public const string Version = "imperium-2020-turn-preview-v5";
+    public const string Version = "imperium-2020-turn-preview-v6";
     private const string Rules = "DUNE_IMPERIUM_Rules_2020_10_26.pdf";
     private const string Aid = "DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf";
 
     public static TurnRuleSet Create() => new(Version, Cards(), Spaces(), []);
 
     /// <summary>Partial source authoring, not a complete inventory or a claim of lifecycle playability.</summary>
-    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v3",
+    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v4",
     [
         new(new("imperium:intrigue:ambush:v1"), IntrigueTiming.Combat, new(),
             [new GainEffect(ResourceKind.Swords, 4)], [new(Rules, 7, "Ambush complete face"), new(Rules, 12, "Combat Intrigue example")]),
@@ -45,7 +45,7 @@ public static class OriginalImperiumTurnRules
         new(faction, 6, reward,
             [new(Rules, 4, "Faction threshold-four printed bonus icons"),
              new(Rules, 7, "Maximum 6: VISUAL INFERENCE from seven cells anchored at 0, 2 and 4; not a printed prose numeral"),
-             new(Rules, 16, "Bonus icon meanings; faction runtime remains unsupported")]);
+             new(Rules, 16, "Bonus icon meanings; threshold reward retains original effect roles")]);
 
     private static ImmutableArray<CardRule> Cards()
     {

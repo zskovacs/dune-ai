@@ -10,7 +10,7 @@ using Dune.Engine.Setup;
 namespace Dune.Engine.Turns;
 
 /// <summary>Incremental turns and decision windows over trusted setup state; unsupported lifecycle work stops explicitly.</summary>
-public sealed class TurnEngine
+public sealed partial class TurnEngine
 {
     private const string InvalidLifecycleVersion = "invalid-lifecycle:";
     private readonly GameState _state;
@@ -546,6 +546,8 @@ public sealed class TurnEngine
                     ? Unsupported("acquire-effect", "The granted card is unsupported.")
                     : _cardErrors.GetValueOrDefault(rule.Id) ?? Support(rule.AcquireEffects, owner, true, false, combatRetreat, depth + 1),
                 SignetEffect => Support(_leaders[Player(owner).Leader].SignetEffects, owner, card, board, combatRetreat, depth + 1),
+                InfluenceEffect influence when _rules.Lifecycle?.Factions.FirstOrDefault(x => x.Faction == influence.Faction) is { } faction =>
+                    _lifecycleDefinitionError ?? Support(faction.ThresholdFourReward, owner, false, false, combatRetreat, depth + 1),
                 _ => null,
             };
         }
@@ -556,16 +558,29 @@ public sealed class TurnEngine
     private TurnDiagnostic? ValidateRemaining(IEnumerable<(Effect Effect, int Owner)>? selected = null, BoardSpaceId? sourceSpace = null,
         IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? selectedPayer = null)
     {
-        var work = Pending.Select(x => (x.Effect, x.Context.RecipientId)).Concat(selected ?? []).ToArray();
-        var resources = Pending.Select(x => (x.Effect, x.Context.RecipientId, x.Context.PayerId, x.Context.Space))
-            .Concat((selected ?? []).Select(x => (x.Effect, x.Owner, selectedPayer ?? x.Owner, sourceSpace)));
+        // A selected decision child finishes first, then the active frame, then its suspended parents.
+        // Keep explicit Sequence order when projecting signed Influence across a suspended decision.
+        var children = new List<Effect>();
+        if (selected is not null)
+            children.Add(new PlayerOrderedEffect([.. selected.Select(x => (Effect)new ForPlayerEffect(x.Owner, [x.Effect])
+                { PayerId = selectedPayer ?? x.Owner })]));
+        foreach (var pendingFrame in _frames.AsEnumerable().Reverse())
+        {
+            ImmutableArray<Effect> effects = [.. pendingFrame.Remaining.Select(x => (Effect)new ForPlayerEffect(x.Context.DecisionOwnerId, [x.Effect])
+                { RecipientId = x.Context.RecipientId, PayerId = x.Context.PayerId })];
+            children.Add(pendingFrame.Mode == EffectGroupMode.Sequence ? new SequenceEffect(effects) : new PlayerOrderedEffect(effects));
+        }
+        (Effect Effect, int Owner)[] work = [(new SequenceEffect([.. children]), 0)];
+        var resources = work.Select(x => (x.Effect, x.Owner, 0, sourceSpace ?? Pending.Select(x => x.Context.Space).FirstOrDefault(x => x is not null)));
         return ValidateAcquisitionStock(work) ?? ValidateResourceBounds(resources, payments) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
     }
 
     private TurnDiagnostic? ValidatePermanentOperations(IEnumerable<(Effect Effect, int Owner)> work)
     {
+        var projection = ProjectFactionWork(work.Select(x => (x.Effect, x.Owner, x.Owner, (BoardSpaceId?)null)));
+        if (projection.Error is { } error) return error;
         var totals = new Dictionary<(int Owner, bool Swordmaster), int>();
-        foreach (var (effect, owner) in work) AccumulatePermanentOperations([effect], owner, totals);
+        foreach (var (effect, owner, _, _) in projection.Work) AccumulatePermanentOperations([effect], owner, totals);
         foreach (var (key, count) in totals)
             if (count > (key.Swordmaster ? Player(key.Owner).Units.UnacquiredSwordmasters : Player(key.Owner).HasHighCouncilSeat ? 0 : 1))
                 return Illegal("permanent-upgrade", "A selected permanent upgrade is already acquired or granted more than once.");
@@ -613,7 +628,9 @@ public sealed class TurnEngine
     private TurnDiagnostic? ValidateResourceBounds(IEnumerable<(Effect Effect, int Owner, int Payer, BoardSpaceId? Space)> work,
         IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, CardInstance? consumed = null)
     {
-        var materialized = work.ToArray();
+        var projection = ProjectFactionWork(work);
+        if (projection.Error is { } error) return error;
+        var materialized = projection.Work;
         var totals = new Dictionary<(int Owner, ResourceKind Resource), long>();
         // These affordable, selected payments happen before all selected and suspended work.
         // Capacity is freed only on the bound payer, independently of each reward recipient.
@@ -649,7 +666,7 @@ public sealed class TurnEngine
                     ResourceKind.Swords => player.Temporary.Swords,
                     _ => 0,
                 };
-                if (current + amount > int.MaxValue || key.Resource == ResourceKind.Swords &&
+                if (current + amount < 0 || current + amount > int.MaxValue || key.Resource == ResourceKind.Swords &&
                     !StrengthFits(current + amount, player.Units.TroopsInConflict)) return false;
             }
             return true;
@@ -756,6 +773,7 @@ public sealed class TurnEngine
                         var branchChoices = new HashSet<Effect>(selectedChoices, ReferenceEqualityComparer.Instance) { choice };
                         var mandatoryWork = materialized.Select(x => (x.Effect, x.Owner)).Concat(branchWork).ToArray();
                         return HasCapacity(branch) && ValidateAcquisitionStock(mandatoryWork, consumed, branchChoices) is null &&
+                            ValidateIntrigueReservations(mandatoryWork, branchChoices) is null &&
                             ValidatePermanentOperations(mandatoryWork) is null &&
                             !AmbiguousJointChoices(option.Effects.Select(x => (x, owner, payer, space)), branch, mandatoryWork, branchFunding) &&
                             ChoicesHaveCapacity(option.Effects, owner, payer, space, branch, branchWork, branchChoices, branchFunding);
@@ -874,11 +892,6 @@ public sealed class TurnEngine
                         var key = (owner, gain.Resource);
                         target[key] = target.GetValueOrDefault(key) + gain.Amount;
                         break;
-                    case InfluenceEffect influence when Influence(Player(owner), influence.Faction) < 2 &&
-                        (long)Influence(Player(owner), influence.Faction) + influence.Amount >= 2:
-                        var vp = (owner, ResourceKind.VictoryPoints);
-                        target[vp] = target.GetValueOrDefault(vp) + 1;
-                        break;
                     case SequenceEffect sequence: Accumulate(sequence.Effects, owner, payer, space, target, includeChoices); break;
                     case PlayerOrderedEffect ordered: Accumulate(ordered.Effects, owner, payer, space, target, includeChoices); break;
                     case ForPlayerEffect player: Accumulate(player.Effects, player.RecipientId ?? player.PlayerId, player.PayerId ?? player.PlayerId, space, target, includeChoices); break;
@@ -904,20 +917,16 @@ public sealed class TurnEngine
 
     private TurnDiagnostic? ValidateInfluenceBounds(IEnumerable<(Effect Effect, int Owner)> work)
     {
-        // Immediate acquisitions and suspended work must remain jointly resolvable for every owner.
-        var influenceBounds = new Dictionary<(int Owner, Faction Faction), long>();
-        foreach (var (effect, owner) in work)
-            AccumulateInfluence([effect], owner, influenceBounds);
-        foreach (var (key, amount) in influenceBounds)
-            if (Influence(Player(key.Owner), key.Faction) + amount >= 4)
-                return Unsupported("alliance-bonus", "The faction alliance bonus is not yet supported.");
-        return null;
+        return ProjectFactionWork(work.Select(x => (x.Effect, x.Owner, x.Owner, (BoardSpaceId?)null))).Error;
     }
 
     private TurnDiagnostic? ValidateAcquisitionStock(IEnumerable<(Effect Effect, int Owner)> work,
         CardInstance? consumed = null, IReadOnlySet<Effect>? selectedChoices = null)
     {
-        var materialized = work.ToArray();
+        var projection = ProjectFactionWork(work.Select(x => (x.Effect, x.Owner, x.Owner, (BoardSpaceId?)null)));
+        if (projection.Error is { } error) return error;
+        var materialized = projection.Work.Select(x => (x.Effect, x.Owner)).ToArray();
+        if (ValidateIntrigueReservations(materialized, selectedChoices) is { } intrigueError) return intrigueError;
         var demand = new Dictionary<ContentId, long>();
         var mandatory = new HashSet<ContentId>();
         foreach (var (effect, owner) in materialized)
@@ -1031,6 +1040,10 @@ public sealed class TurnEngine
                     if (!acquire.AllowEmpty) mandatory.Add(acquire.Card);
                     AccumulateAcquisitionDemand(_cards[acquire.Card].AcquireEffects, owner, totals, mandatory, depth + 1, includeChoices);
                     break;
+                case AcquisitionReservation reservation:
+                    totals[reservation.Card] = totals.GetValueOrDefault(reservation.Card) + 1;
+                    if (!reservation.AllowEmpty) mandatory.Add(reservation.Card);
+                    break;
                 case SequenceEffect sequence:
                     AccumulateAcquisitionDemand(sequence.Effects, owner, totals, mandatory, depth + 1, includeChoices);
                     break;
@@ -1056,49 +1069,6 @@ public sealed class TurnEngine
                     // Optional and choice branches reserve stock only after selection. Support for every
                     // branch was checked before activation; selected work is combined with suspended frames.
 
-            }
-    }
-
-    private void AccumulateInfluence(IEnumerable<Effect> effects, int owner,
-        Dictionary<(int Owner, Faction Faction), long> totals, int depth = 0)
-    {
-        if (depth > 32) throw new InvalidOperationException("A cyclic graph passed preflight.");
-        foreach (var effect in effects)
-            switch (effect)
-            {
-                case InfluenceEffect influence:
-                    var key = (owner, influence.Faction);
-                    totals[key] = totals.GetValueOrDefault(key) + influence.Amount;
-                    break;
-                case SequenceEffect sequence:
-                    AccumulateInfluence(sequence.Effects, owner, totals, depth + 1);
-                    break;
-                case PlayerOrderedEffect ordered:
-                    AccumulateInfluence(ordered.Effects, owner, totals, depth + 1);
-                    break;
-                case OptionalPaymentEffect optional:
-                    AccumulateInfluence(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, totals, depth + 1);
-                    break;
-                case ChoiceEffect choice:
-                    var maxima = new Dictionary<(int Owner, Faction Faction), long>();
-                    foreach (var option in choice.Options)
-                    {
-                        var branch = new Dictionary<(int Owner, Faction Faction), long>();
-                        AccumulateInfluence(option.Effects, owner, branch, depth + 1);
-                        foreach (var (target, amount) in branch)
-                            maxima[target] = Math.Max(maxima.GetValueOrDefault(target), amount);
-                    }
-                    foreach (var (target, amount) in maxima) totals[target] = totals.GetValueOrDefault(target) + amount;
-                    break;
-                case ForPlayerEffect player:
-                    AccumulateInfluence(player.Effects, player.RecipientId ?? player.PlayerId, totals, depth + 1);
-                    break;
-                case AcquireEffect acquire:
-                    AccumulateInfluence(_cards[acquire.Card].AcquireEffects, owner, totals, depth + 1);
-                    break;
-                case SignetEffect:
-                    AccumulateInfluence(_leaders[Player(owner).Leader].SignetEffects, owner, totals, depth + 1);
-                    break;
             }
     }
 
@@ -1328,10 +1298,12 @@ public sealed class TurnEngine
                 if (player.Id == _state.CurrentPlayerId) _recruited += amount;
                 break;
             case InfluenceEffect influence:
-                var before = Influence(player, influence.Faction);
-                var after = before + influence.Amount;
-                player.Influence = [.. player.Influence.Select(x => x.Faction == influence.Faction ? x with { Amount = after } : x)];
-                if (before < 2 && after >= 2) Gain(player, ResourceKind.VictoryPoints, 1);
+                ApplyInfluence(influence, context);
+                break;
+            case DrawIntrigueEffect draw:
+                for (var i = 0; i < draw.Amount; i++)
+                    if (_state.Shared.IntrigueDeck.TryDrawTo(player.Intrigue) is null)
+                        throw new InvalidOperationException("Unavailable Intrigue draw passed preflight.");
                 break;
             case OptionalPaymentEffect optional:
                 _frames[^1] = _frames[^1] with
@@ -1532,11 +1504,12 @@ public sealed class TurnEngine
                 {
                     Take(commutative.Id);
                     Execute(commutative.Effect, commutative.Context);
+                    if (_frames[^1].Id != frame.Id) break;
                 }
                 continue;
             }
             if (available.Length != 1 || IsRevealRoot ||
-                available[0].Effect is not (GainEffect or DrawEffect or RecruitEffect or InfluenceEffect or
+                available[0].Effect is not (GainEffect or DrawEffect or DrawIntrigueEffect or RecruitEffect or InfluenceEffect or
                     HarvestSpiceEffect or HighCouncilEffect or SwordmasterEffect))
                 break;
             var work = Take(available[0].Id);
@@ -1718,7 +1691,7 @@ public sealed class TurnEngine
                 rule.ControlSpace is { } control && !_state.Board.Definition.Spaces.Any(x => x.Id == control && x.Controllable))
                 return Content("lifecycle-shape", "Conflict identity, deck tier, reward positions, control space or source provenance is invalid.");
         foreach (var rule in factions)
-            if (!Enum.IsDefined(rule.Faction) || rule.MaximumInfluence < 4 ||
+            if (!Enum.IsDefined(rule.Faction) || rule.MaximumInfluence != 6 ||
                 !ContentCatalog.ValidSources(rule.Sources) ||
                 !(rule.Sources.All(OfficialSource) || _state.Authenticity == ContentAuthenticity.SyntheticFixture &&
                     rule.Sources.All(x => x.Document.StartsWith("Synthetic", StringComparison.Ordinal))))
@@ -1796,7 +1769,6 @@ public sealed class TurnEngine
         {
             foreach (var player in _state.Players)
                 if (ValidateContext(faction.ThresholdFourReward, false, false, player.Id) is { } issue) return DeckDiagnostic(issue);
-            return Unsupported("lifecycle-faction-support", "Faction threshold operations are not implemented.");
         }
         return null;
     }
