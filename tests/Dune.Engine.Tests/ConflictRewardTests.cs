@@ -22,14 +22,17 @@ public sealed class ConflictRewardTests
         var engine = new TurnEngine(state, rules);
         var before = state.Players.Select(x => x.Resources.Solari).ToArray();
         CloseCombat(engine);
-        Assert.Equal(winner, engine.CaptureTrustedSnapshot().Data.CombatOutcome!.WinnerId);
+        if (winner is not null) Assert.Equal(winner, engine.CaptureTrustedSnapshot().Data.CombatOutcome!.WinnerId);
         FinishRewards(engine);
         foreach (var player in state.Players)
             Assert.Equal(before[player.Id] + (tiers[player.Id] is { } tier ? 4 - tier : 0), player.Resources.Solari);
         Assert.Empty(engine.CaptureTrustedSnapshot().Data.Frames);
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(1, engine.DecisionOwnerId);
         Assert.False(state.IsCompleted);
-        Assert.Equal(GamePhase.Combat, state.Phase); // Cleanup belongs to Task 9.
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
+        Assert.Equal(2, state.Round);
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.CombatOutcome);
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.ConflictRewards);
         var after = engine.CaptureTrustedSnapshot().CanonicalJson;
         Assert.Equal(StepStatus.Illegal, engine.Step(new PassPriorityAction(0)).Status);
         Assert.Equal(after, engine.CaptureTrustedSnapshot().CanonicalJson);
@@ -47,7 +50,7 @@ public sealed class ConflictRewardTests
     {
         var state = CombatState(problem.StartsWith("tie-", StringComparison.Ordinal) ? [8, 8, 4] : [8, 6, 4]);
         if (problem == "overflow") state.Players[1].Resources = state.Players[1].Resources with { Solari = 1 };
-        if (problem == "agent-overflow") state.Players[1].Units = state.Players[1].Units with { AvailableAgents = int.MaxValue - 1 };
+        if (problem == "agent-overflow") state.Players[1].Units = state.Players[1].Units with { AvailableAgents = int.MaxValue - 1, OrdinaryAgents = int.MaxValue - 1 };
         var effect = problem switch
         {
             "unsupported" => (Effect)new UnsupportedEffect("Unknown synthetic reward"),
@@ -88,6 +91,8 @@ public sealed class ConflictRewardTests
         Assert.Equal("fixture:post-win-spice", cards[1].Definition.Value);
         var rules = Rewards(LifecycleFixture.Rules(state), 1,
             cardFunds ? [new GainEffect(ResourceKind.Water, 1)] : [new GainEffect(ResourceKind.Spice, 2), new GainEffect(ResourceKind.Water, 1)]);
+        // A real lower-recipient interruption preserves a cut at the closed winner opportunity.
+        rules = Rewards(rules, 2, [new OptionalPaymentEffect(new(), [])]);
         rules = Intrigue(rules, cards[0].Definition, "fixture:post-win-payment", new(Spice: 2), [new GainEffect(ResourceKind.Solari, 4)]);
         rules = Intrigue(rules, cards[1].Definition, "fixture:post-win-spice", new(), [new GainEffect(ResourceKind.Spice, 2)]);
         var engine = new TurnEngine(state, rules);
@@ -106,8 +111,15 @@ public sealed class ConflictRewardTests
         Assert.False(engine.Observe(0).Game.Window!.IsSuspended);
         Assert.NotEmpty(engine.LegalActions(0).OfType<ResolveEffectAction>());
         CheckReplay(engine, Create, rules);
-        FinishRewards(engine);
+        Resolve<GainEffect>(engine, gain => gain.Resource == ResourceKind.Water);
+        Apply(engine, new PassPriorityAction(0));
         Assert.Equal(new[] { 0 }, engine.CaptureTrustedSnapshot().Data.ConflictRewards!.ClosedPostWinOpportunities);
+        Assert.Equal(1, engine.DecisionOwnerId);
+        Assert.Null(engine.Observe(0).Game.Window);
+        CheckReplay(engine, Create, rules);
+        FinishRewards(engine);
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.ConflictRewards); // Recall clears completed reward progress.
+        Assert.Equal(2, state.Round);
         Assert.Null(engine.Observe(0).Game.Window);
         CheckReplay(engine, Create, rules);
     }
@@ -174,10 +186,10 @@ public sealed class ConflictRewardTests
         Resolve<OptionalPaymentEffect>(engine);
         Apply(engine, new ChooseOptionAction(2, 1));
         FinishRewards(engine);
-        Assert.Equal(supply - 2, state.Players[0].Units.TroopsInSupply);
+        Assert.Equal(supply + 2, state.Players[0].Units.TroopsInSupply); // Four Conflict troops returned to supply.
         Assert.Equal(5, state.Players[0].Units.TroopsInGarrison);
         Assert.Equal(vp + 2, state.Players[0].Resources.VictoryPoints);
-        Assert.Single(state.Players[0].Hand.Cards);
+        Assert.Equal(6, state.Players[0].Hand.Count); // Reward draw plus next round's five.
         Assert.Single(state.Players[0].Intrigue.Cards);
         Assert.Contains(market.Id, state.Players[0].Discard.Cards.Select(x => x.Id));
         Assert.Equal(3, state.Players[1].Resources.Water);
@@ -359,7 +371,8 @@ public sealed class ConflictRewardTests
         CheckReplay(engine, Create, rules);
         Apply(engine, new ChooseOptionAction(2, 1));
         Assert.Equal(3, state.Players[0].Resources.Water);
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
+        Assert.Equal(1, engine.DecisionOwnerId);
         CheckReplay(engine, Create, rules);
     }
 
@@ -387,8 +400,12 @@ public sealed class ConflictRewardTests
         var engine = new TurnEngine(state, rules);
         CloseCombat(engine);
         Assert.Null(engine.Observe(0).Game.Window); // Tied first never opens PostWin.
-        var progress = engine.CaptureTrustedSnapshot().Data.ConflictRewards!;
-        Assert.Equal(players == 3 ? new[] { 0, 1 } : new[] { 0, 1, 2, 3 }, progress.Recipients.Select(x => x.PlayerId));
+        if (wrapped)
+        {
+            var progress = engine.CaptureTrustedSnapshot().Data.ConflictRewards!;
+            Assert.Equal(players == 3 ? new[] { 0, 1 } : new[] { 0, 1, 2, 3 }, progress.Recipients.Select(x => x.PlayerId));
+        }
+        else Assert.Equal(GamePhase.PlayerTurns, state.Phase); // Commuting direct rewards and cleanup resolve atomically.
         CheckReplay(engine, Create, rules);
         FinishRewards(engine);
         foreach (var player in state.Players)
@@ -563,7 +580,8 @@ public sealed class ConflictRewardTests
         Apply(engine, new PassPriorityAction(0));
         Assert.Equal(expected[0], Assert.Single(state.Players[0].Intrigue.Cards).Id);
         Assert.Equal(expected[1], Assert.Single(state.Players[1].Intrigue.Cards).Id);
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
+        Assert.Equal(1, engine.DecisionOwnerId);
         CheckReplay(engine, Create, rules);
     }
 
@@ -584,8 +602,9 @@ public sealed class ConflictRewardTests
         Assert.Equal("intrigue-empty", Assert.Single(engine.SupportDiagnostics(1)).Code);
         Assert.Empty(engine.SupportDiagnostics(0));
         Apply(engine, new ChooseOptionAction(1, 0));
-        Assert.Null(engine.DecisionOwnerId);
-        Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
+        Assert.Equal(1, engine.DecisionOwnerId);
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
+        Assert.Empty(engine.SupportDiagnostics(0));
     }
 
     internal static GameState CombatState(int[] strengths)
@@ -673,7 +692,7 @@ public sealed class ConflictRewardTests
     internal static void FinishRewards(TurnEngine engine)
     {
         var guard = 0;
-        while (engine.DecisionOwnerId is { } owner)
+        while (engine.Phase == GamePhase.Combat && engine.DecisionOwnerId is { } owner)
         {
             Assert.True(++guard < 100);
             var actions = engine.LegalActions(owner);

@@ -74,6 +74,10 @@ internal static class LifecycleFixture
         Lifecycle = LifecycleRules(state),
     };
 
+    /// <summary>Synthetic cards/rewards with the sourced original board; still not an authentic inventory.</summary>
+    internal static TurnRuleSet RulesWithOriginalBoard(GameState state) => Rules(state) with
+    { Spaces = OriginalImperiumTurnRules.Create().Spaces };
+
     internal static LifecycleRuleSet LifecycleRules(GameState state) => new("synthetic-lifecycle-tests-v1",
         [.. state.Definition.Content.Where(x => x.Category == ContentCategory.IntrigueCard).Select(x =>
             new IntrigueRule(x.Id, IntrigueTiming.Combat, new(), [], Sources))],

@@ -59,6 +59,7 @@ public sealed record GameObservation(
     ImmutableArray<StartingCardRecipe> StartingComposition)
 {
     public DecisionWindowSummary? Window { get; init; }
+    public DuneTerminalReason TerminalReason { get; init; }
 }
 
 internal static class ObservationProjection
@@ -83,6 +84,7 @@ internal static class ObservationProjection
             state.Shared.ImperiumDeck.Count, state.Shared.IntrigueDeck.Count, state.Conflict.Deck.Count,
             Cards(own.Hand), Cards(own.Intrigue), own.StartingComposition)
         {
+            TerminalReason = state.TerminalReason,
             Window = state.DecisionWindow is { } window ? new(window.Id, window.Kind, window.EligibleSeats,
                 window.ClockwiseCursor, window.PriorityOwnerId, window.OpportunityPlays, window.ConsecutivePasses,
                 window.SuspendedFrameId is not null) : null,

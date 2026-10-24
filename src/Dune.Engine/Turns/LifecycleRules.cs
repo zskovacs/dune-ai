@@ -4,6 +4,9 @@ using Dune.Engine.Setup;
 
 namespace Dune.Engine.Turns;
 
+[Flags]
+public enum DuneTerminalReason { None = 0, VictoryPointThreshold = 1, ConflictDeckExhausted = 2 }
+
 public enum IntrigueTiming { Plot, Combat, PostWin, Endgame }
 public enum CombatParticipationPolicy { OriginalTroops }
 public enum CombatCleanupPolicy { ReturnTroopsToSupply }

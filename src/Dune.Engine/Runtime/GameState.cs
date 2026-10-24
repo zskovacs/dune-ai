@@ -112,6 +112,7 @@ public sealed class GameState
     public int? DecisionOwnerId { get; internal set; }
     public int? CurrentPlayerId { get; internal set; }
     public bool IsCompleted { get; internal set; }
+    public DuneTerminalReason TerminalReason { get; internal set; }
     internal DecisionWindowState? DecisionWindow { get; set; }
     public ImmutableArray<ActiveEffect> ActiveEffects { get; internal set; } = [];
     public ImmutableArray<ModuleExtensionState> Extensions { get; internal set; } = [];

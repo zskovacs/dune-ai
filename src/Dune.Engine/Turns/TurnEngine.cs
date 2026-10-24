@@ -241,13 +241,13 @@ public sealed partial class TurnEngine
         return new(StepStatus.Applied, []);
     }
 
-    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v5", _rulesIdentity, _initialHash,
+    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v6", _rulesIdentity, _initialHash,
         _state.CaptureTrustedSnapshot().Data, [.. _frames], _nextFrameId, _revealing, _deploying,
         _recruited, _oldGarrison, _nextEffectId,
         [.. _used.OrderBy(x => x.PlayerId).ThenBy(x => x.Space.Value, StringComparer.Ordinal)], [.. _history])
     { Window = _state.DecisionWindow, NextWindowId = _nextWindowId, CombatOutcome = _combatOutcome, ConflictRewards = _conflictRewards is { } progress ? progress with { RemainingRewardWork = [.. Pending] } : null });
 
-    public TurnReplay CaptureReplay() => new("dune-turn-replay-v5",
+    public TurnReplay CaptureReplay() => new("dune-turn-replay-v6",
         typeof(TurnEngine).Assembly.GetName().Version!.ToString(),
         System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
         _rulesIdentity, _state.Definition.Fingerprint, _state.ConfigurationIdentity, _state.ContentIdentity,
@@ -1283,7 +1283,9 @@ public sealed partial class TurnEngine
 
     private void BeginRound()
     {
-        _state.Round = 1;
+        _state.Round = checked(_state.Round + 1);
+        foreach (var card in _state.Conflict.Revealed.Cards.ToArray())
+            _state.Conflict.Revealed.MoveTo(card.Id, _state.Conflict.Discard);
         _state.Conflict.Deck.TryDrawTo(_state.Conflict.Revealed);
         _state.Phase = GamePhase.RoundStart;
         if (MatchingDefenseOwner() is { } controller)
@@ -1319,8 +1321,16 @@ public sealed partial class TurnEngine
         Pay(player, rule.Cost);
         if (!rule.PlacementOptions.IsEmpty) Pay(player, rule.PlacementOptions[action.PaymentOption].Cost);
         player.Hand.MoveTo(card.Id, player.InPlay);
-        player.Units = player.Units with { AvailableAgents = player.Units.AvailableAgents - 1 };
-        board.Occupants = board.Occupants.Add(new(player.Id, AgentKind.Agent));
+        // Spend the shortest-lived Agent first; equivalent permanent Agents use ordinary before Swordmaster.
+        var kind = player.Units.AvailableMentats > 0 ? AgentKind.Mentat :
+            player.Units.AvailableAgents > player.Units.AvailableSwordmasters ? AgentKind.Agent : AgentKind.Swordmaster;
+        player.Units = player.Units with
+        {
+            AvailableAgents = player.Units.AvailableAgents - 1,
+            AvailableSwordmasters = player.Units.AvailableSwordmasters - (kind == AgentKind.Swordmaster ? 1 : 0),
+            AvailableMentats = player.Units.AvailableMentats - (kind == AgentKind.Mentat ? 1 : 0),
+        };
+        board.Occupants = board.Occupants.Add(new(player.Id, kind));
         if (rule.OncePerGame) _used.Add(new(player.Id, action.Space));
         _oldGarrison = player.Units.TroopsInGarrison;
         _recruited = 0;
@@ -1390,9 +1400,14 @@ public sealed partial class TurnEngine
                 ApplyControl(control.Space, player);
                 break;
             case TakeMentatEffect mentat:
+                if (!mentat.ForNextRound && !MentatAtStartingSpace) break;
                 _state.Board.Mentat = new(null, player.Id)
                 { ProtectedThroughRound = mentat.ForNextRound ? checked(_state.Round + 1) : null };
-                player.Units = player.Units with { AvailableAgents = checked(player.Units.AvailableAgents + 1) };
+                player.Units = player.Units with
+                {
+                    AvailableAgents = checked(player.Units.AvailableAgents + 1),
+                    AvailableMentats = checked(player.Units.AvailableMentats + 1),
+                };
                 break;
             case DeployFromSupplyEffect deploy:
                 player.Units = player.Units with
@@ -1446,7 +1461,9 @@ public sealed partial class TurnEngine
                 player.Units = player.Units with
                 {
                     AvailableAgents = player.Units.AvailableAgents + 1,
-                    UnacquiredSwordmasters = player.Units.UnacquiredSwordmasters - 1
+                    UnacquiredSwordmasters = player.Units.UnacquiredSwordmasters - 1,
+                    AcquiredSwordmasters = player.Units.AcquiredSwordmasters + 1,
+                    AvailableSwordmasters = player.Units.AvailableSwordmasters + 1
                 };
                 break;
             case HarvestSpiceEffect:
@@ -1720,10 +1737,19 @@ public sealed partial class TurnEngine
         {
             if (player.Resources.Solari < 0 || player.Resources.Spice < 0 || player.Resources.Water < 0 ||
                 player.Resources.VictoryPoints < 0 || player.Units.AvailableAgents < 0 ||
-                player.Units.UnacquiredSwordmasters < 0 || player.Units.TroopsInSupply < 0 ||
+                player.Units.UnacquiredSwordmasters < 0 || player.Units.OrdinaryAgents < 0 ||
+                player.Units.AcquiredSwordmasters < 0 || player.Units.AvailableSwordmasters < 0 || player.Units.AvailableMentats < 0 ||
+                player.Units.AvailableSwordmasters + player.Units.AvailableMentats > player.Units.AvailableAgents ||
+                player.Units.TroopsInSupply < 0 ||
                 player.Units.TroopsInGarrison < 0 || player.Units.TroopsInConflict < 0 ||
                 player.Temporary.Persuasion < 0 || player.Temporary.Swords < 0)
                 throw new InvalidOperationException("Negative resource or unit invariant failed.");
+            var placed = _state.Board.Spaces.SelectMany(x => x.Occupants).Where(x => x.PlayerId == player.Id).ToArray();
+            if (player.Units.AvailableAgents - player.Units.AvailableSwordmasters - player.Units.AvailableMentats +
+                    placed.Count(x => x.Kind == AgentKind.Agent) != player.Units.OrdinaryAgents ||
+                player.Units.AvailableSwordmasters + placed.Count(x => x.Kind == AgentKind.Swordmaster) != player.Units.AcquiredSwordmasters ||
+                player.Units.AvailableMentats + placed.Count(x => x.Kind == AgentKind.Mentat) != (_state.Board.Mentat.OwnerId == player.Id ? 1 : 0))
+                throw new InvalidOperationException("Agent-kind conservation invariant failed.");
             if (player.Units.TroopsInSupply + player.Units.TroopsInGarrison + player.Units.TroopsInConflict != _troopTotals[player.Id])
                 throw new InvalidOperationException("Troop conservation invariant failed.");
         }

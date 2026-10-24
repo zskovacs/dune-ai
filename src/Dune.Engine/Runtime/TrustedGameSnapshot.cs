@@ -5,6 +5,7 @@ using System.Text.Json;
 using Dune.Engine.Configuration;
 using Dune.Engine.Content;
 using Dune.Engine.Setup;
+using Dune.Engine.Turns;
 
 namespace Dune.Engine.Runtime;
 
@@ -61,7 +62,10 @@ public sealed record SnapshotData(
     ImmutableArray<SnapshotPlayer> Players,
     SnapshotBoard Board,
     ImmutableArray<SnapshotZone> Zones,
-    ImmutableArray<ActiveEffect> ActiveEffects);
+    ImmutableArray<ActiveEffect> ActiveEffects)
+{
+    public DuneTerminalReason TerminalReason { get; init; }
+}
 
 /// <summary>WARNING: trusted debug data contains all hidden cards and RNG seeds. Never expose to policies.</summary>
 public sealed class TrustedGameSnapshot
@@ -82,7 +86,7 @@ public sealed class TrustedGameSnapshot
     {
         if (!state.Extensions.IsEmpty)
             throw new NotSupportedException("Module extensions require an explicit typed snapshot contract.");
-        return new(new("dune-setup-snapshot-v4", typeof(GameState).Assembly.GetName().Version!.ToString(),
+        return new(new("dune-setup-snapshot-v5", typeof(GameState).Assembly.GetName().Version!.ToString(),
             System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
             state.Definition.Setup!.Id, state.Definition.Fingerprint, state.ConfigurationIdentity,
             "dune-configuration-sha256-v1", state.ContentIdentity, state.Authenticity,
@@ -96,6 +100,7 @@ public sealed class TrustedGameSnapshot
                 state.Board.Mentat, state.Board.Bank),
             state.Zones.OrderBy(x => x.Id.Value, StringComparer.Ordinal).Select(x =>
                 new SnapshotZone(x.Id, x.Name, x.Visibility, x.OwnerId, [.. x.Cards])).ToImmutableArray(),
-            state.ActiveEffects));
+            state.ActiveEffects)
+        { TerminalReason = state.TerminalReason });
     }
 }

@@ -211,3 +211,44 @@ unreached faction bonuses remain harmless; unique and untied reward draws remain
 supported. Active lower-recipient ConflictRewards frames use normal candidate
 support diagnostics even without a priority window. This safety revision changes
 support/authoring semantics only; setup/turn/replay shapes stay v4/v5/v5.
+
+### SLICE-004 recurring-round lifecycle
+
+Reward completion now resumes `CompleteCombat` in the same engine. The active
+original cleanup policy returns deployed troops to supply, resets swords/markers
+and clears completed window/outcome/reward state. `RunMakers` uses resolved board
+metadata while occupants still exist. `RunRecall` then records public
+`DuneTerminalReason` flags for VP >=10 and/or Conflict deck exhaustion. A trigger
+enters the existing Endgame window without Agent recall, marker rotation or a new
+hand. Task 10 owns final scoring/results.
+
+Without a trigger, Recall reconstructs available Agents from typed ownership and
+Mentat lifetime, clears placed occupants and rotates First Player clockwise.
+`BeginRound` increments the round, moves the previous revealed Conflict to public
+discard, reveals the next and reuses the existing typed RoundStart defense
+continuation before Draw5. Existing deck/discard reshuffling and Reveal card
+cleanup remain the only implementations; no second phase scheduler, fake policy
+actions or duplicate card discard were added. `StartRoundAction` remains legal
+only before round one.
+
+`PlayerUnits` includes ordinary Agent ownership, acquired/available Swordmasters
+and available Mentat. Placement records the exact kind, choosing Mentat, ordinary
+Agent, then Swordmaster deterministically for currently interchangeable uses.
+Recall preserves permanent Swordmaster/Council/once-game access, resources,
+Influence, control and accumulated spice. A Conflict Mentat earned in R stores
+R+1 and returns at that round's Recall, rather than gaining an extra round of
+protection. Ordinary Mentat returns at the current nonterminal Recall, placed or
+unused. Endgame preserves the final placed/unspent state. Trusted/public views
+include these typed public counts and terminal flags as detached immutable data.
+
+Closing actions preflight automatic Maker bounds and future Conflict support
+before committing. The source-verified Mentat board space draws for its two-Solari
+placement even when no token is available. Swordmaster is an eight-Solari,
+once-game permanent acquisition. Contested rewards and existing unsupported
+content gates remain explicit.
+
+Current schemas are setup **v5**, turn snapshot/replay **v6**, preview/support
+**v11**, lifecycle authoring **v8**. The shared synthetic fixture replays multiple
+rounds and the entire selected ten-card Conflict deck with conservation and
+seeded reshuffles; the official catalog remains incomplete and no authentic
+configuration is declared playable.

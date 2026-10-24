@@ -68,7 +68,8 @@ internal static class TurnEngineFixture
     internal static void FinishPlayerTurns(TurnEngine engine)
     {
         var guard = 0;
-        while (engine.Phase == GamePhase.PlayerTurns)
+        var round = engine.Observe(0).Game.Round;
+        while (engine.Phase == GamePhase.PlayerTurns && engine.Observe(0).Game.Round == round)
         {
             if (++guard > 1000) throw new InvalidOperationException("Fixture did not reach Combat boundary.");
             ResolveAll(engine);

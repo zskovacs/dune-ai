@@ -102,12 +102,22 @@ public sealed class PhaseDecisionTests
         Assert.Equal(2, engine.DecisionOwnerId);
         Assert.Equal(new[] { 0, 1 }, engine.CaptureTrustedSnapshot().Data.Window!.ConsecutivePasses);
         Apply(engine, new PassPriorityAction(2));
-        Assert.Equal(phase, engine.Phase);
-        Assert.Null(engine.CurrentPlayerId);
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(phase == GamePhase.Combat ? GamePhase.PlayerTurns : GamePhase.Endgame, engine.Phase);
+        if (phase == GamePhase.Combat)
+        {
+            Assert.Equal(0, engine.CurrentPlayerId);
+            Assert.Equal(0, engine.DecisionOwnerId);
+            Assert.Equal(2, state.Round);
+            Assert.Empty(engine.SupportDiagnostics(2));
+        }
+        else
+        {
+            Assert.Null(engine.CurrentPlayerId);
+            Assert.Null(engine.DecisionOwnerId);
+            Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
+        }
         Assert.Null(engine.Observe(0).Game.Window);
         Assert.False(state.IsCompleted);
-        Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
         Replay(engine, Create, rules);
     }
 
@@ -159,7 +169,7 @@ public sealed class PhaseDecisionTests
     }
 
     [Fact]
-    public void LastRevealWithNoCombatParticipantsFreezesEmptyOutcomeAndReplays()
+    public void LastRevealWithNoCombatParticipantsCompletesRoundAndReplays()
     {
         GameState Create()
         {
@@ -179,11 +189,11 @@ public sealed class PhaseDecisionTests
         var engine = new TurnEngine(state, rules);
         Apply(engine, new StartRoundAction());
         FinishPlayerTurns(engine);
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(0, engine.DecisionOwnerId);
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
+        Assert.Equal(2, state.Round);
         Assert.Null(engine.CaptureTrustedSnapshot().Data.Window);
-        var outcome = engine.CaptureTrustedSnapshot().Data.CombatOutcome!;
-        Assert.Empty(outcome.Placements);
-        Assert.Equal([0, 1, 2], outcome.NoRewardPlayerIds);
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.CombatOutcome);
         Replay(engine, Create, rules);
     }
 
@@ -195,7 +205,8 @@ public sealed class PhaseDecisionTests
             player.Units = player.Units with { TroopsInSupply = player.Units.TroopsInSupply + 1, TroopsInConflict = 0 };
         var rules = WindowRules(state, IntrigueTiming.Combat, []);
         var engine = new TurnEngine(state, rules);
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(0, engine.DecisionOwnerId);
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
         Assert.Null(engine.CaptureTrustedSnapshot().Data.Window);
         Assert.Equal(1, engine.CaptureTrustedSnapshot().Data.NextWindowId);
         state = WindowState(GamePhase.Combat);
@@ -207,8 +218,9 @@ public sealed class PhaseDecisionTests
         Apply(engine, new PassPriorityAction(2));
         if (engine.Observe(0).Game.Window?.Kind == DecisionWindowKind.PostWinRewards)
             Apply(engine, new PassPriorityAction(engine.DecisionOwnerId!.Value));
-        Assert.Null(engine.DecisionOwnerId);
-        Assert.Equal(GamePhase.Combat, engine.Phase);
+        Assert.Equal(0, engine.DecisionOwnerId);
+        Assert.Equal(GamePhase.PlayerTurns, engine.Phase);
+        Assert.Equal(2, state.Round);
         Assert.False(state.IsCompleted);
     }
 
@@ -252,9 +264,10 @@ public sealed class PhaseDecisionTests
         Apply(engine, new PassPriorityAction(2));
         if (engine.Observe(0).Game.Window?.Kind == DecisionWindowKind.PostWinRewards)
             Apply(engine, new PassPriorityAction(engine.DecisionOwnerId!.Value));
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(state.FirstPlayerId, engine.DecisionOwnerId);
         Assert.Null(engine.Observe(0).Game.Window);
-        Assert.Equal(GamePhase.Combat, engine.Phase);
+        Assert.Equal(GamePhase.PlayerTurns, engine.Phase);
+        Assert.Equal(2, state.Round);
         Replay(engine, Create, rules);
     }
 

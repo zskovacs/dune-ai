@@ -170,6 +170,7 @@ public sealed class BoardControlTests
         Reject(engine, new PlayIntrigueAction(0, Card(card)));
         state = CombatState([8, 6, 4]);
         state.Board.Mentat = new(null, 1);
+        state.Players[1].Units = state.Players[1].Units with { AvailableAgents = 3, AvailableMentats = 1 };
         engine = new TurnEngine(state, Rewards(LifecycleFixture.Rules(state), 1, [new TakeMentatEffect(true)]));
         Apply(engine, new PassPriorityAction(0));
         Apply(engine, new PassPriorityAction(1));

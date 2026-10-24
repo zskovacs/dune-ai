@@ -10,14 +10,14 @@ namespace Dune.Engine.Turns;
 /// </summary>
 public static class OriginalImperiumTurnRules
 {
-    public const string Version = "imperium-2020-turn-preview-v10";
+    public const string Version = "imperium-2020-turn-preview-v11";
     private const string Rules = "DUNE_IMPERIUM_Rules_2020_10_26.pdf";
     private const string Aid = "DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf";
 
     public static TurnRuleSet Create() => new(Version, Cards(), Spaces(), []);
 
     /// <summary>Partial source authoring, not a complete inventory or a claim of lifecycle playability.</summary>
-    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v7",
+    public static LifecycleRuleSet CreateLifecycleRules() => new("imperium-2020-lifecycle-authoring-v8",
     [
         new(new("imperium:intrigue:ambush:v1"), IntrigueTiming.Combat, new(),
             [new GainEffect(ResourceKind.Swords, 4)], [new(Rules, 7, "Ambush complete face"), new(Rules, 12, "Combat Intrigue example")]),
@@ -117,6 +117,10 @@ public static class OriginalImperiumTurnRules
             Space("heighliner", AgentIcon.SpacingGuild, [new InfluenceEffect(Faction.SpacingGuild), new RecruitEffect(5), new GainEffect(ResourceKind.Water, 2)], new(Spice: 6), combat: true, faction: Faction.SpacingGuild),
             Space("arrakeen", AgentIcon.City, [new RecruitEffect(1), new DrawEffect(1)], combat: true, control: ResourceKind.Solari),
             Space("sietch-tabr", AgentIcon.City, [new RecruitEffect(1), new GainEffect(ResourceKind.Water, 1)], combat: true, faction: Faction.Fremen, influence: 2),
+            Space("mentat", AgentIcon.Landsraad, [new DrawEffect(1), new TakeMentatEffect(false)], new(Solari: 2)) with
+            { Sources = [new(Rules, 18, "Mentat: draw regardless of token availability; take token if present"), new(Aid, 2, "Mentat")] },
+            Space("swordmaster", AgentIcon.Landsraad, [new SwordmasterEffect()], new(Solari: 8), once: true) with
+            { Sources = [new(Rules, 18, "Swordmaster: permanent third Agent, once per game"), new(Aid, 2, "Swordmaster")] },
             Space("high-council", AgentIcon.Landsraad, [new HighCouncilEffect()], new(Solari: 5), once: true),
             Space("research-station", AgentIcon.City, [new DrawEffect(3)], new(Water: 2), combat: true),
             Space("hagga-basin", AgentIcon.SpiceTrade, [new GainEffect(ResourceKind.Spice, 2), new HarvestSpiceEffect()], new(Water: 1), combat: true),

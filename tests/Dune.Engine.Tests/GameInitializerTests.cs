@@ -32,7 +32,7 @@ public sealed class GameInitializerTests
         foreach (var player in state.Players)
         {
             Assert.Equal(new PlayerResources(0, 0, 1, vp), player.Resources);
-            Assert.Equal(new PlayerUnits(2, 1, 9, 3, 0, 3), player.Units);
+            Assert.Equal(new PlayerUnits(2, 1, 9, 3, 0, 3) { OrdinaryAgents = 2 }, player.Units);
             Assert.Equal(4, player.Influence.Length);
             Assert.All(player.Influence, x => Assert.Equal(0, x.Amount));
             Assert.False(player.HasHighCouncilSeat);

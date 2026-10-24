@@ -6,7 +6,13 @@ namespace Dune.Engine.Runtime;
 
 public sealed record PlayerResources(int Solari, int Spice, int Water, int VictoryPoints);
 public sealed record PlayerUnits(int AvailableAgents, int UnacquiredSwordmasters, int TroopsInSupply,
-    int TroopsInGarrison, int TroopsInConflict, int ControlMarkers);
+    int TroopsInGarrison, int TroopsInConflict, int ControlMarkers)
+{
+    public int OrdinaryAgents { get; init; }
+    public int AcquiredSwordmasters { get; init; }
+    public int AvailableSwordmasters { get; init; }
+    public int AvailableMentats { get; init; }
+}
 public sealed record FactionInfluence(Faction Faction, int Amount);
 public sealed record TemporaryPlayerState(int Persuasion, int Swords, bool HasRevealed);
 public sealed record ActiveEffect(ContentId Source, string EffectId);
@@ -20,7 +26,8 @@ public sealed class PlayerState
         Leader = leader;
         Resources = new(setup.Solari, setup.Spice, setup.Water, setup.VictoryPoints);
         Units = new(setup.AvailableAgents, setup.UnacquiredSwordmasters, setup.TroopsInSupply,
-            setup.TroopsInGarrison, 0, setup.ControlMarkers);
+            setup.TroopsInGarrison, 0, setup.ControlMarkers)
+        { OrdinaryAgents = setup.AvailableAgents };
         Influence = Enum.GetValues<Faction>().Select(x => new FactionInfluence(x, 0)).ToImmutableArray();
         Deck = deck;
         Hand = Zone("hand", ZoneVisibility.OwnerOnly);

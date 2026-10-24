@@ -26,7 +26,8 @@ public sealed class CombatPriorityTests
         var rules = CombatRules(state);
         var engine = new TurnEngine(state, rules);
         var expected = Enumerable.Range(0, players).Select(x => (first + x) % players).Where(x => x < participants).ToArray();
-        Assert.Equal(expected, engine.Observe(0).Game.Window?.EligibleSeats ?? []);
+        if (participants > 0) Assert.Equal(expected, engine.Observe(0).Game.Window!.EligibleSeats);
+        else Assert.Equal(GamePhase.PlayerTurns, state.Phase);
         foreach (var seat in expected)
         {
             Assert.Null(engine.CurrentPlayerId);
@@ -35,15 +36,18 @@ public sealed class CombatPriorityTests
             Apply(engine, new PassPriorityAction(seat));
             Replay(engine, Create, rules);
         }
-        if (participants == 1) Apply(engine, new PassPriorityAction(0)); // Close the unique winner's empty PostWin opportunity.
-        Assert.Null(engine.DecisionOwnerId);
+        if (participants == 1)
+        {
+            Assert.Equal(0, engine.CaptureTrustedSnapshot().Data.CombatOutcome!.WinnerId);
+            Apply(engine, new PassPriorityAction(0));
+        }
+        Assert.Equal((first + 1) % players, engine.DecisionOwnerId);
         Assert.Null(engine.Observe(0).Game.Window);
         Assert.False(state.IsCompleted);
-        Assert.Equal(GamePhase.Combat, engine.Phase);
-        var outcome = engine.CaptureTrustedSnapshot().Data.CombatOutcome!;
-        Assert.NotNull(outcome);
-        Assert.Equal(participants == 1 ? 0 : null, outcome.WinnerId);
-        Assert.Equal(Enumerable.Range(0, players).Where(x => x >= participants), outcome.NoRewardPlayerIds);
+        Assert.Equal(GamePhase.PlayerTurns, engine.Phase);
+        Assert.Equal(2, state.Round);
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.CombatOutcome);
+        Assert.All(state.Players, x => Assert.Equal(0, x.Units.TroopsInConflict));
     }
 
     [Theory]
@@ -85,7 +89,8 @@ public sealed class CombatPriorityTests
             Apply(engine, new PassPriorityAction(0));
             Assert.Equal(DecisionWindowKind.PostWinRewards, engine.Observe(0).Game.Window!.Kind);
             Apply(engine, new PassPriorityAction(0));
-            Assert.Null(engine.DecisionOwnerId);
+            Assert.Equal(1, engine.DecisionOwnerId);
+            Assert.Equal(GamePhase.PlayerTurns, state.Phase);
             Replay(engine, Create, rules);
         }
     }
@@ -124,7 +129,8 @@ public sealed class CombatPriorityTests
         Apply(engine, new PassPriorityAction(0));
         Assert.Equal(DecisionWindowKind.PostWinRewards, engine.Observe(0).Game.Window!.Kind);
         Apply(engine, new PassPriorityAction(1));
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(1, engine.DecisionOwnerId);
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
         Replay(engine, Create, rules);
     }
 
@@ -179,7 +185,7 @@ public sealed class CombatPriorityTests
     }
 
     [Fact]
-    public void SoleParticipantRetreatClosesAtUnsupportedOutcomeBoundary()
+    public void SoleParticipantRetreatClosesCombatAndBeginsNextRound()
     {
         GameState Create()
         {
@@ -195,15 +201,14 @@ public sealed class CombatPriorityTests
         Apply(engine, new ChooseOptionAction(1, 1));
         Resolve<RetreatEffect>(engine);
         Apply(engine, new ChooseOptionAction(1, 1));
-        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal(1, engine.DecisionOwnerId);
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
         Assert.Null(engine.Observe(0).Game.Window);
         Assert.Equal(0, state.Players[1].CombatMarker);
-        var outcome = engine.CaptureTrustedSnapshot().Data.CombatOutcome!;
-        Assert.Null(outcome.WinnerId);
-        Assert.Empty(outcome.Placements);
-        Assert.Equal([0, 1, 2], outcome.NoRewardPlayerIds);
+        Assert.Equal(4, state.Players[1].Units.TroopsInGarrison); // Retreat remains distinct from cleanup.
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.CombatOutcome);
         Assert.Single(state.Shared.IntrigueDiscard.Cards);
-        Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
+        Assert.Empty(engine.SupportDiagnostics(0));
         Assert.False(state.IsCompleted);
         Replay(engine, Create, rules);
     }
@@ -229,15 +234,14 @@ public sealed class CombatPriorityTests
         Apply(engine, new PassPriorityAction(0));
         Apply(engine, new PassPriorityAction(1));
         Assert.Equal(DecisionWindowKind.PostWinRewards, engine.Observe(0).Game.Window!.Kind);
-        Apply(engine, new PassPriorityAction(1));
-        var snapshot = engine.CaptureTrustedSnapshot();
+        var snapshot = engine.CaptureTrustedSnapshot(); // Real PostWin cut, before cleanup clears the frozen outcome.
         var outcome = snapshot.Data.CombatOutcome!;
         Assert.Equal(1, outcome.WinnerId);
         Assert.Equal([1], outcome.Placements[0].PlayerIds);
         Assert.Equal([0], outcome.Placements[1].PlayerIds);
         Assert.Equal([2], outcome.NoRewardPlayerIds);
-        Assert.Null(engine.DecisionOwnerId);
-        Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
+        Assert.Equal(1, engine.DecisionOwnerId);
+        Assert.Equal(DecisionWindowKind.PostWinRewards, engine.Observe(0).Game.Window!.Kind);
         Replay(engine, Create, rules);
         var restored = JsonSerializer.Deserialize<TurnSnapshotData>(snapshot.CanonicalJson, ConfigurationJson.Options)!;
         Assert.Equal(1, restored.CombatOutcome!.WinnerId);

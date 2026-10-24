@@ -303,6 +303,7 @@ public sealed partial class TurnEngine
     private TurnDiagnostic? PreflightConflictRewards(CombatOutcome outcome)
     {
         if (_lifecycleDefinitionError is { } invalid) return invalid;
+        if (PreflightLifecycleContinuation() is { } transition) return transition;
         if (outcome.Placements.IsEmpty) return null; // No positive strength means no mandatory awards.
         if (RevealedConflict is null)
             return Unsupported("conflict-reward-definition", "The revealed Conflict has no executable reward definition.");
@@ -388,8 +389,8 @@ public sealed partial class TurnEngine
         var progress = _conflictRewards!;
         if (progress.CurrentRecipient >= progress.Recipients.Length)
         {
-            _state.DecisionOwnerId = null;
-            return; // Task 9 owns cleanup. Combat stays nonterminal until that continuation is implemented.
+            CompleteCombat();
+            return;
         }
         var recipient = progress.Recipients[progress.CurrentRecipient];
         var winner = progress.Outcome.WinnerId == recipient.PlayerId;
@@ -471,6 +472,8 @@ public sealed partial class TurnEngine
                         error ??= Content("control-space", "Control requires a controllable board space.");
                     else controls.Add((control.Space, owner));
                     return;
+                case TakeMentatEffect { ForNextRound: false } when !MentatAtStartingSpace:
+                    return; // The paid board effect still draws when the token is absent.
                 case TakeMentatEffect:
                     mentats.Add(owner);
                     agents[owner] = agents.GetValueOrDefault(owner) + 1;

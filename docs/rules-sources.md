@@ -365,3 +365,53 @@ verify these boundaries. Lower-recipient reward frames now report actual candida
 support diagnostics rather than the generic lifecycle stop;
 `LowerRecipientSupportDiagnosticsReflectPendingChoicesInsteadOfGenericLifecycleStop`
 checks both supported work and an unavailable optional Intrigue draw.
+
+## SLICE-004 L1 — cleanup, Makers, Recall and recurring rounds
+
+| Mechanic | Supplied source | Supported interpretation and direct verification |
+| --- | --- | --- |
+| Combat cleanup | [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12) | After all rewards and post-win work, return every remaining Conflict troop to supply, clear swords/Combat markers and completed outcome/reward progress. Retreat remains a separate return to garrison. `RoundLifecycleTests.TenVictoryPointsDuringTurnsStillResolvesCombatCleanupAndMakersBeforeEndgame`, `CombatPriorityTests.SoleParticipantRetreatClosesCombatAndBeginsNextRound`. |
+| Makers before Agent recall | [I p.13](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=13), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16) | Iterate resolved `AccumulatesSpice` spaces before removing occupants; add one to existing bonus only on empty spaces. Existing harvest collects the bonus. `ConsecutiveRoundsAccumulateCollectRecallRotateAndReplayWithExactConservation` checks occupied/empty/collection across four or five supported rounds, including all Maker spaces. |
+| Recall-only Endgame trigger | [I p.13](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=13) | After Combat and Makers, VP >=10 and/or empty Conflict deck sets `DuneTerminalReason` flags and enters the existing Endgame window. Do not recall Agents, return Mentat, rotate First Player or draw another hand on this path. `TenVictoryPointsDuringTurnsStillResolvesCombatCleanupAndMakersBeforeEndgame`, `EntireSyntheticConflictDeckExhaustsAtRecallWithoutExtraDrawOrRoundAndReshufflesDeterministically`, `BothTerminalReasonsAreStoredWithoutPreparingAnotherRound`, `EndgameLeavesUnspentMentatAndPlacedAgentsUntouchedAndPublishesDetachedKindState`. Final scoring/results remain Task 10. |
+| Ordinary Mentat board space | [I p.18](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=18), [A p.2](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=2) | Landsraad, two Solari: draw one even if the token is absent; take it only from its starting space. The borrowed Agent returns at nonterminal Recall whether unused or placed. `OrdinaryMentatReturnsWhetherUnusedOrPlacedWithoutEarlyRevealLosingIt`, `MentatSpaceAlwaysDrawsForPaidPlacementWhenTokenIsAbsent`. |
+| Conflict Mentat | [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16) | Reward in round R stores `ProtectedThroughRound = R+1`: retain at R's Recall, use in R+1, return at R+1's Recall. Available and placed Mentat are counted separately from ordinary Agents; early Reveal cannot lose it. `ConflictMentatSurvivesAwardRecallAndReturnsAtFollowingRecall` covers used and unused cases and replay. Contested reward takeover stays Unsupported. |
+| Permanent Swordmaster and Council | [I p.18](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=18), [A p.2](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=2), [I p.13](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=13) | Landsraad/eight Solari/once per game acquires a Swordmaster available immediately and in later rounds. Preserve Council seat and both once-game records. `SwordmasterAndHighCouncilPersistAfterUsedOrUnusedAgentAndOnceGameSpacesRemainClosed` checks used/unused Swordmaster, unchanged paid resources and legal actions over later rounds. |
+| Next round and reshuffle | [I p.8](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=8), [I p.13](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=13), [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16) | Return Agents by kind, rotate First Player clockwise, increment round, move prior face-up Conflict to public discard and reveal the next. Matching control defense runs before drawing five with the existing own-discard reshuffle. Reveal cleanup is not repeated. `ConsecutiveRoundsAccumulateCollectRecallRotateAndReplayWithExactConservation`, `NextConflictDefenseInterruptsBeforeDrawFiveAndPreservesControlAndSupplyAccounting`, `EntireSyntheticConflictDeckExhaustsAtRecallWithoutExtraDrawOrRoundAndReshufflesDeterministically`. |
+
+For currently supported interchangeable Agent uses, the engine deterministically
+spends Mentat first, then an ordinary Agent, then Swordmaster. This is an explicit
+engineering convention preserving provenance, not a new player choice or a rule
+for unsupported Agent-specific effects. `PlayerUnits` stores ordinary ownership,
+acquired/available Swordmasters and available Mentat; `AgentPlacement.Kind`
+records spent provenance. Trusted snapshots and all detached public seat views
+include these public counts. Conservation checks account for both unspent and
+placed pieces throughout early Reveal and terminal cuts.
+
+Automatic transitions add no policy actions: only the initial `StartRoundAction`
+is accepted and recorded. The shared lifecycle fixture still defines every one
+of its 18 synthetic Conflicts and complete synthetic reserve metadata; it neither
+prunes an authentic deck nor establishes authentic full-game playability. The
+10-Conflict exhaustion test runs the fixture's entire selected deck. A separate
+explicit one-round synthetic terminal seam checks simultaneous reason flags.
+
+Closing Combat/last-retreat/zero-participant final Reveal preflights Maker bounds
+and the next round's enabled Conflict definitions before mutation.
+`ClosingCombatRejectsUnsafeAutomaticContinuationBeforeAnyMutation` and
+`FinalRevealRejectsMakerOverflowWithoutDiscardingCardsOrAcceptingAction` compare
+complete trusted snapshots and accepted replay history on rejection.
+`PendingInfluenceLossCannotBypassNextRoundSupportBecauseCurrentVpIsTen` preserves
+this gate even when signed pending Influence may lower the current VP total.
+Future support uses the complete configured Conflict pool, independently of hidden
+selected/unused identities (`NextRoundSupportDependsOnConfiguredPoolInsteadOfHiddenSelectedConflictIdentities`).
+It is conservatively required whenever Conflict cards remain; only Recall decides
+whether VP actually triggers Endgame. No pause
+switch or missing-reward-definition bypass was added. Earlier window/reward tests
+now use actual PostWin cuts or assert the supported next-round continuation.
+
+Setup snapshots advance v4 -> **v5**, turn snapshots/replays v5 -> **v6**,
+preview/support v10 -> **v11**, and lifecycle authoring v7 -> **v8**. Prior replay
+rejection rows remain intact, with v5/support-v10 and v6/support-v10 rejection
+cases added. Unknown terminal enum values and members still reject under the
+existing strict JSON options. Existing Alliance-loss, tied shared Intrigue and
+contested Mentat gates remain; reserve self-trash routing remains a
+catalog-dependent unsupported gap rather than an expanded mechanic in this task.
