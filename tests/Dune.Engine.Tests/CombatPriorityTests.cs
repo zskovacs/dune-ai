@@ -39,6 +39,10 @@ public sealed class CombatPriorityTests
         Assert.Null(engine.Observe(0).Game.Window);
         Assert.False(state.IsCompleted);
         Assert.Equal(GamePhase.Combat, engine.Phase);
+        var outcome = engine.CaptureTrustedSnapshot().Data.CombatOutcome!;
+        Assert.NotNull(outcome);
+        Assert.Equal(participants == 1 ? 0 : null, outcome.WinnerId);
+        Assert.Equal(Enumerable.Range(0, players).Where(x => x >= participants), outcome.NoRewardPlayerIds);
     }
 
     [Theory]
@@ -189,10 +193,47 @@ public sealed class CombatPriorityTests
         Assert.Null(engine.DecisionOwnerId);
         Assert.Null(engine.Observe(0).Game.Window);
         Assert.Equal(0, state.Players[1].CombatMarker);
+        var outcome = engine.CaptureTrustedSnapshot().Data.CombatOutcome!;
+        Assert.Null(outcome.WinnerId);
+        Assert.Empty(outcome.Placements);
+        Assert.Equal([0, 1, 2], outcome.NoRewardPlayerIds);
         Assert.Single(state.Shared.IntrigueDiscard.Cards);
         Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
         Assert.False(state.IsCompleted);
         Replay(engine, Create, rules);
+    }
+
+    [Fact]
+    public void ClosedCombatFreezesCalculatedStrengthAfterLastIntrigueAndReplaysBeforeRewards()
+    {
+        GameState Create()
+        {
+            var result = CombatState(deployed: [1, 1, 0]);
+            Give(result, "ambush", 1);
+            return result;
+        }
+        var state = Create();
+        var rules = CombatRules(state);
+        var engine = new TurnEngine(state, rules);
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.CombatOutcome);
+        Apply(engine, new PassPriorityAction(0));
+        Replay(engine, Create, rules);
+        Apply(engine, Play(state, "ambush", 1));
+        Replay(engine, Create, rules);
+        Apply(engine, new PassPriorityAction(1));
+        Apply(engine, new PassPriorityAction(0));
+        Apply(engine, new PassPriorityAction(1));
+        var snapshot = engine.CaptureTrustedSnapshot();
+        var outcome = snapshot.Data.CombatOutcome!;
+        Assert.Equal(1, outcome.WinnerId);
+        Assert.Equal([1], outcome.Placements[0].PlayerIds);
+        Assert.Equal([0], outcome.Placements[1].PlayerIds);
+        Assert.Equal([2], outcome.NoRewardPlayerIds);
+        Assert.Null(engine.DecisionOwnerId);
+        Assert.Equal("lifecycle-support", Assert.Single(engine.SupportDiagnostics(0)).Code);
+        Replay(engine, Create, rules);
+        var restored = JsonSerializer.Deserialize<TurnSnapshotData>(snapshot.CanonicalJson, ConfigurationJson.Options)!;
+        Assert.Equal(1, restored.CombatOutcome!.WinnerId);
     }
 
     [Fact]

@@ -43,6 +43,7 @@ public sealed partial class TurnEngine
     private bool _deploying;
     private int _recruited;
     private int _oldGarrison;
+    private CombatOutcome? _combatOutcome;
 
     public TurnEngine(GameState state, TurnRuleSet rules)
     {
@@ -237,13 +238,13 @@ public sealed partial class TurnEngine
         return new(StepStatus.Applied, []);
     }
 
-    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v3", _rulesIdentity, _initialHash,
+    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v4", _rulesIdentity, _initialHash,
         _state.CaptureTrustedSnapshot().Data, [.. _frames], _nextFrameId, _revealing, _deploying,
         _recruited, _oldGarrison, _nextEffectId,
         [.. _used.OrderBy(x => x.PlayerId).ThenBy(x => x.Space.Value, StringComparer.Ordinal)], [.. _history])
-    { Window = _state.DecisionWindow, NextWindowId = _nextWindowId });
+    { Window = _state.DecisionWindow, NextWindowId = _nextWindowId, CombatOutcome = _combatOutcome });
 
-    public TurnReplay CaptureReplay() => new("dune-turn-replay-v3",
+    public TurnReplay CaptureReplay() => new("dune-turn-replay-v4",
         typeof(TurnEngine).Assembly.GetName().Version!.ToString(),
         System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
         _rulesIdentity, _state.Definition.Fingerprint, _state.ConfigurationIdentity, _state.ContentIdentity,
@@ -1124,7 +1125,11 @@ public sealed partial class TurnEngine
             throw new InvalidOperationException("A lifecycle window cannot replace existing decisions or a turn.");
         var id = ++_nextWindowId;
         _state.DecisionOwnerId = null;
-        if (eligible.IsEmpty) return;
+        if (eligible.IsEmpty)
+        {
+            if (kind == DecisionWindowKind.Combat) FreezeCombatOutcome();
+            return;
+        }
         _state.DecisionWindow = new(id, kind, eligible, 0, eligible[0], 0, [], continuation);
         _state.DecisionOwnerId = eligible[0];
     }
@@ -1209,9 +1214,19 @@ public sealed partial class TurnEngine
     {
         if (window.SuspendedFrameId is not null || _frames.Count > 0)
             throw new InvalidOperationException("A window cannot close while Intrigue work is suspended.");
+        if (window.Kind == DecisionWindowKind.Combat) FreezeCombatOutcome();
         // The next lifecycle task owns Conflict rewards / Endgame scoring. Preserve the phase and explicit stop.
         _state.DecisionWindow = null;
         _state.DecisionOwnerId = null;
+    }
+
+    private void FreezeCombatOutcome()
+    {
+        if (_combatOutcome is not null)
+            throw new InvalidOperationException("Combat outcome is already frozen.");
+        _combatOutcome = CombatOutcome.Calculate([.. _state.Players.Select(player =>
+            new CombatParticipant(player.Id, CombatStrength.Calculate(CombatUnits(player), player.Temporary.Swords,
+                _rules.Strength.SwordStrength, _rules.Strength.RequiresDeployedUnits)))], _state.Players.Count);
     }
 
     private void BeginRound()

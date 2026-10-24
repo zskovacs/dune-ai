@@ -155,3 +155,12 @@ at least four with a strict lead.
 
 This changes turn/support semantics to v7 and lifecycle authoring to v5 without new
 trusted fields; the v3 snapshot and replay schemas remain unchanged.
+
+### SLICE-004 Combat outcome
+
+Combat closure now freezes `CombatOutcome` in the trusted turn snapshot from current
+unit and sword strength, including the zero-eligible path. Rankings use official
+tie reward positions while tied player IDs serialize in seat order. The engine
+continues to stop before rewards and cleanup. The added trusted field advances
+turn snapshot and replay schemas to v4, and turn support/preview semantics to v8;
+setup remains v3 and lifecycle authoring remains v5.

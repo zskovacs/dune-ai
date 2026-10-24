@@ -247,6 +247,25 @@ ordinary Agent/Reveal retreat boxes remain gated. Closure still stops at the
 unsupported Conflict outcome boundary; this task does not resolve rewards or
 assert an authentic complete Conflict deck or game.
 
+### SLICE-004 C3b — frozen Combat outcome
+
+Original Imperium [I p.12](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=12)
+determines first, second and (in a four-player game) third Conflict rewards by
+positive strength. A first-place tie receives second rewards and has no winner;
+a second-place tie receives third rewards, including in a three-player game.
+Two players tied first in a four-player game leave third place available. A
+third-place tie receives no reward. Zero strength receives no reward. The
+`CombatOutcomeTests.OfficialPlacementTiersMatchExactTieTable` cases pin these
+rules, including all-equal and zero-strength outcomes. Canonical seat ordering
+within a tie is an engineering serialization choice, not a rules tiebreak.
+
+After the final Combat pass, or immediately when nobody is eligible, the engine
+captures that outcome in the trusted turn snapshot from freshly calculated
+strength. `CombatPriorityTests.ClosedCombatFreezesCalculatedStrengthAfterLastIntrigueAndReplaysBeforeRewards`
+checks closure, serialization and replay before rewards. Turn snapshot/replay
+formats advance to v4; support/preview semantics advance to v8. Setup remains
+v3. Reward execution and cleanup remain unsupported for the next task.
+
 
 ## SLICE-004 C3a — faction reward prerequisites
 

@@ -10,17 +10,17 @@ namespace Dune.Engine.Tests;
 public sealed class LifecycleReplayTests
 {
     [Fact]
-    public void PhaseWindowContractsUseExplicitV3SchemasAndSupportVersions()
+    public void PhaseWindowContractsUseExplicitV4TurnSchemasAndSupportVersions()
     {
         var state = CreateState();
         var engine = new TurnEngine(state, Rules(state));
         Assert.Equal("dune-setup-snapshot-v3", state.CaptureTrustedSnapshot().Data.Schema);
-        Assert.Equal("dune-turn-snapshot-v3", engine.CaptureTrustedSnapshot().Data.Schema);
+        Assert.Equal("dune-turn-snapshot-v4", engine.CaptureTrustedSnapshot().Data.Schema);
         Assert.Equal("dune-setup-snapshot-v3", engine.CaptureTrustedSnapshot().Data.Game.Schema);
-        Assert.Equal("dune-turn-replay-v3", engine.CaptureReplay().Schema);
-        Assert.Equal("original-imperium-turn-support-v7", engine.CaptureReplay().SupportVersion);
-        Assert.Equal("imperium-2020-turn-preview-v7", OriginalImperiumTurnRules.Version);
-        Assert.Equal("imperium-2020-turn-preview-v7", OriginalImperiumTurnRules.Create().Version);
+        Assert.Equal("dune-turn-replay-v4", engine.CaptureReplay().Schema);
+        Assert.Equal("original-imperium-turn-support-v8", engine.CaptureReplay().SupportVersion);
+        Assert.Equal("imperium-2020-turn-preview-v8", OriginalImperiumTurnRules.Version);
+        Assert.Equal("imperium-2020-turn-preview-v8", OriginalImperiumTurnRules.Create().Version);
         Assert.Equal("dune-configuration-sha256-v1", state.CaptureTrustedSnapshot().Data.ConfigurationIdentityFormat);
     }
 
@@ -75,15 +75,18 @@ public sealed class LifecycleReplayTests
     [InlineData("dune-turn-replay-v2", "original-imperium-turn-support-v4")]
     [InlineData("dune-turn-replay-v1", "original-imperium-turn-support-v5")]
     [InlineData("dune-turn-replay-v2", "original-imperium-turn-support-v5")]
-    [InlineData("dune-turn-replay-v1", "original-imperium-turn-support-v7")]
-    [InlineData("dune-turn-replay-v2", "original-imperium-turn-support-v7")]
-    [InlineData("dune-turn-replay-v3", "original-imperium-turn-support-v2")]
-    [InlineData("dune-turn-replay-v3", "original-imperium-turn-support-v3")]
-    [InlineData("dune-turn-replay-v3", "original-imperium-turn-support-v4")]
-    [InlineData("dune-turn-replay-v3", "original-imperium-turn-support-v5")]
+    [InlineData("dune-turn-replay-v1", "original-imperium-turn-support-v8")]
+    [InlineData("dune-turn-replay-v2", "original-imperium-turn-support-v8")]
+    [InlineData("dune-turn-replay-v3", "original-imperium-turn-support-v7")]
+    [InlineData("dune-turn-replay-v3", "original-imperium-turn-support-v8")]
+    [InlineData("dune-turn-replay-v4", "original-imperium-turn-support-v7")]
+    [InlineData("dune-turn-replay-v4", "original-imperium-turn-support-v2")]
+    [InlineData("dune-turn-replay-v4", "original-imperium-turn-support-v3")]
+    [InlineData("dune-turn-replay-v4", "original-imperium-turn-support-v4")]
+    [InlineData("dune-turn-replay-v4", "original-imperium-turn-support-v5")]
     [InlineData("dune-turn-replay-v1", "original-imperium-turn-support-v6")]
     [InlineData("dune-turn-replay-v2", "original-imperium-turn-support-v6")]
-    [InlineData("dune-turn-replay-v3", "original-imperium-turn-support-v6")]
+    [InlineData("dune-turn-replay-v4", "original-imperium-turn-support-v6")]
     public void OlderReplayMetadataFailsValidationBeforeAnyActionsAreApplied(string schema, string supportVersion)
     {
         var state = CreateState();
@@ -132,8 +135,8 @@ public sealed class LifecycleReplayTests
         var second = new TurnEngine(CreateState(), rules with { Cards = [.. rules.Cards.Reverse()], Spaces = [.. rules.Spaces.Reverse()], Leaders = [.. rules.Leaders.Reverse()] });
         Assert.Equal(first.CaptureReplay().RulesIdentity, second.CaptureReplay().RulesIdentity);
         Assert.Equal(first.CaptureTrustedSnapshot().Hash, second.CaptureTrustedSnapshot().Hash);
-        Assert.Equal("original-imperium-turn-support-v7", first.CaptureReplay().SupportVersion);
-        Assert.Equal("imperium-2020-turn-preview-v7", OriginalImperiumTurnRules.Version);
+        Assert.Equal("original-imperium-turn-support-v8", first.CaptureReplay().SupportVersion);
+        Assert.Equal("imperium-2020-turn-preview-v8", OriginalImperiumTurnRules.Version);
     }
 
     [Theory]
@@ -160,7 +163,7 @@ public sealed class LifecycleReplayTests
     {
         var replayJson = JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options);
         var replay = JsonSerializer.Deserialize<TurnReplay>(replayJson, ConfigurationJson.Options)!;
-        Assert.Equal("dune-turn-replay-v3", replay.Schema);
+        Assert.Equal("dune-turn-replay-v4", replay.Schema);
         var result = TurnEngine.Replay(replay, () => CreateState(), rules);
         Assert.True(result.IsSuccess, string.Join(";", result.Diagnostics));
         Assert.Equal(engine.CaptureTrustedSnapshot().Hash, result.Engine!.CaptureTrustedSnapshot().Hash);

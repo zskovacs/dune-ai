@@ -159,6 +159,35 @@ public sealed class PhaseDecisionTests
     }
 
     [Fact]
+    public void LastRevealWithNoCombatParticipantsFreezesEmptyOutcomeAndReplays()
+    {
+        GameState Create()
+        {
+            var result = WindowState(GamePhase.Combat, lifecycleInventory: true);
+            foreach (var player in result.Players)
+                player.Units = player.Units with
+                {
+                    TroopsInSupply = player.Units.TroopsInSupply + player.Units.TroopsInConflict,
+                    TroopsInConflict = 0,
+                };
+            result.Phase = GamePhase.BeforeRoundStart;
+            result.Round = 0;
+            return result;
+        }
+        var state = Create();
+        var rules = LifecycleFixture.Rules(state);
+        var engine = new TurnEngine(state, rules);
+        Apply(engine, new StartRoundAction());
+        FinishPlayerTurns(engine);
+        Assert.Null(engine.DecisionOwnerId);
+        Assert.Null(engine.CaptureTrustedSnapshot().Data.Window);
+        var outcome = engine.CaptureTrustedSnapshot().Data.CombatOutcome!;
+        Assert.Empty(outcome.Placements);
+        Assert.Equal([0, 1, 2], outcome.NoRewardPlayerIds);
+        Replay(engine, Create, rules);
+    }
+
+    [Fact]
     public void ZeroParticipantsClosesAutomaticallyAndOneParticipantMustPassExplicitly()
     {
         var state = WindowState(GamePhase.Combat);
