@@ -21,12 +21,14 @@ public sealed partial class TurnEngine
         var player = Player(context.RecipientId);
         var before = Influence(player, effect.Faction);
         var after = BoundedInfluence(before, effect.Amount, FactionDefinition(effect.Faction)?.MaximumInfluence ?? 6);
+        var token = _state.Board.Alliances.Single(x => x.Faction == effect.Faction);
+        if (token.OwnerId == player.Id && after < before && (after < 4 || _state.Players.Any(p => p.Id != player.Id &&
+            Influence(p, effect.Faction) >= Math.Max(4, after))))
+            throw new InvalidOperationException("Unresolved Alliance holder loss passed preflight.");
         player.Influence = [.. player.Influence.Select(x => x.Faction == effect.Faction ? x with { Amount = after } : x)];
         Gain(player, ResourceKind.VictoryPoints, (after >= 2 ? 1 : 0) - (before >= 2 ? 1 : 0));
-        var token = _state.Board.Alliances.Single(x => x.Faction == effect.Faction);
         int? nextOwner = token.OwnerId;
-        if (token.OwnerId == player.Id && after < 4) nextOwner = null;
-        else if (after >= 4 && (token.OwnerId is null || token.OwnerId != player.Id &&
+        if (after >= 4 && (token.OwnerId is null || token.OwnerId != player.Id &&
                  after > Influence(Player(token.OwnerId.Value), effect.Faction))) nextOwner = player.Id;
         if (nextOwner != token.OwnerId)
         {
@@ -147,12 +149,11 @@ public sealed partial class TurnEngine
                     }
                     Vp(owner, (after >= 2 ? 1 : 0) - (before >= 2 ? 1 : 0));
                     var holder = state.Alliances[influence.Faction];
-                    if (holder == owner && after < before && _state.Players.Any(p => p.Id != owner &&
-                        state.Influence[(p.Id, influence.Faction)] >= Math.Max(4, after)))
-                        error ??= Unsupported("alliance-loss", "Alliance holder loss with a qualifying rival requires an unresolved ownership ruling.");
+                    if (holder == owner && after < before && (after < 4 || _state.Players.Any(p => p.Id != owner &&
+                        state.Influence[(p.Id, influence.Faction)] >= Math.Max(4, after))))
+                        error ??= Unsupported("alliance-loss", "Alliance holder loss below four or involving a qualifying rival requires an unresolved ownership ruling.");
                     int? next = holder;
-                    if (holder == owner && after < 4) next = null;
-                    else if (after >= 4 && (holder is null || holder != owner && after > state.Influence[(holder.Value, influence.Faction)])) next = owner;
+                    if (after >= 4 && (holder is null || holder != owner && after > state.Influence[(holder.Value, influence.Faction)])) next = owner;
                     if (next != holder)
                     {
                         if (holder is { } previous) Vp(previous, -1);

@@ -148,8 +148,10 @@ Suspended Sequence order is preserved across decisions; unordered competing sign
 or differently bound payer influence and subsequent influence dependent on conditional ownership
 remain explicit unsupported gates. Intrigue draws reserve the shared deck jointly;
 no supplied source establishes shared-deck recycling, so unavailable mandatory draws
-reject before mutation while optional declines remain legal. Holder-loss cases with
-qualifying rival ownership or ties remain gated pending source clarification.
+reject before mutation while optional declines remain legal. Every holder loss below four remains gated, including with no qualifying rival;
+the supplied evidence does not establish surrender or retention. Holder losses with
+qualifying rival ownership or ties remain gated. A supported holder loss must remain
+at least four with a strict lead.
 
-This changes turn/support semantics to v6 and lifecycle authoring to v4 without new
+This changes turn/support semantics to v7 and lifecycle authoring to v5 without new
 trusted fields; the v3 snapshot and replay schemas remain unchanged.

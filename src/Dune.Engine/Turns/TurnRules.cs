@@ -90,5 +90,5 @@ public sealed record TurnRuleSet(string Version, ImmutableArray<CardRule> Cards,
 {
     public CombatStrengthRule Strength { get; init; } = new();
     public LifecycleRuleSet? Lifecycle { get; init; }
-    public string SupportVersion { get; init; } = "original-imperium-turn-support-v6";
+    public string SupportVersion { get; init; } = "original-imperium-turn-support-v7";
 }

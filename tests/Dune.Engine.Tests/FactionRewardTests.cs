@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Text.Json;
+using Dune.Engine.Configuration;
 using Dune.Engine.Fixtures;
 using Dune.Engine.Runtime;
 using Dune.Engine.Setup;
@@ -14,7 +16,8 @@ public sealed class FactionRewardTests
     {
         var (state, engine, action, _) = Prepare(Faction.Emperor, 1,
             [new SequenceEffect([new InfluenceEffect(Faction.Emperor), Pause(),
-                new InfluenceEffect(Faction.Emperor, -1), Pause(), new InfluenceEffect(Faction.Emperor)])]);
+                new InfluenceEffect(Faction.Emperor, -1), Pause(), new InfluenceEffect(Faction.Emperor)])],
+            configure: state => IncumbentAtSix(state, Faction.Emperor));
         Apply(engine, action);
         Resolve<SequenceEffect>(engine);
         Assert.Equal(2, Track(state, 0, Faction.Emperor));
@@ -35,21 +38,23 @@ public sealed class FactionRewardTests
     public void FourRewardIsGrantedAgainOnUpwardRecrossAndLossKeepsEarnedResources(Faction faction)
     {
         var (state, engine, action, _) = Prepare(faction, 3,
-            [new SequenceEffect([new InfluenceEffect(faction), Pause(), new InfluenceEffect(faction, -1), Pause(), new InfluenceEffect(faction)])]);
+            [new SequenceEffect([new InfluenceEffect(faction), Pause(), new InfluenceEffect(faction, -1), Pause(), new InfluenceEffect(faction)])],
+            configure: state => IncumbentAtSix(state, faction));
         var physical = state.Zones.Sum(x => x.Count);
         var troops = Troops(state.Players[0]);
         var before = RewardCount(state, faction);
         Apply(engine, action);
         Resolve<SequenceEffect>(engine);
         Assert.Equal(before + RewardAmount(faction), RewardCount(state, faction));
-        Assert.Equal(2, state.Players[0].Resources.VictoryPoints);
+        Assert.Equal(1, state.Players[0].Resources.VictoryPoints);
         ContinuePause(engine);
         Assert.Equal(before + RewardAmount(faction), RewardCount(state, faction));
-        Assert.Null(state.Board.Alliances.Single(x => x.Faction == faction).OwnerId);
+        Assert.Equal(1, state.Board.Alliances.Single(x => x.Faction == faction).OwnerId);
         Assert.Equal(1, state.Players[0].Resources.VictoryPoints);
         ContinuePause(engine);
         Assert.Equal(before + 2 * RewardAmount(faction), RewardCount(state, faction));
-        Assert.Equal(2, state.Players[0].Resources.VictoryPoints);
+        Assert.Equal(1, state.Players[0].Resources.VictoryPoints);
+        Assert.Equal(1, state.Board.Alliances.Single(x => x.Faction == faction).OwnerId);
         Assert.Equal(physical, state.Zones.Sum(x => x.Count));
         Assert.Equal(troops, Troops(state.Players[0]));
         if (faction == Faction.BeneGesserit) Assert.Equal(38, state.Shared.IntrigueDeck.Count);
@@ -108,6 +113,7 @@ public sealed class FactionRewardTests
 
     [Theory]
     [InlineData(0, 6, 4, -1, true)]
+    [InlineData(0, 5, 3, -1, true)]
     [InlineData(0, 5, 4, -1, false)]
     [InlineData(0, 4, 4, -1, false)]
     [InlineData(1, 5, 4, -1, true)]
@@ -124,6 +130,7 @@ public sealed class FactionRewardTests
         Apply(engine, action);
         ResolveAll(engine);
         Assert.Equal(0, state.Board.Alliances.Single(x => x.Faction == Faction.Fremen).OwnerId);
+        Assert.Equal(2, state.Players[0].Resources.VictoryPoints);
         Assert.Equal((recipient == 0 ? holderTrack : rivalTrack) - 1, Track(state, recipient, Faction.Fremen));
     }
 
@@ -134,13 +141,51 @@ public sealed class FactionRewardTests
     {
         var (state, engine, action, _) = Prepare(Faction.Emperor, 6, [new InfluenceEffect(Faction.Emperor, amount)], configure: state =>
         {
-            SetHolder(state, Faction.Emperor, 0);
-            state.Players[0].Resources = state.Players[0].Resources with { VictoryPoints = 2 };
+            IncumbentAtSix(state, Faction.Emperor);
         });
         Apply(engine, action);
         Assert.Equal(expected, Track(state, 0, Faction.Emperor));
-        Assert.Equal(expected == 6 ? 2 : 0, state.Players[0].Resources.VictoryPoints);
+        Assert.Equal(expected == 6 ? 1 : 0, state.Players[0].Resources.VictoryPoints);
         Assert.Equal(3, state.Players[0].Units.TroopsInGarrison);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(3)]
+    public void HolderLossBelowFourWithoutQualifyingRivalRejectsWithUnchangedReplayRandomAndHistory(int rivalTrack)
+    {
+        var (state, engine, action, rules) = Prepare(Faction.Fremen, 4,
+            [new SequenceEffect([new GainEffect(ResourceKind.Water, 1), new InfluenceEffect(Faction.Fremen, -1)])],
+            configure: state => ConfigureHolderLoss(state, rivalTrack));
+        var before = engine.CaptureTrustedSnapshot();
+        var replayBefore = JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options);
+        RejectUnchanged(engine, action, "alliance-loss");
+        var after = engine.CaptureTrustedSnapshot();
+        Assert.Equal(before.CanonicalJson, after.CanonicalJson);
+        Assert.Equal(before.Data.Game.MainRandom, after.Data.Game.MainRandom);
+        Assert.Equal(before.Data.Game.LeaderRandom, after.Data.Game.LeaderRandom);
+        Assert.Equal(before.Data.Actions, after.Data.Actions);
+        Assert.Equal(replayBefore, JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options));
+        Assert.Equal(0, state.Board.Alliances.Single(x => x.Faction == Faction.Fremen).OwnerId);
+        Assert.Equal(4, Track(state, 0, Faction.Fremen));
+        Assert.Equal(2, state.Players[0].Resources.VictoryPoints);
+        Assert.Equal(1, state.Players[0].Resources.Water);
+        var replay = TurnEngine.Replay(engine.CaptureReplay(), () =>
+        {
+            var initial = Initial();
+            SetTrack(initial, 0, Faction.Fremen, 4);
+            ConfigureHolderLoss(initial, rivalTrack);
+            return initial;
+        }, rules);
+        Assert.True(replay.IsSuccess, string.Join(";", replay.Diagnostics));
+        Assert.Equal(before.Hash, replay.Engine!.CaptureTrustedSnapshot().Hash);
+    }
+
+    private static void ConfigureHolderLoss(GameState state, int rivalTrack)
+    {
+        SetTrack(state, 1, Faction.Fremen, rivalTrack);
+        SetHolder(state, Faction.Fremen, 0);
+        state.Players[0].Resources = state.Players[0].Resources with { VictoryPoints = 2 };
     }
 
     [Fact]
@@ -398,6 +443,12 @@ public sealed class FactionRewardTests
     }
     private static void SetHolder(GameState state, Faction faction, int owner) =>
         state.Board.Alliances = [.. state.Board.Alliances.Select(x => x.Faction == faction ? x with { OwnerId = owner } : x)];
+    private static void IncumbentAtSix(GameState state, Faction faction)
+    {
+        SetTrack(state, 1, faction, 6);
+        SetHolder(state, faction, 1);
+        state.Players[1].Resources = state.Players[1].Resources with { VictoryPoints = 2 };
+    }
     private static void EmptyIntrigueDeck(GameState state) { while (state.Shared.IntrigueDeck.Count > 0) state.Shared.IntrigueDeck.TryDrawTo(state.Shared.IntrigueDiscard); }
     private static int Troops(PlayerState player) => player.Units.TroopsInSupply + player.Units.TroopsInGarrison + player.Units.TroopsInConflict;
     private static int RewardAmount(Faction faction) => faction switch { Faction.Emperor => 2, Faction.SpacingGuild => 3, _ => 1 };
