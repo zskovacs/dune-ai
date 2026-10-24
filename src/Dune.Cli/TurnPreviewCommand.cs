@@ -86,6 +86,8 @@ internal sealed class TurnPreviewCommand
             Console.WriteLine("  action " + Describe(action));
             if (engine.Phase != phase) Console.WriteLine($"  phase {phase} -> {engine.Phase}");
         }
+        if (engine.Phase == GamePhase.Combat)
+            PrintDiagnostics(engine.SupportDiagnostics(0), logger);
         var record = engine.CaptureReplay();
         var replay = TurnEngine.Replay(record, Create, rules);
         if (!replay.IsSuccess || replay.Engine!.CaptureTrustedSnapshot().Hash != engine.CaptureTrustedSnapshot().Hash)
@@ -98,8 +100,8 @@ internal sealed class TurnPreviewCommand
         Console.WriteLine($"Replay verified: {record.Actions.Length} accepted actions; {record.FinalStateHash}");
         Console.WriteLine(stoppedUnsupported
             ? "PARTIAL EXECUTION: stopped at an unsupported content boundary before completing Player Turns."
-            : "Stopped at the Combat boundary; Combat, Makers, Recall and game completion are not implemented.");
-        CliLog.PreviewSummary(logger, players, record.Actions.Length, stoppedUnsupported);
+            : "PARTIAL EXECUTION: stopped in Combat with unsupported lifecycle continuation; the game is not completed.");
+        CliLog.PreviewSummary(logger, players, record.Actions.Length, stoppedUnsupported || engine.Phase == GamePhase.Combat);
         return 0;
     }
 

@@ -18,6 +18,8 @@ public sealed record CardSelector(ContentId Definition, int Copy = 0);
 [JsonDerivedType(typeof(DeployAction), "deploy")]
 [JsonDerivedType(typeof(AcquireCardAction), "acquire")]
 [JsonDerivedType(typeof(EndRevealAction), "end-reveal")]
+[JsonDerivedType(typeof(PlayIntrigueAction), "play-intrigue")]
+[JsonDerivedType(typeof(PassPriorityAction), "pass-priority")]
 public abstract record GameAction(int PlayerId);
 public sealed record StartRoundAction() : GameAction(-1);
 public sealed record PlaceAgentAction(int PlayerId, CardSelector Card, BoardSpaceId Space, int PaymentOption = 0) : GameAction(PlayerId);
@@ -28,6 +30,8 @@ public sealed record ChooseOptionAction(int PlayerId, int Option) : GameAction(P
 public sealed record DeployAction(int PlayerId, int Troops) : GameAction(PlayerId);
 public sealed record AcquireCardAction(int PlayerId, CardSelector Card, CardZoneId Source) : GameAction(PlayerId);
 public sealed record EndRevealAction(int PlayerId) : GameAction(PlayerId);
+public sealed record PlayIntrigueAction(int PlayerId, CardSelector Card) : GameAction(PlayerId);
+public sealed record PassPriorityAction(int PlayerId) : GameAction(PlayerId);
 
 public enum StepStatus { Applied, Illegal, Unsupported, ContentError }
 public sealed record TurnDiagnostic(StepStatus Status, string Code, string Message);

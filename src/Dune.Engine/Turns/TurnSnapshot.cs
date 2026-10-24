@@ -16,6 +16,8 @@ public sealed record TurnSnapshotData(string Schema, string RulesIdentity, strin
     bool Revealing, bool Deploying, int Recruited, int OldGarrison, int NextEffectId,
     ImmutableArray<UsedSpace> UsedSpaces, ImmutableArray<GameAction> Actions)
 {
+    public DecisionWindowState? Window { get; init; }
+    public int NextWindowId { get; init; }
     [JsonIgnore]
     public ImmutableArray<PendingEffect> Pending => [.. Frames.SelectMany(x => x.Remaining)];
     [JsonIgnore]

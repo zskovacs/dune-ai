@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Dune.Engine.Content;
 using Dune.Engine.Setup;
+using Dune.Engine.Turns;
 
 namespace Dune.Engine.Runtime;
 
@@ -55,7 +56,10 @@ public sealed record GameObservation(
     int ConflictDeckCount,
     ImmutableArray<ObservedCard> Hand,
     ImmutableArray<ObservedCard> Intrigue,
-    ImmutableArray<StartingCardRecipe> StartingComposition);
+    ImmutableArray<StartingCardRecipe> StartingComposition)
+{
+    public DecisionWindowSummary? Window { get; init; }
+}
 
 internal static class ObservationProjection
 {
@@ -77,7 +81,12 @@ internal static class ObservationProjection
             state.Zones.Where(x => x.Visibility == ZoneVisibility.Public).Select(x =>
                 new ObservedZone(x.Name, x.OwnerId, x.Count, Cards(x))).ToImmutableArray(),
             state.Shared.ImperiumDeck.Count, state.Shared.IntrigueDeck.Count, state.Conflict.Deck.Count,
-            Cards(own.Hand), Cards(own.Intrigue), own.StartingComposition);
+            Cards(own.Hand), Cards(own.Intrigue), own.StartingComposition)
+        {
+            Window = state.DecisionWindow is { } window ? new(window.Id, window.Kind, window.EligibleSeats,
+                window.ClockwiseCursor, window.PriorityOwnerId, window.OpportunityPlays, window.ConsecutivePasses,
+                window.SuspendedFrameId is not null) : null,
+        };
     }
 
     internal static ObservedBoard Board(BoardState board) => new(board.Spaces.Select(x =>

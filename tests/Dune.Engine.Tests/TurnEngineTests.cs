@@ -213,7 +213,7 @@ public sealed class TurnEngineTests
         Assert.Equal(expectedStrength, player.CombatMarker);
         Assert.Equal(0, player.Temporary.Persuasion);
         Assert.Empty(player.InPlay.Cards);
-        Assert.Equal(GamePhase.CombatBoundary, engine.Phase);
+        Assert.Equal(GamePhase.Combat, engine.Phase);
     }
 
     [Fact]
@@ -546,7 +546,7 @@ public sealed class TurnEngineTests
         Assert.Equal(0, engine.DecisionOwnerId);
         Assert.Contains(engine.LegalActions(0), x => x is EndRevealAction);
         FinishPlayerTurns(engine);
-        Assert.Equal(GamePhase.CombatBoundary, engine.Phase);
+        Assert.Equal(GamePhase.Combat, engine.Phase);
         Assert.True(TurnEngine.Replay(engine.CaptureReplay(), () => CreateState(), rules).IsSuccess);
     }
 
@@ -648,7 +648,7 @@ public sealed class TurnEngineTests
             Apply(branch, next);
             ResolveAllEffects(branch);
             FinishPlayerTurns(branch);
-            Assert.Equal(GamePhase.CombatBoundary, branch.Phase);
+            Assert.Equal(GamePhase.Combat, branch.Phase);
             Assert.True(TurnEngine.Replay(branch.CaptureReplay(), InitialState, rules).IsSuccess);
         }
     }

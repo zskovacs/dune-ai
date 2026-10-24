@@ -1,13 +1,19 @@
 using System.Collections.Immutable;
 using Dune.Engine.Rulesets;
+using Dune.Engine.Turns;
 
 namespace Dune.Engine.Runtime;
 
 public enum GamePhase
 {
     BeforeRoundStart,
+    RoundStart,
     PlayerTurns,
-    CombatBoundary
+    Combat,
+    Makers,
+    Recall,
+    Endgame,
+    Completed
 }
 
 public enum ContentAuthenticity
@@ -59,6 +65,7 @@ public sealed class SharedCardState
     public CardZone UnusedStarters { get; }
     public CardZone ImperiumDiscard { get; } = new(new("imperium:discard"), "Imperium discard", ZoneVisibility.Public);
     public CardZone IntrigueDiscard { get; } = new(new("intrigue:discard"), "Intrigue discard", ZoneVisibility.Public);
+    public CardZone IntrigueResolving { get; } = new(new("intrigue:resolving"), "Resolving Intrigue", ZoneVisibility.Public);
     public CardZone Trashed { get; } = new(new("shared:trashed"), "Trashed cards", ZoneVisibility.Public);
 }
 
@@ -84,7 +91,7 @@ public sealed class GameState
             .Concat(new[]
             {
                 shared.ImperiumDeck, shared.ImperiumRow, shared.IntrigueDeck, shared.UnusedStarters,
-                shared.ImperiumDiscard, shared.IntrigueDiscard, shared.Trashed,
+                shared.ImperiumDiscard, shared.IntrigueDiscard, shared.IntrigueResolving, shared.Trashed,
                 Conflict.Deck, Conflict.Unused, Conflict.Revealed, Conflict.Discard
             })
             .Concat(shared.Reserves).OrderBy(x => x.Id.Value, StringComparer.Ordinal).ToList().AsReadOnly();
@@ -105,6 +112,7 @@ public sealed class GameState
     public int? DecisionOwnerId { get; internal set; }
     public int? CurrentPlayerId { get; internal set; }
     public bool IsCompleted { get; internal set; }
+    internal DecisionWindowState? DecisionWindow { get; set; }
     public ImmutableArray<ActiveEffect> ActiveEffects { get; internal set; } = [];
     public ImmutableArray<ModuleExtensionState> Extensions { get; internal set; } = [];
     internal SeededRandom Random { get; }
