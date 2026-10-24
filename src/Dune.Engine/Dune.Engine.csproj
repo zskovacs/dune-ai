@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <EmbeddedResource Include="Content/representative.json" />
+    <EmbeddedResource Include="Content/base-setup.json" />
   </ItemGroup>
 </Project>

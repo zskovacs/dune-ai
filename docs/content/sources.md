@@ -49,3 +49,15 @@ component/variant** identity, verify quantity and availability against the suppl
 record per-definition evidence/status. Compare a generated inventory with the official component counts and applicable
 module exclusions before treating it as complete. Keep effect prose out of executable rules until behavior has been
 independently specified and tested. A copyright review is needed before distributing copied card text or art.
+
+
+## SLICE-002 decision
+
+No third-party data or images were imported. The minimum original-game starter
+and Reserve metadata comes directly from local rulebook
+`DUNE_IMPERIUM_Rules_2020_10_26.pdf`, p.3. Setup uses the p.4–5 recipe and p.17–18
+board list. The complete Imperium/Intrigue/Conflict and eight-leader inventory
+remains unavailable, so the production initializer returns explicit diagnostics.
+A linked internal test/benchmark source generates unmistakably synthetic shared
+cards and leaders; it is not an authentic catalog and is never a production fallback.
+See [coverage](catalog-schema.md#slice-002-coverage-and-readiness).

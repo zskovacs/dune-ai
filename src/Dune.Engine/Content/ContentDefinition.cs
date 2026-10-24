@@ -15,6 +15,7 @@ public enum ContentCategory
 public enum ImplementationStatus { MetadataOnly, Implemented }
 public enum VerificationStatus { Unverified, RulebookVerified }
 public enum CatalogCompleteness { Representative, Complete }
+public enum ConflictTier { I = 1, II = 2, III = 3 }
 public sealed record SourceReference(string Document, int Page, string Section);
 
 public sealed record AvailabilityRequirements
@@ -44,7 +45,10 @@ public sealed record AvailabilityRequirements
 public sealed record ContentDefinition(
     ContentId Id, string Name, Product Product, ContentCategory Category, int Quantity,
     AvailabilityRequirements Availability, ImmutableArray<SourceReference> Sources,
-    ImplementationStatus Implementation, VerificationStatus Verification, int Revision = 1);
+    ImplementationStatus Implementation, VerificationStatus Verification, int Revision = 1)
+{
+    public ConflictTier? ConflictTier { get; init; }
+}
 
-/// <summary>A future instance refers to its definition; no effects or mutable card state are supplied here.</summary>
+/// <summary>An episode-local physical copy refers to its definition; ownership/visibility belong to its current zone.</summary>
 public sealed record CardInstance(CardInstanceId Id, ContentId Definition);

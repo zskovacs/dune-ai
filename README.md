@@ -5,8 +5,10 @@ A local research monorepo for future autonomous play of **Dune: Imperium** and
 with Rise of Ix and Immortality, competitive 3–4 players. The architecture targets
 deterministic headless simulation, parallel self-play and Python/PyTorch learning.
 
-**Current scope:** SLICE-001 typed configuration, representative ruleset composition
-and sourced content architecture, plus the executable two-player **toy token game**.
+**Current scope:** SLICE-001 configuration/composition and SLICE-002 base runtime
+state, deterministic setup, private observations and trusted snapshots. Authentic
+Dune initialization remains blocked by incomplete card data; setup tests and
+benchmarks use explicitly synthetic fixtures. The two-player **toy token game** is executable.
 No Dune configuration is playable. No Python/engine bridge, neural model, PPO or
 MCTS exists. The toy game uses invented rules.
 
@@ -103,7 +105,9 @@ and stable fingerprints. See the [rules index](docs/rules-index.md),
 [content-source assessment](docs/content/sources.md). Validated composition is
 separate from gameplay readiness; all Dune results remain nonplayable.
 
-Next is sourced setup and the first real decision for **Imperium + Ix + Immortality**.
+See the [runtime setup architecture](docs/architecture/runtime-state.md). Next is
+a verified content inventory and Round Start for original Imperium; the eventual
+complete-game target remains **Imperium + Ix + Immortality**.
 See the [roadmap](docs/roadmap.md) and [rule ledger](docs/rules-sources.md).
 Do not commit copyrighted rulebooks/card art, datasets, checkpoints, secrets or
 local experiment output. Contributor/agent conventions live in [AGENTS.md](AGENTS.md).

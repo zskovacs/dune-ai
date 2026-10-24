@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../tests/Fixtures/OriginalImperiumFixture.cs" Link="Fixtures/OriginalImperiumFixture.cs" />
     <ProjectReference Include="../../src/Dune.Simulation/Dune.Simulation.csproj" />
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
   </ItemGroup>

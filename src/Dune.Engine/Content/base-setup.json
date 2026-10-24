@@ -1,0 +1,170 @@
+[
+  {
+    "id": {
+      "value": "imperium:starter:convincing-argument:v1"
+    },
+    "name": "Convincing Argument",
+    "product": "Imperium",
+    "category": "StartingCard",
+    "quantity": 8,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Player Components: four 10-card starting decks"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:starter:dagger:v1"
+    },
+    "name": "Dagger",
+    "product": "Imperium",
+    "category": "StartingCard",
+    "quantity": 8,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Player Components: four 10-card starting decks"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:starter:diplomacy:v1"
+    },
+    "name": "Diplomacy",
+    "product": "Imperium",
+    "category": "StartingCard",
+    "quantity": 4,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Player Components: four 10-card starting decks"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:starter:reconnaissance:v1"
+    },
+    "name": "Reconnaissance",
+    "product": "Imperium",
+    "category": "StartingCard",
+    "quantity": 4,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Player Components: four 10-card starting decks"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:starter:seek-allies:v1"
+    },
+    "name": "Seek Allies",
+    "product": "Imperium",
+    "category": "StartingCard",
+    "quantity": 4,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Player Components: four 10-card starting decks"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:starter:signet-ring:v1"
+    },
+    "name": "Signet Ring",
+    "product": "Imperium",
+    "category": "StartingCard",
+    "quantity": 4,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Player Components: four 10-card starting decks"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  },
+  {
+    "id": {
+      "value": "imperium:reserve:arrakis-liaison:v1"
+    },
+    "name": "Arrakis Liaison",
+    "product": "Imperium",
+    "category": "ReserveCard",
+    "quantity": 8,
+    "availability": {
+      "baseGames": [
+        "Imperium"
+      ]
+    },
+    "sources": [
+      {
+        "document": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+        "page": 3,
+        "section": "Game Components: Reserve cards"
+      }
+    ],
+    "implementation": "MetadataOnly",
+    "verification": "RulebookVerified",
+    "revision": 1
+  }
+]

@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Dune.Engine.Configuration;
 using Dune.Engine.Content;
+using Dune.Engine.Setup;
 
 namespace Dune.Engine.Rulesets;
 
@@ -10,7 +11,11 @@ public sealed class RulesetComposer
     private readonly ContentCatalog catalog;
     private readonly ImmutableArray<RuleModule>? explicitModules;
 
-    private RulesetComposer(ContentCatalog catalog) => this.catalog = catalog;
+    public RulesetComposer(ContentCatalog catalog)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        this.catalog = catalog;
+    }
 
     /// <summary>Explicit modules are the complete composition input, useful for authored catalogs and graph validation.</summary>
     public RulesetComposer(ContentCatalog catalog, IEnumerable<RuleModule> modules)
@@ -50,9 +55,14 @@ public sealed class RulesetComposer
             if (!rules.Any(x => x.Definition.Key == key))
                 errors.Add(new("incomplete-definition", "definitions", $"A resolved recipe is required for {key}."));
         if (errors.Count != 0) return Failure(ConfigurationSupport.Recognized, errors.ToImmutable());
-        var fingerprint = RulesetFingerprint.Compute(configuration, orderedModules, rules, content, leaders, catalog.Completeness);
+        var setup = explicitModules is null ? GameSetupDefinition.Resolve(configuration) : null;
+        var fingerprint = RulesetFingerprint.Compute(configuration, orderedModules, rules, content, leaders, catalog.Completeness, setup);
         return new(ConfigurationSupport.Validated, GameplaySupport.NotImplemented, [],
-            new(fingerprint, orderedModules, rules, content, leaders, catalog.Completeness));
+            new(fingerprint, orderedModules, rules, content, leaders, catalog.Completeness)
+            {
+                Setup = setup,
+                ConfigurationIdentity = ConfigurationIdentity.Compute(configuration),
+            });
     }
 
     private static ResolutionResult Failure(ConfigurationSupport support, ImmutableArray<ConfigurationError> errors) =>

@@ -24,6 +24,9 @@ public sealed class ContentCatalog
                 !Enum.IsDefined(definition.Implementation) || !Enum.IsDefined(definition.Verification) ||
                 definition.Availability is null || !ValidSources(definition.Sources) || !ValidAvailability(definition.Availability))
                 throw new ArgumentException($"Invalid content metadata: {definition.Id.Value}.", nameof(definitions));
+            if (definition.ConflictTier is { } tier &&
+                (definition.Category != ContentCategory.ConflictCard || !Enum.IsDefined(tier)))
+                throw new ArgumentException($"Invalid conflict tier: {definition.Id.Value}.", nameof(definitions));
             if (!HasProductRequirement(definition))
                 throw new ArgumentException($"Content ownership must be reflected in availability: {definition.Id.Value}.", nameof(definitions));
         }
@@ -38,7 +41,11 @@ public sealed class ContentCatalog
             ?? throw new InvalidOperationException("Representative catalog resource is missing.");
         var definitions = JsonSerializer.Deserialize<ImmutableArray<ContentDefinition>>(stream, ConfigurationJson.Options);
         if (definitions.IsDefault) throw new JsonException("A content array is required.");
-        return new ContentCatalog(definitions);
+        using var setupStream = typeof(ContentCatalog).Assembly.GetManifestResourceStream("Dune.Engine.Content.base-setup.json")
+            ?? throw new InvalidOperationException("Base setup metadata resource is missing.");
+        var setup = JsonSerializer.Deserialize<ImmutableArray<ContentDefinition>>(setupStream, ConfigurationJson.Options);
+        if (setup.IsDefault) throw new JsonException("A setup content array is required.");
+        return new ContentCatalog(definitions.AddRange(setup));
     }
 
     internal static bool ValidId(string? value) => value is not null && Regex.IsMatch(value, @"\A[a-z0-9]+(?:[.:-][a-z0-9]+)*\z", RegexOptions.CultureInvariant);

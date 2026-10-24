@@ -2,8 +2,10 @@
 
 This repository supports infrastructure and configuration for future Dune: Imperium
 and Uprising AI. SLICE-001 adds
-[ruleset composition](architecture/ruleset-composition.md). **Only the separate
-toy game is playable.** Executable Dune gameplay and training remain roadmap work.
+[ruleset composition](architecture/ruleset-composition.md); SLICE-002 adds
+[typed runtime state and deterministic setup](architecture/runtime-state.md). **Only the separate
+toy game is playable.** Authentic setup remains blocked by incomplete content. Executable Dune gameplay
+and training remain roadmap work.
 The design favors correctness, reproducibility and clear ownership before
 throughput optimizations.
 
@@ -174,3 +176,11 @@ Future experiment/evaluation manifests should include engine/rules/observation
 versions, Git revision, locks, configs, all seeds, policy checkpoint identity,
 metrics and evaluation split. Tracking services and automated policy tournaments
 will be chosen when this metadata flow exists; no service/database is added now.
+
+## Base initialization boundary
+
+See [runtime state](architecture/runtime-state.md) for setup lifecycle, physical card
+identity/zones, public/private projections, deterministic snapshots and extension
+state. [ADR 0003](adr/0003-runtime-initialization.md) documents the standard-library
+RNG and synthetic fixture boundary. Initialization ends before Round Start; it
+does not implement the Dune `IGame` action loop.

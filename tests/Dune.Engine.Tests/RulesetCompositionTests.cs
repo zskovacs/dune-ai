@@ -343,7 +343,8 @@ public sealed class RulesetCompositionTests
     [Fact]
     public void FingerprintGoldenDetectsAccidentalCanonicalFormatChanges()
     {
-        Assert.Equal("498733ed1bdf6201f841396a8851e7f054c2954ccd59fe9ef2170a41474e82e4", Composer.Compose(Standard).Definition!.Fingerprint);
+        // v2 includes typed setup, conflict tiers and additional sourced starter/reserve metadata.
+        Assert.Equal("00cabbe6539869d1279fe9f2ea783aa54d28105f2cb6b15b90e20a2ee05f189e", Composer.Compose(Standard).Definition!.Fingerprint);
     }
 
     [Fact]

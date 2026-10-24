@@ -11,8 +11,8 @@ A `ContentId` identifies a definition, not a physical copy. Use a globally uniqu
 versioned product/category/component form such as
 `imperium:starter:dune-desert-planet:v1`. Display names are not keys: products can
 reuse a name, and same-name conflicts can have different rewards/versions.
-Renaming display text must not silently reinterpret an old ID. A future runtime
-card instance will hold its own episode-local instance ID and a definition ID;
+Renaming display text must not silently reinterpret an old ID. A runtime
+card instance holds its own episode-local instance ID and a definition ID;
 quantity does not require duplicate definitions or shared mutable card state.
 
 ## Required metadata
@@ -60,3 +60,39 @@ promote playable status only after the whole selected setup/phase/card/scoring
 combination is covered. Changes to content semantics participate in the ruleset
 fingerprint and require a deliberate revision/replay decision. Source/reuse
 permission and game-rule verification are separate checks.
+
+## SLICE-002 coverage and readiness
+
+The bundled catalog remains **Representative**. Added `base-setup.json` contains
+six missing starter definitions and Arrakis Liaison, transcribed only as minimum
+name/quantity/category metadata from original rulebook p.3. Together with existing
+entries, original Imperium now has:
+
+| Pool | Verified definitions | Verified physical copies | Required |
+| --- | ---: | ---: | ---: |
+| Starting | 7 | 40 (four player decks) | 40 |
+| Reserve | 3 | 24 (8 Arrakis Liaison / 10 Spice Must Flow / 6 Foldspace) | 24 |
+| Leaders | 4 | 4 | 8 |
+| Imperium deck | 0 | 0 | 67 |
+| Intrigue | 0 | 0 | 40 |
+| Conflict | 0 | 0 | 18 (4 I / 10 II / 4 III) |
+
+The four other leader identities/metadata and all shared-deck card identities,
+copy counts and Conflict tiers need audited evidence. No card/leader effects are
+implemented. A complete inventory does not imply complete gameplay; leader-specific
+setup instructions also need review before authentic content is enabled.
+
+`ConflictTier` is optional typed metadata on a definition; runtime setup requires
+it for every selected Conflict card. The fingerprint format is deliberately v2
+and includes this field plus typed setup. Box quantity is distinct from per-seat
+copies in `StartingCardRecipe`; three-seat setup leaves a full unused starter deck
+outside the game. Exact required identities/categories/counts are validated, so
+category totals alone cannot hide a wrong starter or Reserve stack.
+
+Production initialization requires a complete catalog, curated RulebookVerified
+status and applicable original-rulebook citations (component p.3; leader pp.3–4;
+board pp.4,17–18), plus structural inventory checks. Citations establish component
+applicability; they cannot machine-verify every identity or grant redistribution
+rights. A future card audit may add per-card evidence without importing effects/art.
+Test-only synthetic definitions remain Unverified/Representative and are accepted
+only by the internal fixture entry point. State and snapshots label them synthetic.

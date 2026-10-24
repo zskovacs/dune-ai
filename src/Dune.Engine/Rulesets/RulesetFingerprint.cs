@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Dune.Engine.Configuration;
 using Dune.Engine.Content;
+using Dune.Engine.Setup;
 
 namespace Dune.Engine.Rulesets;
 
@@ -11,7 +12,7 @@ internal static class RulesetFingerprint
     // Version this format when canonicalization or semantics change. Never use runtime GetHashCode.
     public static string Compute(GameConfiguration c, ImmutableArray<RuleModule> modules,
         ImmutableArray<ResolvedRule> rules, ImmutableArray<ContentDefinition> content,
-        ImmutableArray<ContentId> leaders, CatalogCompleteness completeness)
+        ImmutableArray<ContentId> leaders, CatalogCompleteness completeness, GameSetupDefinition? setup)
     {
         static IEnumerable<string> Ids(IEnumerable<ContentId> ids) => ids.Select(x => x.Value).Order(StringComparer.Ordinal);
         static IEnumerable<string> ModuleIds(IEnumerable<ModuleId> ids) => ids.Select(x => x.Value).Order(StringComparer.Ordinal);
@@ -21,7 +22,8 @@ internal static class RulesetFingerprint
         static object Definition(RuleDefinition d) => new { d.Id, d.Key, d.Value, Sources = Sources(d.Sources) };
         var canonical = new
         {
-            Format = "dune-ruleset-sha256-v1",
+            Format = "dune-ruleset-sha256-v2",
+            Setup = setup,
             Configuration = new
             {
                 c.SchemaVersion,
@@ -62,6 +64,7 @@ internal static class RulesetFingerprint
                 x.Product,
                 x.Category,
                 x.Quantity,
+                x.ConflictTier,
                 Availability = new
                 {
                     BaseGames = Enums(x.Availability.BaseGames),

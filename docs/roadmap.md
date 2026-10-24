@@ -18,20 +18,26 @@ than the recognized official product/mode/format vocabulary. See the
 [rules index](rules-index.md), [matrix](compatibility-matrix.md), and
 [content assessment](content/sources.md).
 
-## SLICE-002 — sourced setup and first real decision
+## SLICE-002 — base setup and runtime state
 
-Target **Dune: Imperium (2020) + Rise of Ix + Immortality**, competitive 3–4 players.
-Start with complete verified setup inputs for a deliberately bounded fixture,
-private/public state, runtime component instances, reproducible setup and one legal
-Agent decision. Lower the selected composition recipes into typed setup behavior;
-keep incomplete inventories explicitly blocked from general play. Add illegal-action,
-privacy, deterministic reset/replay and information-boundary tests. Define initial
-observation/action/replay schema versions before collecting trajectories.
+Implemented original Imperium Standard competitive 3/4-player setup infrastructure:
+typed resolved recipes and board, isolated runtime state, physical card zones,
+fixed/random unique leaders, deterministic first player/decks, explicit private
+observations and trusted canonical snapshots. Stops before Round Start. Tests and
+initialization benchmarks use internal synthetic content with authentic quantities.
+The public initializer remains blocked by the incomplete authentic catalog. No
+Dune game is playable. See [runtime architecture](architecture/runtime-state.md).
 
-Card catalog work needs a separate permission/evidence decision: verify inventories
-against supplied rules and physical components, resolve source discrepancies and
-obtain rights before importing third-party datasets or art. Do not hold this slice
-open for a full catalog or disguise missing effects with placeholders.
+## SLICE-003 — audited content and Round Start
+
+Complete source/permission decisions and verify base card identities/copy counts,
+Conflict tiers, remaining leaders and any leader-specific setup instructions. Keep
+real initialization blocked until that gate passes. Implement Round Start only:
+reveal the top Conflict, draw five cards per player, advance round/phase and create
+the first decision owner. Add privacy/reshuffle/round transition and versioned replay
+tests. Then scope the first bounded Agent action with sourced costs/effects and
+legal-action/observation contracts; do not combine all board/card effects at once.
+The original+Ix+Immortality complete-game target remains unchanged.
 
 ## Complete-game target
 

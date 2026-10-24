@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Dune.Engine.Content;
+using Dune.Engine.Setup;
 
 namespace Dune.Engine.Rulesets;
 
@@ -24,4 +25,6 @@ public sealed record ResolvedGameDefinition(
     CatalogCompleteness CatalogCompleteness)
 {
     public GameplaySupport Gameplay => GameplaySupport.NotImplemented;
+    public GameSetupDefinition? Setup { get; internal init; }
+    public string ConfigurationIdentity { get; internal init; } = "";
 }

@@ -213,3 +213,23 @@ var restored = ConfigurationJson.Deserialize(json);
 JSON syntax/schema errors throw System.Text.Json exceptions. `Compose` validates
 semantic shape and supported scope after deserialization. Persist the original
 configuration and both seeds with the versioned definition fingerprint.
+
+
+## SLICE-002 executable setup adapter
+
+Resolved definitions now bind to canonical seed-independent configuration identity
+and may carry immutable typed `Setup` data. The ordinary original Imperium Standard
+competitive 3/4-player builtin composition receives this adapter for fixed/random
+leader policies; other recognized configurations and explicitly supplied module
+graphs remain metadata-only. This conservative gate prevents replacements from
+silently receiving base behavior. Future expansion adapters must lower their
+resolved definitions deliberately, not parse prose or reuse a base recipe implicitly.
+
+A public `RulesetComposer(ContentCatalog)` overload enables an authored complete
+catalog with the builtin module registration. The existing explicit-modules
+constructor retains its graph-validation semantics. `GameInitializer` separately
+validates support and content readiness; gameplay remains NotImplemented.
+Fingerprint canonicalization is deliberately v2 to include typed setup and optional
+ConflictTier metadata. Full setup and observation contracts are documented in
+[runtime state](runtime-state.md); [ADR 0003](../adr/0003-runtime-initialization.md)
+records the fixture/RNG decisions.
