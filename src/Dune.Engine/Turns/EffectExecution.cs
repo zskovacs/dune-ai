@@ -28,4 +28,7 @@ public sealed record DecisionFrame(Effect Effect, EffectContext Context);
 
 /// <summary>Episode-local immutable execution data; only the last frame can act.</summary>
 public sealed record EffectExecutionFrame(int Id, int? ParentId, EffectGroupMode Mode, int ChooserId,
-    ImmutableArray<PendingEffect> Remaining, ExecutionContinuation Continuation);
+    ImmutableArray<PendingEffect> Remaining, ExecutionContinuation Continuation)
+{
+    public DecisionFrame? Decision { get; init; }
+}

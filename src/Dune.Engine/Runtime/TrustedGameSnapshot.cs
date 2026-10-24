@@ -82,7 +82,7 @@ public sealed class TrustedGameSnapshot
     {
         if (!state.Extensions.IsEmpty)
             throw new NotSupportedException("Module extensions require an explicit typed snapshot contract.");
-        return new(new("dune-setup-snapshot-v1", typeof(GameState).Assembly.GetName().Version!.ToString(),
+        return new(new("dune-setup-snapshot-v2", typeof(GameState).Assembly.GetName().Version!.ToString(),
             System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
             state.Definition.Setup!.Id, state.Definition.Fingerprint, state.ConfigurationIdentity,
             "dune-configuration-sha256-v1", state.ContentIdentity, state.Authenticity,

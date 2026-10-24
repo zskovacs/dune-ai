@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Dune.Engine.Configuration;
 using Dune.Engine.Content;
 using Dune.Engine.Runtime;
@@ -11,10 +12,15 @@ namespace Dune.Engine.Turns;
 
 public sealed record UsedSpace(int PlayerId, BoardSpaceId Space);
 public sealed record TurnSnapshotData(string Schema, string RulesIdentity, string InitialStateHash, SnapshotData Game,
-    ImmutableArray<PendingEffect> Pending, ImmutableArray<DecisionFrame> Decisions,
     ImmutableArray<EffectExecutionFrame> Frames, int NextFrameId,
     bool Revealing, bool Deploying, int Recruited, int OldGarrison, int NextEffectId,
-    ImmutableArray<UsedSpace> UsedSpaces, ImmutableArray<GameAction> Actions);
+    ImmutableArray<UsedSpace> UsedSpaces, ImmutableArray<GameAction> Actions)
+{
+    [JsonIgnore]
+    public ImmutableArray<PendingEffect> Pending => [.. Frames.SelectMany(x => x.Remaining)];
+    [JsonIgnore]
+    public ImmutableArray<DecisionFrame> Decisions => [.. Frames.Where(x => x.Decision is not null).Select(x => x.Decision!)];
+}
 /// <summary>Complete trusted turn state. Contains hidden cards, seeds, pending execution and history.</summary>
 public sealed class TrustedTurnSnapshot
 {

@@ -10,7 +10,7 @@ namespace Dune.Engine.Turns;
 /// </summary>
 public static class OriginalImperiumTurnRules
 {
-    public const string Version = "imperium-2020-turn-preview-v1";
+    public const string Version = "imperium-2020-turn-preview-v2";
     private const string Rules = "DUNE_IMPERIUM_Rules_2020_10_26.pdf";
     private const string Aid = "DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf";
 
