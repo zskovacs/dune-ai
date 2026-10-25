@@ -11,7 +11,9 @@ totals. See [the contract](coverage-schema.md) for status rules.
 
 
 <!-- BEGIN GENERATED CONTENT COVERAGE -->
-Known ability slots: 59; unknown or unreadable applicable slots: 121. Implemented means code-present for a bounded sourced behavior; it does not mean a whole face or configuration is validated.
+Known authored ability clauses: 59; unknown or unreadable applicable slots: 121. Implemented means code-present for a bounded sourced behavior; it does not mean a whole face or configuration is validated.
+
+Fully sourced authored clauses: 42; source-unreadable authored placeholders: 13. Placeholders denote unreadable printed boxes, not verified effects; unlisted unknown slots remain separate.
 
 ### By classification
 

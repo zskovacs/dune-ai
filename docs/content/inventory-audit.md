@@ -12,9 +12,29 @@ and physical piece counts are distinct from resource values.
 <!-- BEGIN GENERATED CONTENT COVERAGE -->
 Audit revision: `slice-004.5-d1-review-fix2-2026-10-25`; schema: `dune-content-coverage-v1`.
 
-Sources: 12; expectations: 93; physical content records: 90; identity/quantity complete expectations: 21; explicit gaps: 72; unknown ability slots: 121.
+Sources: 12; expectations: 93; content identity/component-group records: 90; identity/quantity complete expectations: 21; explicit gaps: 72; unknown ability slots: 121.
 
-Expectations overlap across pools, subsets, recipes and exclusions. These counts are not additive game totals. A complete quantity row does not certify a complete face.
+Expectations overlap across pools, subsets, recipes and exclusions. These counts are not additive game totals. A complete quantity row does not certify a complete face. Content records are audited identities or component groups, not physical copies or runtime instances.
+
+Complete source faces: 30, including 22 board spaces and 8 card/Intrigue faces (ImperiumCard, IntrigueCard, ReserveCard). A complete source face does not establish executable support.
+
+### Face completeness by category
+
+| Category | Complete faces | Incomplete faces | Audited records |
+| --- | --- | --- | --- |
+| BoardLayout | 0 | 1 | 1 |
+| BoardSpace | 22 | 0 | 22 |
+| ConflictCard | 0 | 2 | 2 |
+| GameplayComponent | 0 | 17 | 17 |
+| ImperiumCard | 2 | 14 | 16 |
+| IntrigueCard | 4 | 10 | 14 |
+| Leader | 0 | 8 | 8 |
+| ReserveCard | 2 | 1 | 3 |
+| StartingCard | 0 | 7 | 7 |
+
+### Content identity and metadata status
+
+Discovery, sourcing and verification below concern audited identity/metadata evidence. They do not establish whole ability faces or known copy quantities.
 
 ### By product
 

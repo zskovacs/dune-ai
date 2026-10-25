@@ -18,7 +18,7 @@ from content_coverage_model import (  # noqa: E402
     load_inventory,
     validate_inventory,
 )
-from content_coverage_reports import render_reports, update_region  # noqa: E402
+from content_coverage_reports import _cell, render_reports, update_region  # noqa: E402
 
 
 @pytest.fixture
@@ -135,11 +135,11 @@ def test_report_count_projections_match_canonical_records(raw, tmp_path):
     report = build_report(inventory)
     rendered = render_reports(report, inventory)
     assert (
-        f"physical content records: {len(inventory.content)}"
+        f"content identity/component-group records: {len(inventory.content)}"
         in rendered[Path("docs/content/inventory-audit.md")]
     )
     assert (
-        f"Known ability slots: {report.abilityCount}"
+        f"Known authored ability clauses: {report.abilityCount}"
         in rendered[Path("docs/content/ability-coverage.md")]
     )
     assert (
@@ -154,6 +154,53 @@ def test_report_count_projections_match_canonical_records(raw, tmp_path):
         f"Configurations assessed: {len(inventory.configurations)}"
         in rendered[Path("docs/content/readiness-gates.md")]
     )
+
+
+def test_face_and_placeholder_summaries_come_from_canonical_records(raw, tmp_path):
+    inventory = load(raw, tmp_path)
+    rendered = render_reports(build_report(inventory), inventory)
+    faces = [c for c in inventory.content if c.faceComplete]
+    board_faces = [c for c in faces if c.category == "BoardSpace"]
+    assert (len(faces), len(board_faces), len(faces) - len(board_faces)) == (30, 22, 8)
+    inventory_body = rendered[Path("docs/content/inventory-audit.md")]
+    assert (
+        f"Complete source faces: {len(faces)}, including "
+        f"{len(board_faces)} board spaces and "
+        f"{len(faces) - len(board_faces)} card/Intrigue faces" in inventory_body
+    )
+    for category in sorted({c.category for c in inventory.content}):
+        complete = sum(
+            c.category == category and c.faceComplete for c in inventory.content
+        )
+        total = sum(c.category == category for c in inventory.content)
+        assert (
+            f"| {category} | {complete} | {total - complete} | {total} |"
+            in inventory_body
+        )
+    abilities = [a for c in inventory.content for a in c.abilities]
+    sourced = sum(a.sourcing == "fully-sourced" for a in abilities)
+    unreadable = sum(
+        a.discovery == "not-discovered"
+        and a.sourcing == "unsourced"
+        and any(
+            slot.slot == a.slot
+            and slot.discovery == "unreadable"
+            and a.id in slot.abilityIds
+            for slot in c.slots
+        )
+        for c in inventory.content
+        for a in c.abilities
+    )
+    assert (sourced, unreadable) == (42, 13)
+    assert (
+        f"Fully sourced authored clauses: {sourced}; "
+        f"source-unreadable authored placeholders: {unreadable}"
+        in rendered[Path("docs/content/ability-coverage.md")]
+    )
+
+
+def test_table_cell_escapes_sequence_members():
+    assert _cell(("second|part", "first\npart")) == "first part, second\\|part"
 
 
 def content_record() -> dict:

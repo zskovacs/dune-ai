@@ -17,12 +17,12 @@ ROOT = Path("docs/content")
 
 
 def _cell(value: object) -> str:
+    if isinstance(value, (tuple, list)):
+        value = ", ".join(sorted(map(str, value))) if value else "none"
     if value is None:
         return "unknown"
     if isinstance(value, bool):
         return "yes" if value else "no"
-    if isinstance(value, (tuple, list)):
-        return ", ".join(sorted(map(str, value))) if value else "none"
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
@@ -66,6 +66,36 @@ def render_reports(report: AuditReport, inventory: AuditInventory) -> dict[Path,
     """Return stable generated region bodies, keyed by repository-relative path."""
     content = sorted(inventory.content, key=lambda c: c.id)
     abilities = sorted((a for c in content for a in c.abilities), key=lambda a: a.id)
+    face_counts = Counter(c.category for c in content if c.faceComplete)
+    total_by_category = Counter(c.category for c in content)
+    non_board_faces = sum(
+        count for category, count in face_counts.items() if category != "BoardSpace"
+    )
+    non_board_categories = ", ".join(
+        sorted(str(category) for category in face_counts if category != "BoardSpace")
+    )
+    non_board_label = (
+        "card/Intrigue"
+        if all(
+            str(category).endswith("Card")
+            for category in face_counts
+            if category != "BoardSpace"
+        )
+        else "non-board"
+    )
+    unreadable_placeholders = sum(
+        a.discovery == "not-discovered"
+        and a.sourcing == "unsourced"
+        and any(
+            slot.slot == a.slot
+            and slot.discovery == "unreadable"
+            and a.id in slot.abilityIds
+            for slot in c.slots
+        )
+        for c in content
+        for a in c.abilities
+    )
+    sourced_clauses = sum(a.sourcing == "fully-sourced" for a in abilities)
     quantities = sorted(report.quantities, key=lambda q: q.expectationId)
     expectations = {e.id: e for e in inventory.expectations}
     inventory_body = [
@@ -73,14 +103,43 @@ def render_reports(report: AuditReport, inventory: AuditInventory) -> dict[Path,
         f"schema: `{inventory.schemaVersion}`.",
         "",
         f"Sources: {report.sourceCount}; expectations: {report.expectationCount}; "
-        f"physical content records: {report.contentCount}; identity/quantity "
+        f"content identity/component-group records: {report.contentCount}; "
+        "identity/quantity "
         f"complete expectations: {sum(q.complete for q in quantities)}; "
         f"explicit gaps: {len(report.gaps)}; unknown ability slots: "
         f"{report.unknownSlots}.",
         "",
         "Expectations overlap across pools, subsets, recipes and exclusions. "
         "These counts are not additive game totals. A complete quantity row "
-        "does not certify a complete face.",
+        "does not certify a complete face. Content records are audited identities "
+        "or component groups, not physical copies or runtime instances.",
+        "",
+        f"Complete source faces: {sum(face_counts.values())}, including "
+        f"{face_counts.get('BoardSpace', 0)} board spaces and "
+        f"{non_board_faces} {non_board_label} faces ({non_board_categories}). "
+        "A complete "
+        "source face does not establish executable support.",
+        "",
+        "### Face completeness by category",
+        "",
+        _table(
+            ("Category", "Complete faces", "Incomplete faces", "Audited records"),
+            [
+                (
+                    category,
+                    face_counts[category],
+                    total_by_category[category] - face_counts[category],
+                    total_by_category[category],
+                )
+                for category in sorted(total_by_category)
+            ],
+        ),
+        "",
+        "### Content identity and metadata status",
+        "",
+        "Discovery, sourcing and verification below concern audited identity/"
+        "metadata evidence. They do not establish whole ability faces or known "
+        "copy quantities.",
         "",
         _counts(
             content, ("product", "category", "discovery", "sourcing", "verification")
@@ -150,10 +209,15 @@ def render_reports(report: AuditReport, inventory: AuditInventory) -> dict[Path,
         ),
     ]
     ability_body = [
-        f"Known ability slots: {report.abilityCount}; unknown or unreadable "
+        f"Known authored ability clauses: {report.abilityCount}; unknown or unreadable "
         f"applicable slots: {report.unknownSlots}. Implemented means code-present "
         "for a bounded sourced behavior; it does not mean a whole face or "
         "configuration is validated.",
+        "",
+        f"Fully sourced authored clauses: {sourced_clauses}; source-unreadable "
+        f"authored placeholders: {unreadable_placeholders}. Placeholders denote "
+        "unreadable printed boxes, not verified effects; unlisted unknown slots "
+        "remain separate.",
         "",
         _counts(
             abilities,
