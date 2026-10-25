@@ -203,6 +203,28 @@ def test_table_cell_escapes_sequence_members():
     assert _cell(("second|part", "first\npart")) == "first part, second\\|part"
 
 
+def test_batch_source_locator_is_escaped_once_in_rendered_table(raw, tmp_path):
+    inventory = load(raw, tmp_path)
+    batch = next(b for b in inventory.batches if b.evidence)
+    locator = "section A|B\ncontinued"
+    changed = replace(
+        batch,
+        evidence=(replace(batch.evidence[0], locator=locator), *batch.evidence[1:]),
+    )
+    inventory = replace(
+        inventory,
+        batches=tuple(changed if b.id == batch.id else b for b in inventory.batches),
+    )
+    body = render_reports(build_report(inventory), inventory)[
+        Path("docs/content/implementation-batches.md")
+    ]
+    assert (
+        f"{batch.evidence[0].sourceId} "
+        f"p.{batch.evidence[0].page or '?'} section A\\|B continued" in body
+    )
+    assert "section A\\\\|B" not in body
+
+
 def content_record() -> dict:
     return {
         "id": "Imperium/StartingCard/test/v1",

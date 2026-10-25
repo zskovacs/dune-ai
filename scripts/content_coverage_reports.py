@@ -58,8 +58,8 @@ def _ability_owners(abilities: list[object], content: list[object]) -> Iterator[
         )
 
 
-def _refs(refs: tuple[object, ...]) -> str:
-    return _cell(tuple(f"{r.sourceId} p.{r.page or '?'} {r.locator}" for r in refs))
+def _refs(refs: tuple[object, ...]) -> tuple[str, ...]:
+    return tuple(f"{r.sourceId} p.{r.page or '?'} {r.locator}" for r in refs)
 
 
 def render_reports(report: AuditReport, inventory: AuditInventory) -> dict[Path, str]:
