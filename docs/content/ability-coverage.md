@@ -28,17 +28,17 @@ Fully sourced authored clauses: 42; source-unreadable authored placeholders: 13.
 
 | implementation | Records |
 | --- | --- |
-| implemented | 34 |
+| implemented | 35 |
 | not-implemented | 4 |
 | partially-implemented | 3 |
-| unsupported | 18 |
+| unsupported | 17 |
 
 ### By validation
 
 | validation | Records |
 | --- | --- |
-| not-tested | 25 |
-| tested | 34 |
+| not-tested | 24 |
+| tested | 35 |
 
 ### By sourcing
 
@@ -117,7 +117,7 @@ Fully sourced authored clauses: 42; source-unreadable authored placeholders: 13.
 | imperium:space:research-station:v1#slot:placement | Imperium / BoardSpace | composite | fully-sourced | verified | implemented | tested | cap-agent-placement, cap-card-draw, cap-combat-placement, cap-payment | none | unknown |
 | imperium:space:secrets:v1#slot:placement | Imperium / BoardSpace | composite | fully-sourced | verified | unsupported | not-tested | cap-agent-placement, cap-influence, cap-intrigue-draw, cap-intrigue-theft | int-original-secrets-theft | batch-03-secrets |
 | imperium:space:secure-contract:v1#slot:placement | Imperium / BoardSpace | primitive | fully-sourced | verified | implemented | tested | cap-agent-placement, cap-resource-gain | none | unknown |
-| imperium:space:selective-breeding:v1#slot:placement | Imperium / BoardSpace | composite | fully-sourced | verified | unsupported | not-tested | cap-agent-placement, cap-card-draw, cap-influence, cap-payment, cap-selected-trash | int-original-selected-trash-reserve | batch-01-selected-trash |
+| imperium:space:selective-breeding:v1#slot:placement | Imperium / BoardSpace | composite | fully-sourced | verified | implemented | tested | cap-agent-placement, cap-card-draw, cap-influence, cap-payment, cap-selected-trash | int-original-selected-trash-reserve | batch-01-selected-trash |
 | imperium:space:sell-melange:v1#slot:placement | Imperium / BoardSpace | composite | fully-sourced | verified | implemented | tested | cap-agent-placement, cap-payment, cap-placement-choice, cap-resource-gain | none | unknown |
 | imperium:space:sietch-tabr:v1#slot:placement | Imperium / BoardSpace | composite | fully-sourced | verified | implemented | tested | cap-agent-placement, cap-combat-placement, cap-recruit, cap-resource-gain | none | unknown |
 | imperium:space:stillsuits:v1#slot:placement | Imperium / BoardSpace | composite | fully-sourced | verified | implemented | tested | cap-agent-placement, cap-combat-placement, cap-influence, cap-resource-gain | none | unknown |
@@ -178,14 +178,14 @@ Fully sourced authored clauses: 42; source-unreadable authored placeholders: 13.
 | cap-recruit | implemented / tested | none | imperium:imperium-card:fremen-camp:v1#slot:optional-recruit, imperium:imperium-card:sardaukar-legion:v1#slot:recruit, imperium:space:arrakeen:v1#slot:placement, imperium:space:carthag:v1#slot:placement, imperium:space:conspire:v1#slot:placement, imperium:space:hall-of-oratory:v1#slot:placement, imperium:space:hardy-warriors:v1#slot:placement, imperium:space:heighliner:v1#slot:placement, imperium:space:rally-troops:v1#slot:placement, imperium:space:sietch-tabr:v1#slot:placement | Original authored board recruitment and combat deployment. | No additional delta for the stated bounded supported subset; full authentic faces and interactions are gated separately. | none |
 | cap-research-genetic | unsupported / not-tested | cap-effect-frames | none | unknown | No research/genetic/Beetle/Specimen acquisition state adapter; source complete individual faces first. | cap-research-genetic-gap |
 | cap-reserve-acquire | implemented / tested | none | imperium:reserve:spice-must-flow:v1#slot:victory-point, imperium:space:foldspace:v1#slot:placement | Available authored Reserve definitions only; Foldspace face remains gated. | No additional delta for the stated bounded supported subset; full authentic faces and interactions are gated separately. | none |
-| cap-reserve-return | unsupported / not-tested | cap-selected-trash | none | unknown | Reserve routing and finite-stock reservations must observe a returned card; distinguish executing source from selected target. | cap-reserve-return-gap |
+| cap-reserve-return | implemented / tested | cap-selected-trash | none | Actual setup Reserve definitions return to their exact shared stack, including an empty stack; finite-stock preflight credits only a selected return. | No additional delta for the actual three Reserve definitions; unsupported Foldspace face remains gated. | none |
 | cap-resource-gain | implemented / tested | none | imperium:imperium-card:fremen-camp:v1#slot:persuasion-and-sword, imperium:imperium-card:sardaukar-legion:v1#slot:persuasion-and-swords, imperium:intrigue:ambush:v1#slot:swords, imperium:intrigue:corner-the-market:v1#slot:more-spice-must-flow, imperium:intrigue:corner-the-market:v1#slot:two-spice-must-flow, imperium:intrigue:master-tactician:v1#slot:swords-or-retreat, imperium:reserve:arrakis-liaison:v1#slot:persuasion, imperium:reserve:spice-must-flow:v1#slot:spice, imperium:reserve:spice-must-flow:v1#slot:victory-point, imperium:space:arrakeen:v1#slot:controller-payout, imperium:space:carthag:v1#slot:controller-payout, imperium:space:conspire:v1#slot:placement, imperium:space:great-flat:v1#slot:placement, imperium:space:hagga-basin:v1#slot:placement, imperium:space:hall-of-oratory:v1#slot:reveal-bonus, imperium:space:heighliner:v1#slot:placement, imperium:space:high-council:v1#slot:reveal-bonus, imperium:space:imperial-basin:v1#slot:controller-payout, imperium:space:imperial-basin:v1#slot:placement, imperium:space:secure-contract:v1#slot:placement, imperium:space:sell-melange:v1#slot:placement, imperium:space:sietch-tabr:v1#slot:placement, imperium:space:stillsuits:v1#slot:placement, imperium:space:wealth:v1#slot:placement, imperium:starter:signet-ring:v1#slot:persuasion | Direct GainEffect from authored cards and spaces. | No additional delta for the stated bounded supported subset; full authentic faces and interactions are gated separately. | none |
 | cap-retreat-choice | implemented / tested | none | imperium:intrigue:master-tactician:v1#slot:swords-or-retreat | Master Tactician own Conflict troops. | No additional delta for the stated bounded supported subset; full authentic faces and interactions are gated separately. | none |
 | cap-reveal-draw-timing | unsupported / not-tested | cap-card-draw | none | unknown | Existing gain/draw frames do not prove correct during-Reveal versus after-Reveal handling for unknown faces. | cap-reveal-draw-timing-gap |
 | cap-reveal-generation-total | unsupported / not-tested | cap-card-reveal | none | unknown | No generation-total query/turn entitlement; repeated Combat icons must not multiply old-garrison allowance. | cap-reveal-generation-total-gap |
 | cap-reveal-space | implemented / tested | none | imperium:space:hall-of-oratory:v1#slot:reveal-bonus | Hall of Oratory while own Agent occupies the space. | No additional delta for the stated bounded supported subset; full authentic faces and interactions are gated separately. | none |
 | cap-sandworm-reward | unsupported / not-tested | cap-typed-combat-units | none | unknown | No sandworm unit/reward adapter; optional Wall destruction, permanent removal and doubling exclusions must remain explicit. | cap-sandworm-reward-gap |
-| cap-selected-trash | unsupported / not-tested | none | imperium:space:selective-breeding:v1#slot:placement | Only self-trash primitive exists. | No selected-card trash action/effect for Selective Breeding. | cap-selected-trash-open |
+| cap-selected-trash | implemented / tested | none | imperium:space:selective-breeding:v1#slot:placement | Own Hand, Discard and InPlay with visible zone/definition/copy selectors; bounded direct selected-trash effects only. | No additional delta for this bounded subset; other card-family semantics and copied-card triggers remain separate gates. | none |
 | cap-semantic-card-movement | unsupported / not-tested | cap-selected-trash | none | unknown | Unload/paid self-trash/copied self require causal children and source-correct occurrence handling. | cap-semantic-card-movement-gap |
 | cap-spy-payment | unsupported / not-tested | cap-placement-provenance | none | unknown | No Spy/observation post state or payment hook; same Spy cannot fund both uses. | cap-spy-payment-gap |
 | cap-swordmaster | implemented / tested | none | imperium:space:swordmaster:v1#slot:placement | Original Swordmaster space. | No additional delta for the stated bounded supported subset; full authentic faces and interactions are gated separately. | none |

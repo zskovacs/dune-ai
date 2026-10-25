@@ -70,13 +70,15 @@ I pp.9–11 for general cost/deployment/control/Reveal rules.
 | Hagga Basin | Spice Trade; water1; Combat | Spice2 + accumulated bonus; deployment |
 | The Great Flat | Spice Trade; water2; Combat | Spice3 + accumulated bonus; deployment |
 | Sell Melange | Spice Trade; choose2/3/4/5 spice first | Gain6/8/10/12 Solari respectively; one exchange |
+| Selective Breeding | Bene Gesserit; Spice2 | Influence1; optional selected own trash -> draw2 |
 
 Carthag, Conspire, Heighliner, Mentat and Swordmaster are now enabled sourced
 definitions (see the rule ledger). Carthag recruits1/draws Intrigue1; Conspire
 costs4 spice for Emperor influence1/Solari5/recruit2/Intrigue1; Heighliner costs6
 spice for Guild influence1/recruit5/water2 and deployment; Mentat costs2 Solari
 for draw1 and the available token; Swordmaster costs8 Solari once per game.
-Foldspace, Secrets and Selective Breeding remain unsupported board spaces.
+Foldspace and Secrets remain unsupported board spaces. Selective Breeding's
+bounded original placement is described in the SLICE-005 delta below.
 No board subset is advertised as the complete 22-space official legal action set.
 
 ## CLI and eligible configurations
@@ -96,15 +98,15 @@ game. Neither command authorizes training on incomplete Dune mechanics.
 See [rule ledger](rules-sources.md), [turn architecture](architecture/turn-engine.md)
 and [roadmap](roadmap.md) for evidence and remaining work.
 
-Current support/preview semantics are v13, partial lifecycle authoring v9, setup
-v5 and turn/replay v7; earlier headers reject before replay. The ordinary
+At SLICE-004, support/preview semantics were v13, partial lifecycle authoring v9, setup
+v5 and turn/replay v7. Current values are in the SLICE-005 delta below. The ordinary
 `Create()` preview keeps lifecycle disabled.
 
 ## Definition counts and inventory limits
 
 `LifecycleIntegrationTests.OfficialRegistryDefinitionCountsRemainDistinctFromCompleteInventorySupport`
 locks current registry counts: 12 `CardRule` definitions (7 starter identities,
-3 reserves, 2 Imperium examples), 19 board definitions, 0 production leaders;
+3 reserves, 2 Imperium examples), 20 board definitions, 0 production leaders;
 4 `IntrigueRule` definitions (3 executable complete faces, 1 explicitly unsupported
 Plot face), 0 official `ConflictRule` definitions and 4 faction definitions.
 Counts are authored definitions, not boxed physical inventory or complete-game
@@ -118,5 +120,27 @@ Supported lifecycle mechanics include Combat tie tiers, winner PostWin reward
 interleaving, lower-recipient child effects, control/defense, Makers, typed Agent
 Recall, round rotation/draws, terminal triggers and immutable final standings.
 Source gates remain for holder loss below four, tied positive shared Intrigue
-draw order, contested Mentat, Plot, reserve self-trash routing and unsupported
+draw order, contested Mentat, Plot and unsupported
 composite/future content. [SLICE-004 handoff](handoffs/SLICE-004-result.md).
+
+## SLICE-005 bounded original Imperium delta
+
+Selective Breeding is now the twentieth authored original `BoardRule`. Its Bene
+Gesserit Agent placement pays 2 Spice before benefits, grants 1 Bene Gesserit
+Influence, and offers a once-only optional exchange: select and trash one own
+Hand, Discard or InPlay card, then draw two. Declining keeps the Influence and
+draws nothing. The card just played can be the InPlay target. Visible
+zone/definition/copy selectors distinguish duplicate faces; trusted execution
+binds the chosen physical instance separately from the executing source. Actual
+Reserve cards return to their exact shared stacks, even if empty; ordinary
+cards enter shared trash. Returned stock can support only proven later work.
+
+The canonical audit now records 35 implemented and 17 unsupported of 59 known
+abilities, with three partial and four not implemented. The new ability,
+`cap-selected-trash`, `cap-reserve-return`, and
+`int-original-selected-trash-reserve` are tested; this does not certify other
+card families. Foldspace and Secrets spaces remain unauthored, as does the
+Foldspace card face. Current turn snapshot/replay versions are v9,
+support/preview v15, and lifecycle authoring v11; setup v5 and result/identity
+v1 remain. The preceding v13/v9/v7 statements above describe the historical
+SLICE-004 state. All six authentic configurations remain unready.

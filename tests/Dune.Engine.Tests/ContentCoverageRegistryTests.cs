@@ -121,7 +121,7 @@ public class ContentCoverageRegistryTests
                      x.GetProperty("key").GetString() == id);
         }
 
-        Assert.Equal(19, rules.Count(x => x.Kind == "BoardRule"));
+        Assert.Equal(20, rules.Count(x => x.Kind == "BoardRule"));
         Assert.Equal(22, items.Values.Count(x => x.GetProperty("category").GetString() == "BoardSpace"));
         foreach (var item in items.Values)
         {
@@ -209,7 +209,7 @@ public class ContentCoverageRegistryTests
             if (space.Effects.Any(x => x is HighCouncilEffect))
                 AssertBox(item, "PersistentModifier", true, false);
         }
-        foreach (var key in new[] { "foldspace", "secrets", "selective-breeding" })
+        foreach (var key in new[] { "foldspace", "secrets" })
         {
             var id = $"imperium:space:{key}:v1";
             Assert.DoesNotContain(turns.Spaces, x => x.Id.Value == id);

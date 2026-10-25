@@ -141,8 +141,8 @@ decision/payer/recipient roles and Combat windows in
 and Graft remain proposals.
 
 
-The following stage subsections record deliberate version evolution; current
-contracts are setup v5, turn/replay v7, support/preview v13 and authoring v9.
+The following stage subsections record deliberate version evolution. Current
+contracts are recorded in the SLICE-005 section below.
 
 ### SLICE-004 faction prerequisites
 
@@ -273,7 +273,7 @@ placement even when no token is available. Swordmaster is an eight-Solari,
 once-game permanent acquisition. Contested rewards and existing unsupported
 content gates remain explicit.
 
-Current schemas are setup **v5**, turn snapshot/replay **v7**, preview/support
+At SLICE-004, schemas were setup **v5**, turn snapshot/replay **v7**, preview/support
 **v13**, lifecycle authoring **v9**. The shared synthetic fixture replays multiple
 rounds and the entire selected ten-card Conflict deck with conservation and
 seeded reshuffles; the official catalog remains incomplete and no authentic
@@ -350,3 +350,40 @@ observations of the selected run, not promises about arbitrary seeds.
 See [SLICE-004 measurements](../benchmarks/slice-004.md) and the
 [complete handoff](../handoffs/SLICE-004-result.md). No public snapshot-import or
 search-clone API and no unexpected-exception rollback guarantee is introduced.
+
+### SLICE-005 selected trash and current version
+
+`SelectedTrashEffect(ImmutableArray<Effect> OnTrashed, bool Optional = true)`
+uses the existing frame and `TurnEngine.Execute` path. `LegalActions` offers
+`SelectTrashCardAction(PlayerId, DecisionId, Source, Card)` for owner-visible
+Hand, Discard and InPlay cards and `DeclineTrashAction(PlayerId, DecisionId)`
+only for optional effects. `ValidateSelectedTrash` checks the decision, zone,
+selector, physical target and complete generated/suspended work before
+`CommitSelectedTrash` moves the card. The private `SelectedTrashDecision` freezes
+physical target bindings while policy actions carry no physical instance ID.
+`SelectedCardTarget` remains separate from the executing `SourceCard`,
+`SourceDefinition` and nullable trusted `SourceOwnerId`. `RootContext` binds a
+physical source owner; `Acquire` rebinds it to the acquiring player. Role changes
+preserve it across `ForPlayer` and nested continuations. Public observations
+show only the chooser's permitted targets; other seats cannot inspect pending
+selection, physical IDs, frames or RNG.
+
+`TrashDestination` and `MoveTrashedCard` route each actual Reserve definition to
+its matching shared stack and ordinary cards to shared trash. Return-aware
+`ValidateAcquisitionStock` credits only a selected, validated return to later
+work. A return cannot fund earlier acquisition or an unsafe reacquire-then-
+self-trash path; those remain conservative support gates. Selective Breeding
+uses mandatory 2-Spice placement and Influence, with an optional one-card
+trash-for-two-draw exchange. The existing card, board and Influence ordering
+continues to apply; trash precedes draw/refill when the exchange is taken.
+
+Current contracts are setup v5, turn snapshot/replay v9, support/preview v15,
+authoring v11 and result/replay-identity v1. Snapshot/replay v8, support/preview
+v14 and authoring v10 were intermediate development formats and reject; their
+v7/v13/v9 predecessors also reject. No migration is supplied. Configuration
+identity v1, ruleset fingerprint v2 and embedded catalog identity remain
+unchanged. New authored board execution changes `RulesIdentity` and, together
+with new headers/actions, resulting snapshot and replay hashes; the hash
+algorithm/version is unchanged. Three- and four-seat synthetic complete games
+replay every accepted prefix, including paused selections. No authentic setup
+is newly playable.

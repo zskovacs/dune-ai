@@ -124,3 +124,20 @@ actions, checkpoints and evaluation partitions. Add rollout/evaluation manifests
 before choosing external tracking infrastructure. Later introduce uv-locked PyTorch
 and an established multi-agent learning implementation, with held-out baselines
 and uncertainty estimates. PPO, MCTS and neural training remain outside current scope.
+
+## SLICE-005 — bounded selected trash and Selective Breeding
+
+The original Selective Breeding placement, owner-selected Hand/Discard/InPlay
+trash and semantic Reserve return are implemented and tested. The canonical
+audit promotes only `batch-01-selected-trash`'s four members: one board ability,
+two capabilities and their original 3/4-seat interaction. Authored BoardRules
+increase 19 -> 20 and implemented known abilities 34 -> 35 of 59. This is a
+bounded sourced engine slice; all six authentic configurations remain unready.
+Three- and four-seat development-only synthetic lifecycle fixtures exercise
+privacy and every-prefix deterministic replay. Current turn snapshot/replay
+are v9, support/preview v15 and authoring v11; no new setup/catalog identity.
+
+Next recommended candidate is `batch-02-intrigue-recycle`, which has no batch
+prerequisite and precedes Secrets. It requires sourced shared Intrigue exhaustion
+recycling and rejected-action RNG protection; it is not part of SLICE-005. The
+original starter, leader, Conflict, Foldspace and other content gates remain.

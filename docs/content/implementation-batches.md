@@ -13,7 +13,7 @@ remain outside Git unless rights are independently established.
 <!-- BEGIN GENERATED CONTENT COVERAGE -->
 Prioritized batches: 41. Order and membership are authored in the inventory; source discovery does not promise executable ability gains.
 
-### 1. SLICE-005 candidate: selected trash, Reserve return and Selective Breeding (`batch-01-selected-trash`)
+### 1. SLICE-005 implemented subset: selected trash, Reserve return and Selective Breeding (`batch-01-selected-trash`)
 
 | Field | Canonical value |
 | --- | --- |
@@ -22,11 +22,11 @@ Prioritized batches: 41. Order and membership are authored in the inventory; sou
 | Prerequisites | none |
 | Source gates | src-A, src-I, src-publisher-faq-2025 |
 | Source references | src-A p.2 Selective Breeding complete space, src-I p.16 Trash targets and Reserve return, src-publisher-faq-2025 p.3 Optional black-X versus mandatory text |
-| Mechanics | Compare existing owner-visible action/frame selectors first; introduce only demonstrated missing target fields., Executing source versus selected hand/discard target; route Reserve definition to stack; reuse costs, influence and causal draw frames. |
-| Expected delta | 1 known unsupported board ability and 2 shared gaps become implemented; authored board keys 19 ->20. No whole game or unreadable card face promoted. |
+| Mechanics | Actual Reserve definitions return to their own stack; bounded stock preflight credits only a proven selected return., Optional Selective Breeding exchange pays trash only when taken; 2 Spice placement and Influence are mandatory., Visible zone/definition/copy selected targets bind a private physical instance distinct from the executing source. |
+| Expected delta | Measured after reports: one board ability and two shared capabilities plus one interaction implemented/tested; BoardRule 19 -> 20. No whole game or unreadable face promoted. |
 | Risks | Private duplicate selectors and mandatory stock; no fixed physical allocation IDs in policy actions. |
 | Required tests / validation | Behavior and LegalActions/Step tests for the exact sourced subset, including invalid-action immutability., Preserve generated-child preflight in EffectSafetyTests, FactionRewardTests and ConflictRewardTests; no runtime source lookup., Privacy and paused/resumed replay across every new selector, payment, child and scheduling boundary. |
-| Acceptance | Exact A2 cost/influence/trash-to-draw, I16 routing and optional/cost semantics verified; legal/Step, stock, privacy and replay tests pass. |
+| Acceptance | Sourced A2/I9/I16/FAQ3 behavior, legal/Step, stock, privacy and 3/4-seat replay verified by the linked member tests. |
 
 ### 2. Shared Intrigue exhaustion recycling (`batch-02-intrigue-recycle`)
 

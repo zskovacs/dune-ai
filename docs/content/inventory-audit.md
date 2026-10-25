@@ -10,7 +10,7 @@ and physical piece counts are distinct from resource values.
 
 
 <!-- BEGIN GENERATED CONTENT COVERAGE -->
-Audit revision: `slice-004.5-d1-review-fix2-2026-10-25`; schema: `dune-content-coverage-v1`.
+Audit revision: `slice-005-batch-01-2026-10-25`; schema: `dune-content-coverage-v1`.
 
 Sources: 12; expectations: 93; content identity/component-group records: 90; identity/quantity complete expectations: 21; explicit gaps: 72; unknown ability slots: 121.
 

@@ -943,7 +943,7 @@ def test_canonical_tested_abilities_do_not_underreport_implementation(raw):
         for ability in content["abilities"]
         if ability["validation"] == "tested"
     ]
-    assert len(tested) == 34
+    assert len(tested) == 35
     assert all(ability["implementation"] == "implemented" for ability in tested)
     master = next(a for a in tested if "master-tactician" in a["id"])
     assert master["implementation"] == "implemented"
@@ -1431,7 +1431,7 @@ def test_known_blockers_have_one_primary_batch_and_topological_order(raw):
         for a in c["abilities"]
         if a["implementation"] != "implemented"
     ]
-    assert len(known) == 25
+    assert len(known) == 24
     for a in known:
         assert [b["id"] for b in batches.values() if a["id"] in b["memberIds"]] == [
             a["batchId"]
@@ -1473,9 +1473,9 @@ def test_batch_graph_and_primary_membership_reject_invalid_edits(
             a
             for c in raw["content"]
             for a in c["abilities"]
-            if a["batchId"] == first["id"]
+            if a["batchId"] == second["id"]
         )
-        first["memberIds"].remove(ability["id"])
+        second["memberIds"].remove(ability["id"])
         ability["batchId"] = None
         expected = "batch-membership"
     assert expected in codes(raw, tmp_path)

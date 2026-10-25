@@ -164,3 +164,17 @@ causal execution/window payloads remain privileged. Turn schemas and result cont
 private hands/decks, physical card IDs, RNG, role payloads, seeds, history and
 replay identity never become policy inputs. Shared immutable definitions do not
 authorize sharing mutable episode state.
+
+## SLICE-005 physical identity and Reserve routing
+
+Selected trash binds one existing `CardInstanceId` privately from an owner-visible
+Hand, Discard or InPlay zone; the policy action uses zone, definition and copy
+index. `CardZone.MoveTo` moves that exact instance. A Reserve definition returns
+to its authoritative `reserve:<definition>` shared stack, including an empty
+stack; other eligible definitions move to shared trash. There is no second stock
+counter or new runtime zone. `EffectContext.SourceOwnerId` is trusted turn
+execution state, separate from selected target owner and current recipient. It
+is absent from `ObservationProjection`. Setup snapshot stays v5; turn snapshot
+v9 includes the new suspended binding. Conservation, owner-private observation,
+and seeded refill remain runtime invariants. Six authentic configuration gates
+remain closed by incomplete content.

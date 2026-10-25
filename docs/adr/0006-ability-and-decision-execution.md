@@ -96,3 +96,26 @@ remain explicit. No expansion capability, general trigger framework, unexpected
 exception rollback, authentic complete-game or RL-ready claim follows.
 All task reviews and the final whole-branch review are complete. The final F1
 correction passed scoped re-review; no Critical or Important finding remains.
+
+## SLICE-005 extension of the accepted decision
+
+The existing `TurnEngine` now carries bounded `SelectedTrashEffect` and a
+private `SelectedTrashDecision` through its causal frames. Visible
+zone/definition/copy actions select a frozen physical target. The target's
+provenance is separate from executing `SourceCard`/`SourceDefinition` and
+nullable trusted `SourceOwnerId`; source ownership is bound at `RootContext`
+or `Acquire` and survives chooser/payer/recipient changes. Shared trash
+routing returns actual Reserves to their own stack and credits only a proven
+selected return to later stock preflight. The Selective Breeding consumer is
+one authored original BoardRule, with mandatory placement/Influence and an
+optional one-use trash-for-draw exchange. The existing resolver, frames,
+observation boundary and strict JSON allowlist are retained; no new framework
+or dependency is introduced.
+
+Trusted turn snapshot/replay advance v7 -> v9, support/preview v13 -> v15 and
+authoring v9 -> v11. Intermediate v8/v14/v10 and previous headers are rejected;
+setup v5, configuration identity v1, ruleset fingerprint v2, embedded catalog,
+result v1 and replay-identity algorithm v1 stay unchanged. The new board
+execution changes RulesIdentity and resulting replay hashes. No benchmark was
+run for this slice, so the extra target/stock preflight has no measured speed
+claim. Conservative source-reacquisition and unsupported content gates remain.

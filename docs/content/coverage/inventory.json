@@ -1,7 +1,7 @@
 {
   "schemaVersion": "dune-content-coverage-v1",
-  "auditRevision": "slice-004.5-d1-review-fix2-2026-10-25",
-  "repositoryRevision": "c256caadd8c077c8514fef611aa63f1488354fa0",
+  "auditRevision": "slice-005-batch-01-2026-10-25",
+  "repositoryRevision": "0baed8b486044c7b806fa928d7de26574e06454a",
   "sources": [
     {
       "id": "src-I",
@@ -10595,15 +10595,15 @@
           "timing": "on-placement",
           "classification": "composite",
           "classificationReason": null,
-          "semanticClaim": "Pay two Spice, gain Bene Gesserit influence, trash one eligible own card to draw two cards.",
+          "semanticClaim": "Pay two Spice to place and gain one Bene Gesserit Influence; optionally trash one eligible own card to draw two.",
           "descriptors": [
             {
               "kind": "cost",
-              "value": "two Spice to place; selected trash is a mandatory cost for draw"
+              "value": "two Spice to place; trash one card only when taking the optional draw-two exchange"
             },
             {
               "kind": "choice",
-              "value": "own card from hand, discard or in play"
+              "value": "own card from hand, discard or in play, including the played source"
             },
             {
               "kind": "role",
@@ -10617,6 +10617,27 @@
               "locator": "Board Space Guide entry: Selective Breeding",
               "kind": "semantics",
               "verification": "verified"
+            },
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "Agent placement cost before benefits and player-chosen effect order",
+              "kind": "semantics",
+              "verification": "verified"
+            },
+            {
+              "sourceId": "src-I",
+              "page": 16,
+              "locator": "In Play, Draw, Trash and Paying a cost",
+              "kind": "semantics",
+              "verification": "verified"
+            },
+            {
+              "sourceId": "src-publisher-faq-2025",
+              "page": 3,
+              "locator": "Optional arrow exchange versus mandatory ordinary board effect",
+              "kind": "ruling",
+              "verification": "verified"
             }
           ],
           "capabilityIds": [
@@ -10629,22 +10650,49 @@
           "interactionIds": [
             "int-original-selected-trash-reserve"
           ],
-          "implementationRefs": [],
-          "testRefs": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces",
+            "src/Dune.Engine/Turns/TurnEngine.cs::Place",
+            "src/Dune.Engine/Turns/TurnEngine.Trashing.cs::CommitSelectedTrash"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/SelectiveBreedingTests.cs",
+              "name": "PlacementRequiresMatchingIconAvailableAgentVacancyAndTwoSpice",
+              "kind": "behavior",
+              "historical": false
+            },
+            {
+              "path": "tests/Dune.Engine.Tests/SelectiveBreedingTests.cs",
+              "name": "DecliningExchangeStillPaysPlacementAndGrantsInfluence",
+              "kind": "behavior",
+              "historical": false
+            },
+            {
+              "path": "tests/Dune.Engine.Tests/SelectiveBreedingTests.cs",
+              "name": "TakingExchangeTrashesExactlyOneThenDrawsTwo",
+              "kind": "behavior",
+              "historical": false
+            },
+            {
+              "path": "tests/Dune.Engine.Tests/SelectiveBreedingTests.cs",
+              "name": "TrashFromDiscardPrecedesSeededEmptyDeckReshuffle",
+              "kind": "behavior",
+              "historical": false
+            },
+            {
+              "path": "tests/Dune.Engine.Tests/SelectiveBreedingTests.cs",
+              "name": "ThresholdChildrenAndSelectedDrawFinishBeforeSuspendedParent",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
           "discovery": "discovered",
           "sourcing": "fully-sourced",
           "verification": "verified",
-          "implementation": "unsupported",
-          "validation": "not-tested",
-          "blockers": [
-            {
-              "id": "placement-unsupported",
-              "open": true,
-              "blocking": true,
-              "scope": "imperium:space:selective-breeding:v1#slot:placement",
-              "reason": "No original Selective Breeding BoardRule or selected-card trash operation is authored."
-            }
-          ],
+          "implementation": "implemented",
+          "validation": "tested",
+          "blockers": [],
           "exclusionReason": null,
           "batchId": "batch-01-selected-trash"
         }
@@ -10665,7 +10713,16 @@
         ],
         "minimumSeats": 3,
         "maximumSeats": 4
-      }
+      },
+      "implementationReferences": [
+        {
+          "registryKind": "BoardRule",
+          "key": "imperium:space:selective-breeding:v1",
+          "path": "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs",
+          "member": "OriginalImperiumTurnRules.Create",
+          "authored": true
+        }
+      ]
     },
     {
       "id": "imperium:space:sell-melange:v1",
@@ -13436,24 +13493,45 @@
     {
       "id": "cap-reserve-return",
       "contract": "Semantic selected trash returns Reserve definitions to their shared stack, other eligible cards to trash.",
-      "supportedSubset": null,
-      "memberRefs": [],
-      "testRefs": [],
-      "missingDelta": "Reserve routing and finite-stock reservations must observe a returned card; distinguish executing source from selected target.",
+      "supportedSubset": "Actual setup Reserve definitions return to their exact shared stack, including an empty stack; finite-stock preflight credits only a selected return.",
+      "memberRefs": [
+        "src/Dune.Engine/Turns/TurnEngine.Trashing.cs::TrashDestination",
+        "src/Dune.Engine/Turns/TurnEngine.Trashing.cs::MoveTrashedCard",
+        "src/Dune.Engine/Turns/TurnEngine.cs::ValidateAcquisitionStock"
+      ],
+      "testRefs": [
+        {
+          "path": "tests/Dune.Engine.Tests/ReserveReturnTests.cs",
+          "name": "EachReserveReturnsTheSameInstanceToItsOwnPossiblyEmptyStack",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/ReserveReturnTests.cs",
+          "name": "SelectedReturnFundsOnlyPostTrashMandatoryChildren",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/ReserveReturnTests.cs",
+          "name": "GeneratedMandatoryFailureRejectsTheWholeSelectedReturn",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/ReserveReturnTests.cs",
+          "name": "SpiceMustFlowKeepsPreviouslyEarnedVictoryPoint",
+          "kind": "behavior",
+          "historical": false
+        }
+      ],
+      "missingDelta": "No additional delta for the actual three Reserve definitions; unsupported Foldspace face remains gated.",
       "prerequisiteIds": [
         "cap-selected-trash"
       ],
-      "implementation": "unsupported",
-      "validation": "not-tested",
-      "blockers": [
-        {
-          "id": "cap-reserve-return-gap",
-          "open": true,
-          "blocking": true,
-          "scope": "cap-reserve-return",
-          "reason": "Reserve routing and finite-stock reservations must observe a returned card; distinguish executing source from selected target."
-        }
-      ]
+      "implementation": "implemented",
+      "validation": "tested",
+      "blockers": []
     },
     {
       "id": "cap-resource-gain",
@@ -13588,24 +13666,44 @@
     {
       "id": "cap-selected-trash",
       "contract": "Select an own card from hand, discard or in play and trash it as an effect cost.",
-      "supportedSubset": "Only self-trash primitive exists.",
+      "supportedSubset": "Own Hand, Discard and InPlay with visible zone/definition/copy selectors; bounded direct selected-trash effects only.",
       "memberRefs": [
-        "src/Dune.Engine/Turns/TurnEngine.cs::Execute"
+        "src/Dune.Engine/Turns/TurnRules.cs::SelectedTrashEffect",
+        "src/Dune.Engine/Turns/GameAction.cs::SelectTrashCardAction",
+        "src/Dune.Engine/Turns/TurnEngine.Trashing.cs::ValidateSelectedTrash",
+        "src/Dune.Engine/Turns/TurnEngine.Trashing.cs::CommitSelectedTrash"
       ],
-      "testRefs": [],
-      "missingDelta": "No selected-card trash action/effect for Selective Breeding.",
-      "prerequisiteIds": [],
-      "implementation": "unsupported",
-      "validation": "not-tested",
-      "blockers": [
+      "testRefs": [
         {
-          "id": "cap-selected-trash-open",
-          "open": true,
-          "blocking": true,
-          "scope": "Select an own card from hand, discard or in play and trash it as an effect cost.",
-          "reason": "No selected-card trash action/effect for Selective Breeding."
+          "path": "tests/Dune.Engine.Tests/SelectedTrashTests.cs",
+          "name": "HandDiscardAndInPlayTargetsUseVisibleZoneSelectors",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/SelectedTrashTests.cs",
+          "name": "DuplicateCopyChoiceMovesExactlyItsBoundInstance",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/SelectedTrashTests.cs",
+          "name": "InvalidTargetMatrixLeavesTrustedStateRngFramesAndHistoryUnchanged",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/SelectedTrashReplayPrivacyTests.cs",
+          "name": "PendingTargetsAreVisibleOnlyToTheirOwner",
+          "kind": "behavior",
+          "historical": false
         }
-      ]
+      ],
+      "missingDelta": "No additional delta for this bounded subset; other card-family semantics and copied-card triggers remain separate gates.",
+      "prerequisiteIds": [],
+      "implementation": "implemented",
+      "validation": "tested",
+      "blockers": []
     },
     {
       "id": "cap-semantic-card-movement",
@@ -15056,7 +15154,7 @@
         {
           "sourceId": "src-I",
           "page": 16,
-          "locator": "Trash icon: eligible own hand/discard, Reserve return",
+          "locator": "Trash icon: eligible own Hand, Discard and InPlay; Reserve return",
           "kind": "semantics",
           "verification": "verified"
         },
@@ -15072,19 +15170,40 @@
         "A selected target is not the executing source. This board operation does not certify Foldspace or other unreadable faces."
       ],
       "requiredHook": "Add bounded selected-card operation to existing frame/action contracts; route Reserve target back to stack, preserve cost versus optional effect semantics.",
-      "implementationRefs": [],
-      "testRefs": [],
-      "implementation": "unsupported",
-      "validation": "not-tested",
-      "blockers": [
+      "implementationRefs": [
+        "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces",
+        "src/Dune.Engine/Turns/TurnEngine.Trashing.cs::CommitSelectedTrash",
+        "src/Dune.Engine/Turns/TurnEngine.cs::ValidateAcquisitionStock"
+      ],
+      "testRefs": [
         {
-          "id": "int-original-selected-trash-reserve-gap",
-          "open": true,
-          "blocking": true,
-          "scope": "int-original-selected-trash-reserve",
-          "reason": "Add bounded selected-card operation to existing frame/action contracts; route Reserve target back to stack, preserve cost versus optional effect semantics."
+          "path": "tests/Dune.Engine.Tests/SelectiveBreedingTests.cs",
+          "name": "TakingExchangeTrashesExactlyOneThenDrawsTwo",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/ReserveReturnTests.cs",
+          "name": "SelectedReturnFundsOnlyPostTrashMandatoryChildren",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/SelectedTrashReplayPrivacyTests.cs",
+          "name": "EveryAcceptedPrefixReplaysSelectionReturnDrawAndTurnBoundary",
+          "kind": "behavior",
+          "historical": false
+        },
+        {
+          "path": "tests/Dune.Engine.Tests/SelectedTrashReplayPrivacyTests.cs",
+          "name": "NonemptyOpponentHiddenChangesLeaveObservationMaskAndDiagnosticsUnchanged",
+          "kind": "behavior",
+          "historical": false
         }
       ],
+      "implementation": "implemented",
+      "validation": "tested",
+      "blockers": [],
       "rulingStatus": "resolved",
       "scenarios": [
         "LegalActions and Step agree on eligible actions and complete payment/target validation before mutation.",
@@ -15340,7 +15459,7 @@
   "batches": [
     {
       "id": "batch-01-selected-trash",
-      "title": "SLICE-005 candidate: selected trash, Reserve return and Selective Breeding",
+      "title": "SLICE-005 implemented subset: selected trash, Reserve return and Selective Breeding",
       "priority": "high",
       "order": 1,
       "priorityRationale": "Source-ready mandatory original gap with reusable target/movement primitive. Runs before starter/Leader batches because their complete faces remain unavailable; smaller state/privacy surface than combining Secrets.",
@@ -15380,11 +15499,12 @@
         }
       ],
       "mechanics": [
-        "Compare existing owner-visible action/frame selectors first; introduce only demonstrated missing target fields.",
-        "Executing source versus selected hand/discard target; route Reserve definition to stack; reuse costs, influence and causal draw frames."
+        "Visible zone/definition/copy selected targets bind a private physical instance distinct from the executing source.",
+        "Optional Selective Breeding exchange pays trash only when taken; 2 Spice placement and Influence are mandatory.",
+        "Actual Reserve definitions return to their own stack; bounded stock preflight credits only a proven selected return."
       ],
-      "expectedDelta": "1 known unsupported board ability and 2 shared gaps become implemented; authored board keys 19 ->20. No whole game or unreadable card face promoted.",
-      "acceptance": "Exact A2 cost/influence/trash-to-draw, I16 routing and optional/cost semantics verified; legal/Step, stock, privacy and replay tests pass.",
+      "expectedDelta": "Measured after reports: one board ability and two shared capabilities plus one interaction implemented/tested; BoardRule 19 -> 20. No whole game or unreadable face promoted.",
+      "acceptance": "Sourced A2/I9/I16/FAQ3 behavior, legal/Step, stock, privacy and 3/4-seat replay verified by the linked member tests.",
       "risks": [
         "Private duplicate selectors and mandatory stock; no fixed physical allocation IDs in policy actions."
       ],

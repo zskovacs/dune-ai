@@ -515,3 +515,33 @@ rejection and all older rejection rows retained. Setup v5, turn/replay v7,
 authored lifecycle v9, result v1 and replay identity v1 are unchanged because no
 serialized shape or source-authored definition changes. Arbitrary unexpected
 exceptions still have no general rollback guarantee.
+
+## SLICE-005 source verification and bounded implementation
+
+The local original 2020 [player aid A p.2](rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf#page=2)
+shows Selective Breeding's Bene Gesserit access, 2-Spice placement cost, +1
+Influence and one-card trash arrow to draw two. [Original rules I p.9](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=9)
+place mandatory cost before effects and permit player ordering of card, board
+and Influence work. [I p.16](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=16)
+permits own Hand, Discard and InPlay trash and returns Reserve cards to their
+stack; its Draw rule refills the current empty deck from discard. The publisher
+[FAQ, revised 2025-01-13, p.3](https://d19y2ttatozxjp.cloudfront.net/pdfs/DUNE_IMPERIUM_FAQ_25-1-13.pdf)
+makes the arrow exchange optional and once-only while ordinary board benefits
+remain mandatory. FAQ p.4 confirms that The Spice Must Flow's acquired VP
+survives later trash. Local hashes for I and A matched the approved source ledger; the FAQ URL
+and retrieved SHA-256 are recorded in the approved SLICE-005 spec. No publisher
+content was redistributed.
+
+`SelectiveBreedingTests.PlacementRequiresMatchingIconAvailableAgentVacancyAndTwoSpice`,
+`DecliningExchangeStillPaysPlacementAndGrantsInfluence`,
+`TakingExchangeTrashesExactlyOneThenDrawsTwo` and
+`TrashFromDiscardPrecedesSeededEmptyDeckReshuffle` cover the sourced board rule.
+`SelectedTrashTests.HandDiscardAndInPlayTargetsUseVisibleZoneSelectors` and
+`DuplicateCopyChoiceMovesExactlyItsBoundInstance` cover target identity.
+`ReserveReturnTests.EachReserveReturnsTheSameInstanceToItsOwnPossiblyEmptyStack`,
+`SelectedReturnFundsOnlyPostTrashMandatoryChildren` and
+`SpiceMustFlowKeepsPreviouslyEarnedVictoryPoint` cover routing, stock and VP.
+`SelectedTrashReplayPrivacyTests.EveryAcceptedPrefixReplaysSelectionReturnDrawAndTurnBoundary`
+and `NonemptyOpponentHiddenChangesLeaveObservationMaskAndDiagnosticsUnchanged`
+cover synthetic 3/4-seat replay and privacy. Foldspace's unreadable face and
+other unauthored cards gain no source-backed ability from movement support.
