@@ -1817,6 +1817,86 @@
         }
       ],
       "note": "Selected from the 18 boxed cards; unused cards return to the box."
+    },
+    {
+      "id": "exp-ix-epic-starters-boxed",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 4,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-epic-variant",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "Game Components: player components/starting cards"
+        }
+      ],
+      "note": "Four player-color copies of Control the Spice; one per player in Epic mode. Excluded from Standard."
+    },
+    {
+      "id": "exp-immortality-experimentation-boxed",
+      "product": "Immortality",
+      "edition": "2022",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 8,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-starter-replacement",
+      "evidence": [
+        {
+          "sourceId": "src-M",
+          "page": 3,
+          "locator": "Game Components: player components/starting cards"
+        }
+      ],
+      "note": "Four player-color sets of two Experimentation copies. The separate per-player replacement recipe applies at setup."
+    },
+    {
+      "id": "exp-uprising-starters-four-decks",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 40,
+      "uniqueDefinitions": 7,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "Game Components: player components/starting cards"
+        }
+      ],
+      "note": "Four ordinary player-color ten-card decks. Seven printed identities have per-player multiplicities 2+2+1+2+1+1+1; no face semantics inferred."
+    },
+    {
+      "id": "exp-uprising-starter-per-player",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 10,
+      "uniqueDefinitions": 7,
+      "unit": "card-or-component",
+      "basis": "per-player-copies",
+      "scope": "ordinary-player-recipe",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "Game Components: player components/starting cards"
+        }
+      ],
+      "note": "Convincing Argument (2), Dagger (2), Diplomacy (1), Dune, the Desert Planet (2), Reconnaissance (1), Seek Allies (1), Signet Ring (1). One deck is used per participant."
     }
   ],
   "content": [],
