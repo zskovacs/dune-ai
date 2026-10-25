@@ -15,7 +15,7 @@ synthetic inventory and effects; these do not establish full rules coverage.
 | Deployment | Finite supply/garrison/Conflict, choose zero through turn recruits plus two old troops | No expansion units or combat re-entry |
 | Strength | Two per troop plus swords, zero without troops; refresh after applied supported effects including nested decisions | Frozen outcomes and rewards use supported lifecycle definitions |
 | Combat outcome | Frozen positive-strength placements, official tie reward tiers and winner at Combat closure | Reward/round/result path supported; official Conflict registry empty |
-| Combat priority (support v12) | First Player clockwise; repeated plays/passes; Ambush +4 swords; Master Tactician +3 swords or bounded own retreat to garrison; completed-card eligibility refresh | Winner PostWin window supported; no deployment/re-entry Intrigues, expansion units or authentic complete deck |
+| Combat priority (support v13) | First Player clockwise; repeated plays/passes; Ambush +4 swords; Master Tactician +3 swords or bounded own retreat to garrison; completed-card eligibility refresh | Winner PostWin window supported; no deployment/re-entry Intrigues, expansion units or authentic complete deck |
 | Privacy | Detached owner/public views; no physical-ID ranges, hidden order, RNG or privileged history | No ML encoding or fixed action vocabulary |
 | Replay | Versioned accepted history, initial factory, pending-context hash and final comparison | Pinned runtime/content/support versions only; no event sourcing |
 
@@ -89,7 +89,7 @@ game. Neither command authorizes training on incomplete Dune mechanics.
 See [rule ledger](rules-sources.md), [turn architecture](architecture/turn-engine.md)
 and [roadmap](roadmap.md) for evidence and remaining work.
 
-Current support/preview semantics are v12, partial lifecycle authoring v9, setup
+Current support/preview semantics are v13, partial lifecycle authoring v9, setup
 v5 and turn/replay v7; earlier headers reject before replay. The ordinary
 `Create()` preview keeps lifecycle disabled.
 

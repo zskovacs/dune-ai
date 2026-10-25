@@ -426,8 +426,9 @@ catalog-dependent unsupported gap rather than an expanded mechanic in this task.
 | Completed state and trusted result | Engineering contract following the sourced Endgame closure | `FullTenConflictEpisodeCompletesWithDetachedResultAndEveryAcceptedActionBound` completes the unpruned selected ten-Conflict synthetic recipe, verifies every action (including StartRound) is rejected after completion without state/RNG/history changes, complete replay, JSON strictness, immutable result and inclusion of the final accepted pass. Separate normal Recall-trigger cases verify VP-only and combined reason flags. No authentic inventory claim. |
 | Hidden ownership isolation | [I p.7, Intrigue privacy](rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf#page=7); existing engine observation boundary | `HiddenRivalCopiesCannotChangeCornerLegalityDiagnosticsOrMetadataEvenOnFailure` compares identical visible states with different hidden rival copies before play, while pending, on conservative overflow rejection and after completion. Only the resolved public VP consequence differs. Private cards, trusted seeds and replay identity never enter policy observations. |
 
-Turn snapshot/replay **v7**, preview/support **v12**, lifecycle authoring **v9**
-deliberately version Endgame completion and result semantics; setup snapshot stays
+At the Endgame stage, turn snapshot/replay **v7**, preview/support **v12** and
+lifecycle authoring **v9** versioned completion and result semantics; F1 later
+advances only support/preview to **v13** as recorded below. Setup snapshot stays
 **v5** because its shape is unchanged. `DuneGameResult` starts at
 `dune-game-result-v1`. Replay identity uses a separate canonical
 `dune-turn-replay-identity-v1` header/action payload, excluding final-state/result
@@ -477,3 +478,34 @@ names as proof of a path for arbitrary seeds. Makers/Recall are automatic
 consequences. Benchmarks, exact checks and pending review gates are in the
 [SLICE-004 report](benchmarks/slice-004.md) and [handoff](handoffs/SLICE-004-result.md).
 No SLICE-003.5 re-audit or SLICE-004.5 audit/schema implementation was performed.
+
+### SLICE-004 final-review F1 safety correction
+
+This is an execution validation correction, not new official faction authoring.
+The four sourced threshold bonuses above are unchanged. Accepted explicitly
+synthetic threshold graphs are inside the state-safety contract: the existing
+faction projection now also supplies special-operation availability, combined
+Agent capacity and scarce-award reservations, including generated children in
+mandatory Choice detection, suspended parents and later Conflict recipients.
+Optional decline remains valid; unavailable selected payments reject before
+payment, Influence/VP/card changes, frames, history or either RNG changes.
+`GeneratedMandatoryMentatRejectsBeforePlacementIncludingForeignRecipient`,
+`GeneratedAndEnclosingMandatoryMentatsCompeteBeforeAnyGrant`,
+`GeneratedSwordmasterAndMentatShareCombinedAgentBounds`,
+`MandatoryChoiceDetectsGeneratedScarceChildrenIncludingOptionalDescendants`,
+`OptionalMentatCannotConsumeGeneratedAwardReservedInSuspendedParent` and
+`GeneratedPostWinSelectionReservesLaterRecipientsMandatoryMentat` cover this seam,
+with executable available/decline controls. The existing source gates, including
+contested Mentat, tied shared draws and Alliance holder loss, remain.
+
+For the original board's three markers/three controllable locations, zero spare
+markers plus an unowned target is incoherent: an owner with no spare markers
+already owns all three. `GeneratedControlUsesCoherentMarkerSupplyAndIdempotentReservations`
+uses coherent one/zero-marker states and duplicate-target reservations;
+`GeneratedControlCompetesWithAnotherMandatoryRecipientBeforePlacement` rejects
+competing owners. These tests do not claim an authentic marker-shortage scenario.
+Support/preview semantics advance from v12 to v13 with explicit support-v12 replay
+rejection and all older rejection rows retained. Setup v5, turn/replay v7,
+authored lifecycle v9, result v1 and replay identity v1 are unchanged because no
+serialized shape or source-authored definition changes. Arbitrary unexpected
+exceptions still have no general rollback guarantee.

@@ -84,7 +84,7 @@ framework is selected. The implementation uses `EffectExecutionFrame`, `Executio
 `LifecycleReplayTests`, `EffectContinuationTests`, Combat/Conflict reward/faction/round/Endgame
 tests and `LifecycleIntegrationTests` verify causal suspension, deterministic
 replay, rejection, hidden-information boundaries and independent episodes.
-The current boundary is setup v5, turn/replay v7, support/preview v12, authoring v9.
+The current boundary is setup v5, turn/replay v7, support/preview v13, authoring v9.
 `DuneGameResult` and replay identity are independently v1; final action identity
 excludes final-state hash to avoid circular hashing.
 

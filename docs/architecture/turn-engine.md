@@ -142,7 +142,7 @@ and Graft remain proposals.
 
 
 The following stage subsections record deliberate version evolution; current
-contracts are setup v5, turn/replay v7, support/preview v12 and authoring v9.
+contracts are setup v5, turn/replay v7, support/preview v13 and authoring v9.
 
 ### SLICE-004 faction prerequisites
 
@@ -154,8 +154,21 @@ and returns before the parent continues. The primitive drain re-reads the top fr
 after pushing that child.
 
 A private, preflight-only faction projection exposes threshold work to the existing
-bounded resource, acquisition-stock, permanent-upgrade and funding checks. Its
+bounded resource, acquisition-stock, permanent-upgrade, funding and special-operation checks. Its
 acquisition reservation marker never enters execution or canonical serialization.
+Generated mandatory Mentat/control awards and combined Mentat/Swordmaster Agent
+capacity participate in the same availability and reservation checks as authored
+enclosing work, including suspended parents and later Conflict recipients. The
+scarce-operation Choice gate sees projected threshold descendants too; optional
+payments retain decline and are checked before selected payment or child activation.
+Accepted synthetic threshold graphs have the same precommit contract as sourced
+definitions. This F1 correction advances support/preview to v13, explicitly rejects
+support v12 replay headers, and changes no serialized shape or authored faction
+bonus: setup v5, turn/replay v7, lifecycle authoring v9 and result/identity v1 remain.
+With the original three markers and three controllable locations, a coherent owner
+with zero spare markers already controls every location, making those grants
+idempotent. Tests use that bound, valid one-marker control and competing recipients;
+no impossible zero-marker/unowned-target fixture is presented as authentic proof.
 Suspended Sequence order is preserved across decisions; unordered competing signed, cross-player
 or differently bound payer influence and subsequent influence dependent on conditional ownership
 remain explicit unsupported gates. Intrigue draws reserve the shared deck jointly;
@@ -261,7 +274,7 @@ once-game permanent acquisition. Contested rewards and existing unsupported
 content gates remain explicit.
 
 Current schemas are setup **v5**, turn snapshot/replay **v7**, preview/support
-**v12**, lifecycle authoring **v9**. The shared synthetic fixture replays multiple
+**v13**, lifecycle authoring **v9**. The shared synthetic fixture replays multiple
 rounds and the entire selected ten-card Conflict deck with conservation and
 seeded reshuffles; the official catalog remains incomplete and no authentic
 configuration is declared playable.

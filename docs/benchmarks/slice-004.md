@@ -7,10 +7,11 @@ Dry runs are execution checks only.
 
 ## Reproduction and measured revision
 
-Measured code revision: `170a8f21fbce8af435da08673aa087ba5aba3201` on
-`slice-004-lifecycle`. Documentation/handoff was still being edited; no measured
-C# differed from that revision. Pre-production baseline:
-`3c0229bebcbb3ae7542b15a3b76430e5c7ab745f`.
+Measured code/test revision: `535c7e124480d61d543c33db8b79672b369d6219` on
+`slice-004-lifecycle`, recorded before both proper Short runs. This refresh follows
+the final-review F1 runtime preflight correction; benchmark harness code is
+unchanged. Later documentation-only finalization does not change measured C#.
+Pre-production baseline: `3c0229bebcbb3ae7542b15a3b76430e5c7ab745f`.
 
 ```sh
 rtk proxy mise run benchmark -- --job Dry --filter '*LifecycleBenchmarks*'
@@ -64,37 +65,37 @@ No replay/state serialization was inserted into the per-action measurement loop.
 
 ### Lifecycle ShortRun
 
-| Method                                        | InvocationCount | UnrollFactor | Players | Mean             | Error             | StdDev           | Gen0       | Gen1      | Allocated    |
-|---------------------------------------------- |---------------- |------------- |-------- |-----------------:|------------------:|-----------------:|-----------:|----------:|-------------:|
-| **UnchangedLegalEnumeration**                     | **Default**         | **16**           | **3**       |     **228,373.7 ns** |     **126,073.06 ns** |      **6,910.49 ns** |    **47.3633** |   **11.7188** |    **872.92 KB** |
-| RankingTieDistribution                        | Default         | 16           | 3       |         338.4 ns |           6.60 ns |          0.36 ns |     0.1001 |         - |      1.84 KB |
-| FullSyntheticLifecycleIncludingInitialization | Default         | 16           | 3       | 123,211,288.3 ns | 229,830,264.12 ns | 12,597,772.35 ns | 19000.0000 | 8000.0000 |  353368.3 KB |
-| DepthThreeForeignChild                        | 1               | 1            | 3       |      20,259.5 ns |       2,638.83 ns |        144.64 ns |          - |         - |     48.34 KB |
-| CombatPlay                                    | 1               | 1            | 3       |      20,729.9 ns |      42,775.75 ns |      2,344.68 ns |          - |         - |        51 KB |
-| CombatPass                                    | 1               | 1            | 3       |      14,424.2 ns |      19,122.63 ns |      1,048.18 ns |          - |         - |     26.77 KB |
-| CombatChildResume                             | 1               | 1            | 3       |      21,351.1 ns |      26,695.68 ns |      1,463.28 ns |          - |         - |     44.88 KB |
-| RewardRoundTransition                         | 1               | 1            | 3       |      23,514.7 ns |       4,886.15 ns |        267.83 ns |          - |         - |     42.68 KB |
-| **UnchangedLegalEnumeration**                     | **Default**         | **16**           | **4**       |     **240,425.1 ns** |     **114,711.40 ns** |      **6,287.72 ns** |    **48.3398** |   **11.9629** |    **890.55 KB** |
-| RankingTieDistribution                        | Default         | 16           | 4       |         377.9 ns |           8.22 ns |          0.45 ns |     0.1111 |         - |      2.05 KB |
-| FullSyntheticLifecycleIncludingInitialization | Default         | 16           | 4       | 135,423,765.0 ns |   5,535,314.52 ns |    303,409.27 ns | 24000.0000 | 8000.0000 | 449733.06 KB |
-| DepthThreeForeignChild                        | 1               | 1            | 4       |      26,280.5 ns |         873.49 ns |         47.88 ns |          - |         - |     51.48 KB |
-| CombatPlay                                    | 1               | 1            | 4       |      23,865.3 ns |      54,758.74 ns |      3,001.51 ns |          - |         - |     54.14 KB |
-| CombatPass                                    | 1               | 1            | 4       |      11,965.9 ns |      28,286.31 ns |      1,550.47 ns |          - |         - |      29.7 KB |
-| CombatChildResume                             | 1               | 1            | 4       |      21,491.3 ns |      32,023.22 ns |      1,755.30 ns |          - |         - |     48.02 KB |
-| RewardRoundTransition                         | 1               | 1            | 4       |      21,288.4 ns |      12,964.43 ns |        710.62 ns |          - |         - |     47.02 KB |
+| Method                                        | InvocationCount | UnrollFactor | Players | Mean             | Error            | StdDev          | Gen0       | Gen1       | Allocated    |
+|---------------------------------------------- |---------------- |------------- |-------- |-----------------:|-----------------:|----------------:|-----------:|-----------:|-------------:|
+| **UnchangedLegalEnumeration**                     | **Default**         | **16**           | **3**       |     **248,077.5 ns** |    **145,049.91 ns** |     **7,950.67 ns** |    **52.7344** |    **12.9395** |    **972.76 KB** |
+| RankingTieDistribution                        | Default         | 16           | 3       |         332.7 ns |          6.17 ns |         0.34 ns |     0.1001 |          - |      1.84 KB |
+| FullSyntheticLifecycleIncludingInitialization | Default         | 16           | 3       | 137,434,367.7 ns | 12,468,507.36 ns |   683,440.96 ns | 20000.0000 |  7000.0000 |  378816.8 KB |
+| DepthThreeForeignChild                        | 1               | 1            | 3       |      23,568.6 ns |     31,455.57 ns |     1,724.19 ns |          - |          - |     49.69 KB |
+| CombatPlay                                    | 1               | 1            | 3       |      21,634.7 ns |      2,662.29 ns |       145.93 ns |          - |          - |     52.26 KB |
+| CombatPass                                    | 1               | 1            | 3       |      14,813.6 ns |     54,577.18 ns |     2,991.56 ns |          - |          - |     26.77 KB |
+| CombatChildResume                             | 1               | 1            | 3       |      20,798.3 ns |     50,392.94 ns |     2,762.21 ns |          - |          - |      45.9 KB |
+| RewardRoundTransition                         | 1               | 1            | 3       |      22,519.7 ns |     91,740.27 ns |     5,028.59 ns |          - |          - |     42.68 KB |
+| **UnchangedLegalEnumeration**                     | **Default**         | **16**           | **4**       |     **259,338.6 ns** |    **114,237.05 ns** |     **6,261.72 ns** |    **53.7109** |    **13.1836** |    **994.61 KB** |
+| RankingTieDistribution                        | Default         | 16           | 4       |         366.9 ns |         16.57 ns |         0.91 ns |     0.1111 |          - |      2.05 KB |
+| FullSyntheticLifecycleIncludingInitialization | Default         | 16           | 4       | 189,084,636.7 ns | 70,808,681.96 ns | 3,881,262.81 ns | 26000.0000 | 10000.0000 | 479526.84 KB |
+| DepthThreeForeignChild                        | 1               | 1            | 4       |      27,799.7 ns |      2,907.36 ns |       159.36 ns |          - |          - |     52.83 KB |
+| CombatPlay                                    | 1               | 1            | 4       |      27,552.1 ns |     63,700.43 ns |     3,491.64 ns |          - |          - |      55.4 KB |
+| CombatPass                                    | 1               | 1            | 4       |      13,431.4 ns |     34,298.24 ns |     1,880.00 ns |          - |          - |      29.7 KB |
+| CombatChildResume                             | 1               | 1            | 4       |      20,578.9 ns |      9,301.02 ns |       509.82 ns |          - |          - |     49.04 KB |
+| RewardRoundTransition                         | 1               | 1            | 4       |      27,366.5 ns |      2,023.86 ns |       110.93 ns |          - |          - |     47.02 KB |
 
 Time is reported in ns; Gen0/Gen1 are collections per 1000 normalized operations.
 `-` means no collection was recorded during the measured batch, not zero allocations.
-The three-seat full-game 99.9% error exceeds its mean; retain that uncertainty.
+Full-game means 137.434 ms (3p)/189.085 ms (4p), allocations 378816.80 KB/479526.84 KB; 99.9% errors ±12.469 ms/±70.809 ms respectively. Small ShortRun samples retain material uncertainty.
 
 ### Unchanged TurnEngine ShortRun
 
-| Method                 | InvocationCount | UnrollFactor | Mean     | Error     | StdDev   | Gen0    | Gen1   | Allocated |
-|----------------------- |---------------- |------------- |---------:|----------:|---------:|--------:|-------:|----------:|
-| LegalActionEnumeration | Default         | 16           | 96.02 μs | 28.748 μs | 1.576 μs | 18.4326 | 4.5166 | 340.68 KB |
-| RoundStart             | 1               | 1            | 26.67 μs |  3.737 μs | 0.205 μs |  1.2207 | 0.2441 |  26.74 KB |
-| AgentPlacement         | 1               | 1            | 31.11 μs |  7.049 μs | 0.386 μs |  1.7090 | 0.2441 |  34.37 KB |
-| EffectResolution       | 1               | 1            | 27.58 μs |  3.411 μs | 0.187 μs |  2.1973 | 0.4883 |  44.46 KB |
+| Method                 | InvocationCount | UnrollFactor | Mean      | Error     | StdDev   | Gen0    | Gen1   | Allocated |
+|----------------------- |---------------- |------------- |----------:|----------:|---------:|--------:|-------:|----------:|
+| LegalActionEnumeration | Default         | 16           | 102.72 μs | 37.330 μs | 2.046 μs | 20.1416 | 5.0049 | 370.99 KB |
+| RoundStart             | 1               | 1            |  26.97 μs |  3.178 μs | 0.174 μs |  1.2207 | 0.2441 |  26.74 KB |
+| AgentPlacement         | 1               | 1            |  32.39 μs | 11.638 μs | 0.638 μs |  1.7090 | 0.2441 |  34.77 KB |
+| EffectResolution       | 1               | 1            |  29.32 μs |  6.271 μs | 0.344 μs |  2.4414 | 0.4883 |  45.85 KB |
 
 ## Pre-production baseline and interpretation
 
@@ -108,12 +109,7 @@ The same unchanged TurnEngine harness was measured before production edits at
 | AgentPlacement | 22.59 us | 2.985 us | 0.164 us | 0.9766 | 21.36 KB |
 | EffectResolution | 19.68 us | 5.865 us | 0.321 us | 0.9766 | 19.88 KB |
 
-The unchanged harness's sampled means rose from 36.49/24.50/22.59/19.68 us
-to 96.02/26.67/31.11/27.58 us for legal enumeration/RoundStart/placement/optional
-resolution respectively. Legal enumeration is approximately **2.63x** the sampled
-baseline mean and **3.39x** its allocations (100.53 -> 340.68 KB). Other sampled
-mean ratios are approximately 1.09x/1.38x/1.40x; uncertainty remains explicit in
-the tables, so ratios are descriptive rather than a statistical guarantee.
+The unchanged harness's sampled means rose from 36.49/24.50/22.59/19.68 us to 102.72/26.97/32.39/29.32 us for legal enumeration/RoundStart/placement/optional resolution respectively. Legal enumeration is approximately **2.82x** the sampled baseline mean and **3.69x** its allocations (100.53 -> 370.99 KB). Other sampled mean ratios are approximately 1.10x/1.43x/1.49x; uncertainty remains explicit in the tables, so ratios are descriptive rather than a statistical guarantee.
 
 This is a measured total-branch cost increase on unchanged synthetic inputs.
 The slice adds causal/lifecycle/safety behavior, but these measurements do not
@@ -122,19 +118,27 @@ Retain it as a performance concern for profiling representative workloads; do
 not infer authentic game throughput, peak RSS, worker scaling or training speed.
 The lifecycle legal fixture has richer enabled content and cannot be substituted
 for the unchanged harness in this comparison. Full-game allocation is managed
-allocation per game, not retained/peak memory; its 3-seat confidence interval is
-especially wide.
+allocation per game, not retained/peak memory; reported confidence intervals
+remain material limits.
 
 ## Evidence and limitations
 
-Raw BenchmarkDotNet reports are ignored local artifacts under
+Raw BenchmarkDotNet reports are temporary ignored local artifacts under
 `BenchmarkDotNet.Artifacts/results/Dune.Benchmarks.LifecycleBenchmarks-report.*`
-and `Dune.Benchmarks.TurnEngineBenchmarks-report.*`. Task evidence is retained in
-`.superpowers/sdd/2026-10-24-slice-004/task-12-lifecycle-{dry,short}.log`,
-`task-12-turn-{dry,short}.log`, and copied `task-12-*-results.{md,csv}`. The
-baseline files are `baseline-benchmark-results.md`, `.csv`,
-`baseline-benchmark.log` in that same scratch directory. Scratch is not a tracked
-deliverable; this report preserves commands, revision, boundaries and results.
+and `Dune.Benchmarks.TurnEngineBenchmarks-report.*`. Temporary verification logs
+and copied report/CSV data use `.superpowers/sdd/2026-10-24-slice-004/` names
+`final-fix-lifecycle-{dry,short}.log`, `final-fix-turn-{dry,short}.log`, and
+`final-fix-{lifecycle,turn}-results.{md,csv}`. Controller scratch cleanup may remove
+these files; the committed tables, exact revision, commands, boundaries and
+metadata here preserve the measurement evidence. The pre-production baseline
+`3c0229b` is unchanged; its temporary original evidence uses
+`baseline-benchmark-results.md`, `.csv`, `baseline-benchmark.log`.
+
+Historical pre-F1 measurement at `170a8f2` had unchanged-harness legal enumeration
+96.02 us/340.68 KB and full synthetic games 123.211 ms/353368.30 KB (3p),
+135.424 ms/449733.06 KB (4p), with a 3p 99.9% error ±229.830 ms exceeding its mean.
+Those figures are history, not current measurements. The post-F1 tables above
+replace them; no isolated causal performance claim is made.
 
 Lifecycle Dry executed 16/16 workloads; TurnEngine Dry executed 4/4. Proper
 Short measurements, rather than Dry timings, populate the tables above. Mutable
