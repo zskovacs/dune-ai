@@ -1379,3 +1379,27 @@ def test_bounded_effects_link_existing_direct_behavior_instead_of_duplicate_batc
         assert name in (ROOT / reference["path"]).read_text()
         # These bounded assertions alone do not supply full readiness evidence.
         assert {t["kind"] for t in ability["testRefs"]} == {"behavior"}
+
+
+def test_foldspace_reuses_sourced_reserve_return_dependency(raw):
+    batches = {b["id"]: b for b in raw["batches"]}
+    capabilities = {c["id"]: c for c in raw["capabilities"]}
+    foldspace = batches["batch-07-foldspace"]
+    routing = batches["batch-01-selected-trash"]
+    assert {"batch-01-selected-trash", "batch-04-starter-reserve-sources"} <= set(
+        foldspace["prerequisiteIds"]
+    )
+    assert routing["order"] < foldspace["order"]
+    assert "cap-reserve-return" in routing["memberIds"]
+    assert "cap-reserve-return" in capabilities["cap-foldspace-face"]["prerequisiteIds"]
+    # I16 routes trashed Reserve cards; FAQ1 names Foldspace's self-trash.
+    assert any(
+        e["sourceId"] == "src-I" and e["page"] == 16 for e in foldspace["evidence"]
+    )
+    assert any(
+        e["sourceId"] == "src-publisher-faq-2025" and e["page"] == 1
+        for e in foldspace["evidence"]
+    )
+    face = next(c for c in raw["content"] if c["id"] == "imperium:reserve:foldspace:v1")
+    assert not face["faceComplete"]
+    assert all(a["implementation"] == "unsupported" for a in face["abilities"])

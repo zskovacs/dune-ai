@@ -1,6 +1,6 @@
 {
   "schemaVersion": "dune-content-coverage-v1",
-  "auditRevision": "slice-004.5-d1-review-fix1-2026-10-25",
+  "auditRevision": "slice-004.5-d1-review-fix2-2026-10-25",
   "repositoryRevision": "c256caadd8c077c8514fef611aa63f1488354fa0",
   "sources": [
     {
@@ -12975,8 +12975,10 @@
         "src/Dune.Engine/Turns/TurnEngine.cs::Acquire"
       ],
       "testRefs": [],
-      "missingDelta": "Foldspace card face remains unsupported.",
-      "prerequisiteIds": [],
+      "missingDelta": "Foldspace whole card face remains unsupported; a complete supported Reserve definition also needs shared return routing for the sourced self-trash/Reserve rule (FAQ1 and I16).",
+      "prerequisiteIds": [
+        "cap-reserve-return"
+      ],
       "implementation": "unsupported",
       "validation": "not-tested",
       "blockers": [
@@ -15777,6 +15779,7 @@
         "imperium:space:foldspace:v1#slot:placement"
       ],
       "prerequisiteIds": [
+        "batch-01-selected-trash",
         "batch-04-starter-reserve-sources"
       ],
       "sourceGates": [
@@ -15805,10 +15808,18 @@
           "locator": "Foldspace acquisition restriction",
           "kind": "ruling",
           "verification": "verified"
+        },
+        {
+          "sourceId": "src-publisher-faq-2025",
+          "page": 1,
+          "locator": "Beguiling Pheromones: Foldspace is an example of a card that otherwise self-trashes; I16 routes trashed Reserve cards back to their stack.",
+          "kind": "ruling",
+          "verification": "verified"
         }
       ],
       "mechanics": [
-        "Existing Reserve acquire plus source-proven Foldspace face; icon-only acquisition and stock."
+        "Existing Reserve acquire plus source-proven Foldspace face; icon-only acquisition and stock.",
+        "Reuse Reserve-return routing from batch01 for trashed Foldspace and acquire/return stock tests; do not reimplement that shared operation. Whole Foldspace face evidence remains a separate source gate."
       ],
       "expectedDelta": "2 unreadable card slots +1 unsupported board ability; last missing board key21 ->22 after batches01/03.",
       "acceptance": "Whole Foldspace face established; no market purchase; exact Agent/Reveal boxes and acquire/return stock tests.",
