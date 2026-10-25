@@ -1,6 +1,6 @@
 {
   "schemaVersion": "dune-content-coverage-v1",
-  "auditRevision": "slice-004.5-i1-review-fix-2026-10-25",
+  "auditRevision": "slice-004.5-a1-2026-10-25",
   "repositoryRevision": "c256caadd8c077c8514fef611aa63f1488354fa0",
   "sources": [
     {
@@ -4361,8 +4361,20 @@
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-publisher-faq-2025",
+              "page": 4,
+              "locator": "deferred-mentat official FAQ entry",
+              "kind": "ruling",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:conflict:sort-through-the-chaos:v1#slot:deferred-mentat"
+          ]
         },
         {
           "slot": "Setup",
@@ -4375,7 +4387,52 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:conflict:sort-through-the-chaos:v1#slot:deferred-mentat",
+          "contentId": "imperium:conflict:sort-through-the-chaos:v1",
+          "slot": "PostWin",
+          "timing": "post-win",
+          "classification": "unresolved",
+          "classificationReason": "The official FAQ resolves the timing only; the complete printed tier rewards and eligibility are not available in the audit.",
+          "semanticClaim": "A Mentat award associated with this Conflict is deferred to the next RoundStart.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "official content-specific timing clarification"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-publisher-faq-2025",
+              "page": 4,
+              "locator": "deferred-mentat official FAQ entry",
+              "kind": "ruling",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "partially-sourced",
+          "verification": "unverified",
+          "implementation": "not-implemented",
+          "validation": "not-tested",
+          "blockers": [
+            {
+              "id": "deferred-mentat-face",
+              "open": true,
+              "blocking": true,
+              "scope": "imperium:conflict:sort-through-the-chaos:v1#slot:deferred-mentat",
+              "reason": "The official FAQ resolves the timing only; the complete printed tier rewards and eligibility are not available in the audit."
+            }
+          ],
+          "exclusionReason": null,
+          "batchId": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -4732,66 +4789,287 @@
       "discovery": "discovered",
       "sourcing": "fully-sourced",
       "verification": "verified",
-      "faceComplete": false,
-      "faceEvidence": [],
+      "faceComplete": true,
+      "faceEvidence": [
+        {
+          "sourceId": "src-I",
+          "page": 9,
+          "locator": "complete Fremen Camp pictured face",
+          "kind": "semantics",
+          "verification": "verified"
+        }
+      ],
       "slots": [
         {
           "slot": "Acquire",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:imperium-card:fremen-camp:v1#slot:optional-recruit"
+          ]
         },
         {
           "slot": "Combat",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Endgame",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Reveal",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:imperium-card:fremen-camp:v1#slot:persuasion-and-sword"
+          ]
         },
         {
           "slot": "Setup",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "SignetRing",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:imperium-card:fremen-camp:v1#slot:optional-recruit",
+          "contentId": "imperium:imperium-card:fremen-camp:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "On placement, optionally pay two Spice to recruit three troops.",
+          "descriptors": [
+            {
+              "kind": "cost",
+              "value": "optional two Spice before reward"
+            },
+            {
+              "kind": "choice",
+              "value": "decline or pay"
+            },
+            {
+              "kind": "role",
+              "value": "Agent card effect"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "FremenCampPaymentPrecedesItsRecruitment",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        },
+        {
+          "id": "imperium:imperium-card:fremen-camp:v1#slot:persuasion-and-sword",
+          "contentId": "imperium:imperium-card:fremen-camp:v1",
+          "slot": "Reveal",
+          "timing": "on-reveal",
+          "classification": "composite",
+          "semanticClaim": "Reveal grants two Persuasion and one Sword.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "Reveal card effect"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Fremen Camp pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "NamedImperiumCardsRevealTheirSourcedPersuasionAndSwords",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -5486,8 +5764,20 @@
         },
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-publisher-faq-2025",
+              "page": 3,
+              "locator": "opponent-discard-order official FAQ entry",
+              "kind": "ruling",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:imperium-card:reverend-mother-mohiam:v1#slot:opponent-discard-order"
+          ]
         },
         {
           "slot": "Combat",
@@ -5535,7 +5825,52 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:imperium-card:reverend-mother-mohiam:v1#slot:opponent-discard-order",
+          "contentId": "imperium:imperium-card:reverend-mother-mohiam:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "unresolved",
+          "classificationReason": "The FAQ resolves opponent ordering only; the complete printed Agent and Reveal boxes are not available in the audit.",
+          "semanticClaim": "The affected opponent discards in clockwise order from the acting player’s left.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "official content-specific timing clarification"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-publisher-faq-2025",
+              "page": 3,
+              "locator": "opponent-discard-order official FAQ entry",
+              "kind": "ruling",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "partially-sourced",
+          "verification": "unverified",
+          "implementation": "not-implemented",
+          "validation": "not-tested",
+          "blockers": [
+            {
+              "id": "opponent-discard-order-face",
+              "open": true,
+              "blocking": true,
+              "scope": "imperium:imperium-card:reverend-mother-mohiam:v1#slot:opponent-discard-order",
+              "reason": "The FAQ resolves opponent ordering only; the complete printed Agent and Reveal boxes are not available in the audit."
+            }
+          ],
+          "exclusionReason": null,
+          "batchId": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -5580,66 +5915,262 @@
       "discovery": "discovered",
       "sourcing": "fully-sourced",
       "verification": "verified",
-      "faceComplete": false,
-      "faceEvidence": [],
+      "faceComplete": true,
+      "faceEvidence": [
+        {
+          "sourceId": "src-I",
+          "page": 9,
+          "locator": "complete Sardaukar Legion pictured face",
+          "kind": "semantics",
+          "verification": "verified"
+        }
+      ],
       "slots": [
         {
           "slot": "Acquire",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:imperium-card:sardaukar-legion:v1#slot:recruit"
+          ]
         },
         {
           "slot": "Combat",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Endgame",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Reveal",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:imperium-card:sardaukar-legion:v1#slot:persuasion-and-swords"
+          ]
         },
         {
           "slot": "Setup",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "SignetRing",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:imperium-card:sardaukar-legion:v1#slot:persuasion-and-swords",
+          "contentId": "imperium:imperium-card:sardaukar-legion:v1",
+          "slot": "Reveal",
+          "timing": "on-reveal",
+          "classification": "composite",
+          "semanticClaim": "Reveal grants one Persuasion and two Swords.",
+          "descriptors": [],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "NamedImperiumCardsRevealTheirSourcedPersuasionAndSwords",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        },
+        {
+          "id": "imperium:imperium-card:sardaukar-legion:v1#slot:recruit",
+          "contentId": "imperium:imperium-card:sardaukar-legion:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "On placement, recruit two troops.",
+          "descriptors": [],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 9,
+              "locator": "complete Sardaukar Legion pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -6109,51 +6640,182 @@
       "discovery": "discovered",
       "sourcing": "fully-sourced",
       "verification": "verified",
-      "faceComplete": false,
-      "faceEvidence": [],
+      "faceComplete": true,
+      "faceEvidence": [
+        {
+          "sourceId": "src-I",
+          "page": 7,
+          "locator": "complete Ambush pictured face and Combat timing",
+          "kind": "semantics",
+          "verification": "verified"
+        }
+      ],
       "slots": [
         {
           "slot": "Combat",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:intrigue:ambush:v1#slot:swords"
+          ]
         },
         {
           "slot": "Endgame",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Intrigue",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Setup",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:intrigue:ambush:v1#slot:swords",
+          "contentId": "imperium:intrigue:ambush:v1",
+          "slot": "Combat",
+          "timing": "combat",
+          "classification": "primitive",
+          "semanticClaim": "Play during Combat to gain four Swords.",
+          "descriptors": [],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Ambush pictured face and Combat timing",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::CreateLifecycleRules"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/LifecycleDefinitionTests.cs",
+              "name": "OfficialAmbushRetainsSourceAndExecutesFourSwordsThroughRealWindow",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -6385,51 +7047,198 @@
       "discovery": "discovered",
       "sourcing": "fully-sourced",
       "verification": "verified",
-      "faceComplete": false,
-      "faceEvidence": [],
+      "faceComplete": true,
+      "faceEvidence": [
+        {
+          "sourceId": "src-I",
+          "page": 7,
+          "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+          "kind": "semantics",
+          "verification": "verified"
+        }
+      ],
       "slots": [
         {
           "slot": "Combat",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Endgame",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Intrigue",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "Calculated Hire pictured cost and Plot timing; remaining face unresolved",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:intrigue:calculated-hire:v1#slot:plot"
+          ]
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Setup",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:intrigue:calculated-hire:v1#slot:plot",
+          "contentId": "imperium:intrigue:calculated-hire:v1",
+          "slot": "Intrigue",
+          "timing": "intrigue",
+          "classification": "primitive",
+          "semanticClaim": "During an owner Agent or Reveal turn, pay one Spice to take the Mentat from the Landsraad board space.",
+          "descriptors": [
+            {
+              "kind": "cost",
+              "value": "one Spice paid to play"
+            },
+            {
+              "kind": "role",
+              "value": "owner Agent or Reveal turn"
+            },
+            {
+              "kind": "effect",
+              "value": "take the Mentat from the Landsraad board space"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Calculated Hire pictured Plot face with one-Spice cost and Mentat effect",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [
+            "cap-plot-window"
+          ],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::CreateLifecycleRules"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "unsupported",
+          "validation": "not-tested",
+          "blockers": [
+            {
+              "id": "unsupported-plot",
+              "open": true,
+              "blocking": true,
+              "scope": "imperium:intrigue:calculated-hire:v1#slot:plot",
+              "reason": "Plot play is explicitly unsupported by the authored lifecycle rule and TurnEngine."
+            }
+          ],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -6572,51 +7381,233 @@
       "discovery": "discovered",
       "sourcing": "fully-sourced",
       "verification": "verified",
-      "faceComplete": false,
-      "faceEvidence": [],
+      "faceComplete": true,
+      "faceEvidence": [
+        {
+          "sourceId": "src-I",
+          "page": 7,
+          "locator": "complete Corner the Market pictured face",
+          "kind": "semantics",
+          "verification": "verified"
+        }
+      ],
       "slots": [
         {
           "slot": "Combat",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Endgame",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:intrigue:corner-the-market:v1#slot:two-spice-must-flow",
+            "imperium:intrigue:corner-the-market:v1#slot:more-spice-must-flow"
+          ]
         },
         {
           "slot": "Intrigue",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Setup",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:intrigue:corner-the-market:v1#slot:more-spice-must-flow",
+          "contentId": "imperium:intrigue:corner-the-market:v1",
+          "slot": "Endgame",
+          "timing": "endgame",
+          "classification": "primitive",
+          "semanticClaim": "Gain a separate Victory Point if owning more copies than each opponent.",
+          "descriptors": [
+            {
+              "kind": "precondition",
+              "value": "strictly more owned copies than each opponent"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::CreateLifecycleRules"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/LifecycleDefinitionTests.cs",
+              "name": "CompleteMasterTacticianAndIndependentCornerConditionsHaveSupportedShapes",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        },
+        {
+          "id": "imperium:intrigue:corner-the-market:v1#slot:two-spice-must-flow",
+          "contentId": "imperium:intrigue:corner-the-market:v1",
+          "slot": "Endgame",
+          "timing": "endgame",
+          "classification": "primitive",
+          "semanticClaim": "Gain a Victory Point if owning at least two copies of The Spice Must Flow.",
+          "descriptors": [
+            {
+              "kind": "precondition",
+              "value": "two owned copies at Endgame"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 7,
+              "locator": "complete Corner the Market pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::CreateLifecycleRules"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/LifecycleDefinitionTests.cs",
+              "name": "CompleteMasterTacticianAndIndependentCornerConditionsHaveSupportedShapes",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -7026,51 +8017,191 @@
       "discovery": "discovered",
       "sourcing": "fully-sourced",
       "verification": "verified",
-      "faceComplete": false,
-      "faceEvidence": [],
+      "faceComplete": true,
+      "faceEvidence": [
+        {
+          "sourceId": "src-I",
+          "page": 12,
+          "locator": "complete Master Tactician pictured face",
+          "kind": "semantics",
+          "verification": "verified"
+        }
+      ],
       "slots": [
         {
           "slot": "Combat",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:intrigue:master-tactician:v1#slot:swords-or-retreat"
+          ]
         },
         {
           "slot": "Endgame",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Intrigue",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Setup",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:intrigue:master-tactician:v1#slot:swords-or-retreat",
+          "contentId": "imperium:intrigue:master-tactician:v1",
+          "slot": "Combat",
+          "timing": "combat",
+          "classification": "composite",
+          "semanticClaim": "Choose three Swords or retreat up to three own troops.",
+          "descriptors": [
+            {
+              "kind": "choice",
+              "value": "Swords or troop retreat"
+            },
+            {
+              "kind": "role",
+              "value": "own troops in Conflict"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 12,
+              "locator": "complete Master Tactician pictured face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::CreateLifecycleRules"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/LifecycleDefinitionTests.cs",
+              "name": "CompleteMasterTacticianAndIndependentCornerConditionsHaveSupportedShapes",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -7702,8 +8833,20 @@
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 6,
+              "locator": "pictured Duke Leto front, two separate Passive and Signet boxes",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:leader:duke-leto-atreides:v1#slot:landsraad-discount"
+          ]
         },
         {
           "slot": "PersistentModifier",
@@ -7722,8 +8865,20 @@
         },
         {
           "slot": "SignetRing",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 6,
+              "locator": "pictured Duke Leto front, two separate Passive and Signet boxes",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:leader:duke-leto-atreides:v1#slot:opponent-influence"
+          ]
         },
         {
           "slot": "Triggered",
@@ -7731,7 +8886,82 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:leader:duke-leto-atreides:v1#slot:landsraad-discount",
+          "contentId": "imperium:leader:duke-leto-atreides:v1",
+          "slot": "Passive",
+          "timing": "passive",
+          "classification": "unresolved",
+          "semanticClaim": "Landsraad placement cost discount; exact printed qualifier requires high-resolution verification.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "leader Passive"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 6,
+              "locator": "pictured Duke Leto front, two separate Passive and Signet boxes",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "partially-sourced",
+          "verification": "unverified",
+          "implementation": "not-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": "Pictured text/icons are too small here to verify complete cost and qualifiers."
+        },
+        {
+          "id": "imperium:leader:duke-leto-atreides:v1#slot:opponent-influence",
+          "contentId": "imperium:leader:duke-leto-atreides:v1",
+          "slot": "SignetRing",
+          "timing": "on-signet-ring",
+          "classification": "unresolved",
+          "semanticClaim": "Faction influence choice relative to opponents; icon and cost require high-resolution verification.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "leader SignetRing"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 6,
+              "locator": "pictured Duke Leto front, two separate Passive and Signet boxes",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [
+            "cap-leader-signet"
+          ],
+          "interactionIds": [],
+          "implementationRefs": [],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "partially-sourced",
+          "verification": "unverified",
+          "implementation": "not-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": "Pictured text/icons are too small here to verify complete cost and qualifiers."
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -8187,66 +9417,227 @@
       "discovery": "discovered",
       "sourcing": "fully-sourced",
       "verification": "verified",
-      "faceComplete": false,
-      "faceEvidence": [],
+      "faceComplete": true,
+      "faceEvidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "complete Arrakis Liaison Reserve face",
+          "kind": "semantics",
+          "verification": "verified"
+        }
+      ],
       "slots": [
         {
           "slot": "Acquire",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Combat",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Endgame",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Reveal",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:reserve:arrakis-liaison:v1#slot:persuasion"
+          ]
         },
         {
           "slot": "Setup",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "SignetRing",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:reserve:arrakis-liaison:v1#slot:persuasion",
+          "contentId": "imperium:reserve:arrakis-liaison:v1",
+          "slot": "Reveal",
+          "timing": "on-reveal",
+          "classification": "primitive",
+          "semanticClaim": "Reveal grants two Persuasion.",
+          "descriptors": [],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Arrakis Liaison Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "RevealCanBuyMultipleLiaisonsAndFlowButNotFoldspace",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": true,
       "replaces": [],
       "excludes": [],
@@ -8443,66 +9834,274 @@
       "discovery": "discovered",
       "sourcing": "fully-sourced",
       "verification": "verified",
-      "faceComplete": false,
-      "faceEvidence": [],
+      "faceComplete": true,
+      "faceEvidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "complete The Spice Must Flow Reserve face",
+          "kind": "semantics",
+          "verification": "verified"
+        }
+      ],
       "slots": [
         {
           "slot": "Acquire",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:reserve:spice-must-flow:v1#slot:victory-point"
+          ]
         },
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Combat",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Endgame",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Passive",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Reveal",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:reserve:spice-must-flow:v1#slot:spice"
+          ]
         },
         {
           "slot": "Setup",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "SignetRing",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:reserve:spice-must-flow:v1#slot:spice",
+          "contentId": "imperium:reserve:spice-must-flow:v1",
+          "slot": "Reveal",
+          "timing": "on-reveal",
+          "classification": "primitive",
+          "semanticClaim": "Reveal grants one Spice.",
+          "descriptors": [],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "RevealCanBuyMultipleLiaisonsAndFlowButNotFoldspace",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        },
+        {
+          "id": "imperium:reserve:spice-must-flow:v1#slot:victory-point",
+          "contentId": "imperium:reserve:spice-must-flow:v1",
+          "slot": "Acquire",
+          "timing": "on-acquire",
+          "classification": "primitive",
+          "semanticClaim": "Acquiring from the Reserve grants one Victory Point.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "on acquisition, not on Reveal"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete The Spice Must Flow Reserve face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "RevealCanBuyMultipleLiaisonsAndFlowButNotFoldspace",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": true,
       "replaces": [],
       "excludes": [],
@@ -8575,8 +10174,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "arrakeen entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:arrakeen:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -8604,7 +10215,61 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:arrakeen:v1#slot:placement",
+          "contentId": "imperium:space:arrakeen:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Recruit one troop and draw one card; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "arrakeen entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "ArrakeenRecruitsOneTroopAndDrawsOneCard",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -8670,8 +10335,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "carthag entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:carthag:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -8699,7 +10376,56 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:carthag:v1#slot:placement",
+          "contentId": "imperium:space:carthag:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "Recruit one troop and draw one Intrigue; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "carthag entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [
+            "cap-intrigue-recycle"
+          ],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -8765,8 +10491,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "conspire entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:conspire:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -8794,7 +10532,56 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:conspire:v1#slot:placement",
+          "contentId": "imperium:space:conspire:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "Pay four Spice, gain Emperor influence and five Solari, recruit two troops and draw one Intrigue.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "conspire entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [
+            "cap-intrigue-recycle"
+          ],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -8946,8 +10733,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "great-flat entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:great-flat:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -8975,7 +10774,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:great-flat:v1#slot:placement",
+          "contentId": "imperium:space:great-flat:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "Pay two Water, gain base three Spice and accumulated bonus; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "great-flat entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9041,8 +10887,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "hagga-basin entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:hagga-basin:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9070,7 +10928,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:hagga-basin:v1#slot:placement",
+          "contentId": "imperium:space:hagga-basin:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "Pay one Water, gain base two Spice and accumulated bonus; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "hagga-basin entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9136,8 +11041,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "hall-of-oratory entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:hall-of-oratory:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9151,8 +11068,20 @@
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "hall-of-oratory entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:hall-of-oratory:v1#slot:reveal-bonus"
+          ]
         },
         {
           "slot": "Setup",
@@ -9165,7 +11094,99 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:hall-of-oratory:v1#slot:placement",
+          "contentId": "imperium:space:hall-of-oratory:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Recruit one troop.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "hall-of-oratory entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        },
+        {
+          "id": "imperium:space:hall-of-oratory:v1#slot:reveal-bonus",
+          "contentId": "imperium:space:hall-of-oratory:v1",
+          "slot": "PersistentModifier",
+          "timing": "persistent",
+          "classification": "special",
+          "semanticClaim": "A retained seat adds Persuasion in subsequent Reveal turns.",
+          "descriptors": [
+            {
+              "kind": "usage",
+              "value": "while the seat remains owned"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "hall-of-oratory entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "HallOfOratoryAddsOnePersuasionOnReveal",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9231,8 +11252,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "hardy-warriors entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:hardy-warriors:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9260,7 +11293,61 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:hardy-warriors:v1#slot:placement",
+          "contentId": "imperium:space:hardy-warriors:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "Pay one Water, gain Fremen influence and recruit two troops; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "hardy-warriors entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "HardyWarriorsPaysWaterAndCanDeployRecruitsPlusTwoOldTroops",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9326,8 +11413,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "heighliner entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:heighliner:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9355,7 +11454,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:heighliner:v1#slot:placement",
+          "contentId": "imperium:space:heighliner:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "Pay six Spice, gain Guild influence, recruit five troops and gain two Water; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "heighliner entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9421,8 +11567,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "high-council entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:high-council:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9436,8 +11594,20 @@
         },
         {
           "slot": "PersistentModifier",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "high-council entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:high-council:v1#slot:reveal-bonus"
+          ]
         },
         {
           "slot": "Setup",
@@ -9450,7 +11620,106 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:high-council:v1#slot:placement",
+          "contentId": "imperium:space:high-council:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Pay five Solari for Council seat, once per game.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "high-council entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "HighCouncilCostsFiveSolariAndAddsTwoPersuasionOnReveal",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        },
+        {
+          "id": "imperium:space:high-council:v1#slot:reveal-bonus",
+          "contentId": "imperium:space:high-council:v1",
+          "slot": "PersistentModifier",
+          "timing": "persistent",
+          "classification": "special",
+          "semanticClaim": "A retained seat adds Persuasion in subsequent Reveal turns.",
+          "descriptors": [
+            {
+              "kind": "usage",
+              "value": "while the seat remains owned"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "high-council entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "HighCouncilCostsFiveSolariAndAddsTwoPersuasionOnReveal",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9516,8 +11785,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "imperial-basin entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:imperial-basin:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9545,7 +11826,61 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:imperial-basin:v1#slot:placement",
+          "contentId": "imperium:space:imperial-basin:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "Gain base Spice and accumulated bonus; control payout applies.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "imperial-basin entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "ImperialBasinHarvestsBonusAndPaysItsController",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9611,8 +11946,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "mentat entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:mentat:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9640,7 +11987,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:mentat:v1#slot:placement",
+          "contentId": "imperium:space:mentat:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Pay two Solari, draw one card and take available Mentat.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "mentat entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9706,8 +12100,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "rally-troops entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:rally-troops:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9735,7 +12141,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:rally-troops:v1#slot:placement",
+          "contentId": "imperium:space:rally-troops:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Pay four Solari to recruit four troops.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "rally-troops entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9801,8 +12254,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "research-station entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:research-station:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -9830,7 +12295,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:research-station:v1#slot:placement",
+          "contentId": "imperium:space:research-station:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Pay two Water to draw three cards; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "research-station entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -9982,8 +12494,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "secure-contract entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:secure-contract:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -10011,7 +12535,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:secure-contract:v1#slot:placement",
+          "contentId": "imperium:space:secure-contract:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Gain three Solari.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "secure-contract entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -10163,8 +12734,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "sell-melange entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:sell-melange:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -10192,7 +12775,65 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:sell-melange:v1#slot:placement",
+          "contentId": "imperium:space:sell-melange:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "composite",
+          "semanticClaim": "Choose one printed Spice-for-Solari exchange and pay its Spice cost.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            },
+            {
+              "kind": "choice",
+              "value": "one of four printed exchange tiers"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "sell-melange entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "SellMelangeUsesTheChosenExchange",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -10258,8 +12899,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "sietch-tabr entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:sietch-tabr:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -10287,7 +12940,61 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:sietch-tabr:v1#slot:placement",
+          "contentId": "imperium:space:sietch-tabr:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Requires two Fremen influence; recruit one troop and gain one Water; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "sietch-tabr entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "SietchTabrRequiresTwoFremenInfluenceAndDoesNotGrantInfluence",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -10353,8 +13060,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "stillsuits entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:stillsuits:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -10382,7 +13101,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:stillsuits:v1#slot:placement",
+          "contentId": "imperium:space:stillsuits:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Gain Fremen influence and one Water; combat placement.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "stillsuits entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -10448,8 +13214,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "swordmaster entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:swordmaster:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -10477,7 +13255,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:swordmaster:v1#slot:placement",
+          "contentId": "imperium:space:swordmaster:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Pay eight Solari to gain the permanent third Agent, once per game.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "swordmaster entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -10543,8 +13368,20 @@
       "slots": [
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "wealth entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:space:wealth:v1#slot:placement"
+          ]
         },
         {
           "slot": "Combat",
@@ -10572,7 +13409,54 @@
           "reason": "Whole-face slot semantics pending separate face review."
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:space:wealth:v1#slot:placement",
+          "contentId": "imperium:space:wealth:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "primitive",
+          "semanticClaim": "Gain Emperor influence and two Solari.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "board placement"
+            },
+            {
+              "kind": "precondition",
+              "value": "legal icon, open space and any printed restriction"
+            },
+            {
+              "kind": "cost",
+              "value": "printed placement cost, where present"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-A",
+              "page": 2,
+              "locator": "wealth entry in original Board Space Guide",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Spaces"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        }
+      ],
       "runtimeDefinition": false,
       "replaces": [],
       "excludes": [],
@@ -11028,8 +13912,18 @@
         },
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "verified-absent",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 10,
+              "locator": "Imperial Basin Agent-turn example explicitly treats Dune as access only",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": []
         },
         {
           "slot": "Combat",
@@ -11410,60 +14304,187 @@
         {
           "slot": "Acquire",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         },
         {
           "slot": "Agent",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Signet Ring starter face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:starter:signet-ring:v1#slot:signet"
+          ]
         },
         {
           "slot": "Combat",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         },
         {
           "slot": "Endgame",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         },
         {
           "slot": "Passive",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         },
         {
           "slot": "PersistentModifier",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         },
         {
           "slot": "PostWin",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         },
         {
           "slot": "Reveal",
-          "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "discovery": "discovered",
+          "reason": null,
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Signet Ring starter face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "abilityIds": [
+            "imperium:starter:signet-ring:v1#slot:persuasion"
+          ]
         },
         {
           "slot": "Setup",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         },
         {
           "slot": "SignetRing",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         },
         {
           "slot": "Triggered",
           "discovery": "undiscovered",
-          "reason": "Whole-face slot semantics pending separate face review."
+          "reason": "The source illustration does not show the full printed starter face clearly enough to verify absence.",
+          "evidence": [],
+          "abilityIds": []
         }
       ],
-      "abilities": [],
+      "abilities": [
+        {
+          "id": "imperium:starter:signet-ring:v1#slot:persuasion",
+          "contentId": "imperium:starter:signet-ring:v1",
+          "slot": "Reveal",
+          "timing": "on-reveal",
+          "classification": "primitive",
+          "semanticClaim": "Reveal grants one Persuasion.",
+          "descriptors": [],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Signet Ring starter face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [
+            {
+              "path": "tests/Dune.Engine.Tests/OriginalImperiumTurnRulesTests.cs",
+              "name": "SignetRingRevealsOnePersuasion",
+              "kind": "behavior",
+              "historical": false
+            }
+          ],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": null
+        },
+        {
+          "id": "imperium:starter:signet-ring:v1#slot:signet",
+          "contentId": "imperium:starter:signet-ring:v1",
+          "slot": "Agent",
+          "timing": "on-placement",
+          "classification": "special",
+          "semanticClaim": "Playing the starter on an Agent turn invokes the selected real leader Signet ability.",
+          "descriptors": [
+            {
+              "kind": "role",
+              "value": "leader Signet resolution"
+            },
+            {
+              "kind": "usage",
+              "value": "when Signet Ring is played for an Agent"
+            }
+          ],
+          "evidence": [
+            {
+              "sourceId": "src-I",
+              "page": 3,
+              "locator": "complete Signet Ring starter face",
+              "kind": "semantics",
+              "verification": "verified"
+            }
+          ],
+          "capabilityIds": [
+            "cap-leader-signet"
+          ],
+          "interactionIds": [],
+          "implementationRefs": [
+            "src/Dune.Engine/Turns/OriginalImperiumTurnRules.cs::Cards"
+          ],
+          "testRefs": [],
+          "discovery": "discovered",
+          "sourcing": "fully-sourced",
+          "verification": "verified",
+          "implementation": "partially-implemented",
+          "validation": "not-tested",
+          "blockers": [],
+          "exclusionReason": null,
+          "batchId": null,
+          "classificationReason": "No official leader is authored in Create()."
+        }
+      ],
       "runtimeDefinition": true,
       "replaces": [],
       "excludes": [],
@@ -11499,7 +14520,76 @@
       ]
     }
   ],
-  "capabilities": [],
+  "capabilities": [
+    {
+      "id": "cap-intrigue-recycle",
+      "contract": "Recycle and shuffle the shared Intrigue discard when drawing past deck exhaustion.",
+      "supportedSubset": "Draw from a nonempty shared Intrigue deck is authored.",
+      "memberRefs": [
+        "src/Dune.Engine/Turns/TurnEngine.Rewards.cs::ValidateIntrigueReservations"
+      ],
+      "testRefs": [],
+      "missingDelta": "Pinned FAQ p.2 resolves recycling, but ValidateIntrigueReservations rejects mandatory draws past current deck stock.",
+      "prerequisiteIds": [],
+      "implementation": "unsupported",
+      "validation": "not-tested",
+      "blockers": [
+        {
+          "id": "intrigue-recycle-open",
+          "open": true,
+          "blocking": true,
+          "scope": "imperium:space:carthag:v1#slot:placement, imperium:space:conspire:v1#slot:placement",
+          "reason": "Shared discard recycling and deterministic shuffle are not implemented."
+        }
+      ]
+    },
+    {
+      "id": "cap-leader-signet",
+      "contract": "Resolve a complete official leader Signet ability through a real leader identity.",
+      "supportedSubset": "No authenticated original face is claimed supported by this capability.",
+      "memberRefs": [
+        "src/Dune.Engine/Turns/TurnEngine.cs::Support",
+        "src/Dune.Engine/Turns/TurnEngine.cs::PushChild"
+      ],
+      "testRefs": [],
+      "missingDelta": "Create() has no official LeaderRule and the Signet path rejects unsupported leaders.",
+      "prerequisiteIds": [],
+      "implementation": "unsupported",
+      "validation": "not-tested",
+      "blockers": [
+        {
+          "id": "cap-leader-signet-open",
+          "open": true,
+          "blocking": true,
+          "scope": "imperium:starter:signet-ring:v1, imperium:leader:duke-leto-atreides:v1",
+          "reason": "Create() has no official LeaderRule and the Signet path rejects unsupported leaders."
+        }
+      ]
+    },
+    {
+      "id": "cap-plot-window",
+      "contract": "Resolve Plot Intrigue effects during owner Agent or Reveal turns.",
+      "supportedSubset": "No authenticated original face is claimed supported by this capability.",
+      "memberRefs": [
+        "src/Dune.Engine/Turns/TurnEngine.cs::ValidateAction",
+        "src/Dune.Engine/Turns/TurnEngine.cs::PlayIntrigue"
+      ],
+      "testRefs": [],
+      "missingDelta": "The authored Calculated Hire uses UnsupportedEffect and the selected Plot window is gated.",
+      "prerequisiteIds": [],
+      "implementation": "unsupported",
+      "validation": "not-tested",
+      "blockers": [
+        {
+          "id": "cap-plot-window-open",
+          "open": true,
+          "blocking": true,
+          "scope": "imperium:intrigue:calculated-hire:v1",
+          "reason": "The authored Calculated Hire uses UnsupportedEffect and the selected Plot window is gated."
+        }
+      ]
+    }
+  ],
   "interactions": [],
   "batches": [],
   "configurations": []

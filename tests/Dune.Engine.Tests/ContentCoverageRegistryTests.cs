@@ -81,4 +81,70 @@ public class ContentCoverageRegistryTests
         Assert.DoesNotContain(items.Values, x => x.GetProperty("category").GetString() == "GameplayComponent" &&
             x.GetProperty("runtimeDefinition").GetBoolean());
     }
+
+    [Fact]
+    public void AuthoredBoxesAgreeWithAuditedSlotsAndExplicitUnsupportedEffects()
+    {
+        using var document = LoadInventory();
+        var items = document.RootElement.GetProperty("content").EnumerateArray()
+            .Where(x => x.GetProperty("product").GetString() == "Imperium")
+            .ToDictionary(Id);
+        var turns = OriginalImperiumTurnRules.Create();
+        var lifecycle = OriginalImperiumTurnRules.CreateLifecycleRules();
+
+        static JsonElement Slot(JsonElement item, string name) => item.GetProperty("slots")
+            .EnumerateArray().Single(x => x.GetProperty("slot").GetString() == name);
+        static void AssertBox(JsonElement item, string name, bool hasEffect, bool unsupported)
+        {
+            var slot = Slot(item, name);
+            var discovery = slot.GetProperty("discovery").GetString();
+            if (unsupported)
+            {
+                Assert.True(discovery is "undiscovered" or "unreadable" or "discovered",
+                    $"Unsupported {Id(item)} {name} was declared absent");
+                if (discovery == "discovered")
+                    foreach (var abilityId in slot.GetProperty("abilityIds").EnumerateArray())
+                        Assert.Contains(item.GetProperty("abilities").EnumerateArray(), ability =>
+                            Id(ability) == abilityId.GetString() &&
+                            ability.GetProperty("implementation").GetString() != "implemented");
+            }
+            else if (hasEffect)
+            {
+                Assert.Equal("discovered", discovery);
+                Assert.NotEmpty(slot.GetProperty("abilityIds").EnumerateArray());
+            }
+            else if (item.GetProperty("faceComplete").GetBoolean())
+                Assert.Equal("verified-absent", discovery);
+        }
+
+        foreach (var card in turns.Cards)
+        {
+            var item = items[card.Id.Value];
+            AssertBox(item, "Agent", card.AgentEffects.Length > 0,
+                card.AgentEffects.Any(x => x is UnsupportedEffect));
+            AssertBox(item, "Reveal", card.RevealEffects.Length > 0,
+                card.RevealEffects.Any(x => x is UnsupportedEffect));
+            AssertBox(item, "Acquire", !card.AcquireEffects.IsDefaultOrEmpty,
+                !card.AcquireEffects.IsDefaultOrEmpty && card.AcquireEffects.Any(x => x is UnsupportedEffect));
+        }
+        foreach (var space in turns.Spaces)
+            AssertBox(items[space.Id.Value], "Agent", space.Effects.Length > 0 ||
+                !space.PlacementOptions.IsDefaultOrEmpty, space.Effects.Any(x => x is UnsupportedEffect));
+        foreach (var intrigue in lifecycle.Intrigues)
+        {
+            var item = items[intrigue.Id.Value];
+            var name = intrigue.Timing switch
+            {
+                IntrigueTiming.Combat => "Combat",
+                IntrigueTiming.Endgame => "Endgame",
+                IntrigueTiming.PostWin => "PostWin",
+                _ => "Intrigue",
+            };
+            AssertBox(item, name, intrigue.Effects.Length > 0,
+                intrigue.Effects.Any(x => x is UnsupportedEffect));
+        }
+        Assert.Empty(turns.Leaders);
+        Assert.Empty(lifecycle.Conflicts);
+        Assert.DoesNotContain(items.Values, x => x.GetProperty("authenticity").GetString() == "synthetic");
+    }
 }

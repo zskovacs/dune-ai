@@ -360,6 +360,7 @@ def test_optional_pdf_unavailable_offline_without_freshness(tmp_path, raw, monke
     root = tmp_path / "empty-root"
     root.mkdir()
     raw["content"] = []  # Isolate optional source files from required registry paths.
+    raw["capabilities"] = []
 
     def fail(*_args, **_kwargs):
         raise AssertionError("network called")
@@ -598,6 +599,99 @@ def test_complete_identity_quantity_with_unreadable_face_blocks_gameplay(tmp_pat
     assert not gate.initialization
     assert not gate.fullGame
     assert not gate.rl
+
+
+def test_primitive_dependency_does_not_complete_partial_card(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    item["faceComplete"] = False
+    item["faceEvidence"] = []
+    item["slots"][0] = {
+        "slot": "Setup",
+        "discovery": "undiscovered",
+        "reason": "whole face still unavailable",
+    }
+    ability = ability_record(item["id"])
+    ability.update(
+        classification="primitive",
+        classificationReason=None,
+        semanticClaim="one sourced reward primitive",
+        discovery="discovered",
+        sourcing="fully-sourced",
+        verification="verified",
+        evidence=[
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "reward primitive",
+                "kind": "semantics",
+                "verification": "verified",
+            }
+        ],
+    )
+    item["abilities"] = [ability]
+    next(s for s in item["slots"] if s["slot"] == "Agent").update(
+        discovery="discovered", abilityIds=[ability["id"]]
+    )
+    assert not codes(raw, tmp_path)
+    report = build_report(load(raw, tmp_path))
+    assert report.quantities[0].complete
+    assert not report.configurationGates[0].abilities
+
+
+@pytest.mark.parametrize("slot_name", ["Reveal", "Acquire"])
+def test_unknown_card_box_blocks_whole_face_support(tmp_path, raw, slot_name):
+    item, _ = populated_inventory(raw)
+    item["faceComplete"] = False
+    item["faceEvidence"] = []
+    slot = next(s for s in item["slots"] if s["slot"] == slot_name)
+    slot.update(discovery="unreadable", reason="printed box not available", evidence=[])
+    assert not codes(raw, tmp_path)
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.inventory
+    assert not gate.abilities
+
+
+def test_synthetic_tested_ability_cannot_raise_authentic_gate(tmp_path, raw):
+    item, config = populated_inventory(raw)
+    item["authenticity"] = "synthetic"
+    ability = ability_record(item["id"])
+    ability.update(
+        classification="primitive",
+        classificationReason=None,
+        semanticClaim="tested synthetic reward",
+        discovery="discovered",
+        sourcing="fully-sourced",
+        verification="verified",
+        implementation="implemented",
+        validation="tested",
+        implementationRefs=["scripts/content_coverage_model.py::build_report"],
+        evidence=[
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "synthetic fixture",
+                "kind": "semantics",
+                "verification": "verified",
+            }
+        ],
+        testRefs=[
+            {
+                "path": "training/tests/test_content_coverage.py",
+                "name": "fixture",
+                "kind": kind,
+            }
+            for kind in ("behavior", "integration", "privacy-replay")
+        ],
+    )
+    item["abilities"] = [ability]
+    next(s for s in item["slots"] if s["slot"] == "Agent").update(
+        discovery="discovered", abilityIds=[ability["id"]]
+    )
+    config["authenticity"] = "synthetic"
+    assert not codes(raw, tmp_path)
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.inventory
+    assert not gate.abilities
 
 
 def test_selected_configuration_cannot_omit_reconciled_definition(tmp_path, raw):
