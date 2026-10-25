@@ -150,8 +150,8 @@ public sealed class EffectContinuationTests
         var snapshot = engine.CaptureTrustedSnapshot();
         var copy = JsonSerializer.Deserialize<TurnSnapshotData>(snapshot.CanonicalJson, ConfigurationJson.Options)!;
         Assert.Equal(snapshot.CanonicalJson, JsonSerializer.Serialize(copy, ConfigurationJson.Options));
-        Assert.Equal("dune-turn-snapshot-v7", copy.Schema);
-        Assert.Equal("dune-turn-replay-v7", engine.CaptureReplay().Schema);
+        Assert.Equal("dune-turn-snapshot-v9", copy.Schema);
+        Assert.Equal("dune-turn-replay-v9", engine.CaptureReplay().Schema);
     }
 
     [Fact]

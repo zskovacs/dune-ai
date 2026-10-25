@@ -19,6 +19,7 @@ public sealed record EffectContext(int InitiatorId, int DecisionOwnerId, int Pay
     CardInstanceId? SourceCard, ContentId? SourceDefinition, BoardSpaceId? Space,
     EffectProvenance Provenance, int? ParentFrameId = null)
 {
+    public int? SourceOwnerId { get; init; }
     public SelectedCardTarget? SelectedTarget { get; init; }
 
     [JsonIgnore]

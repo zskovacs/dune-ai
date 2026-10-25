@@ -254,7 +254,7 @@ public sealed partial class TurnEngine
         return new(StepStatus.Applied, []);
     }
 
-    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v8", _rulesIdentity, _initialHash,
+    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v9", _rulesIdentity, _initialHash,
         _state.CaptureTrustedSnapshot().Data, [.. _frames], _nextFrameId, _revealing, _deploying,
         _recruited, _oldGarrison, _nextEffectId,
         [.. _used.OrderBy(x => x.PlayerId).ThenBy(x => x.Space.Value, StringComparer.Ordinal)], [.. _history])
@@ -262,7 +262,7 @@ public sealed partial class TurnEngine
 
     public TurnReplay CaptureReplay() => CreateReplay(CaptureTrustedSnapshot().Hash);
 
-    private TurnReplay CreateReplay(string finalStateHash) => new("dune-turn-replay-v8",
+    private TurnReplay CreateReplay(string finalStateHash) => new("dune-turn-replay-v9",
         typeof(TurnEngine).Assembly.GetName().Version!.ToString(),
         System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
         _rulesIdentity, _state.Definition.Fingerprint, _state.ConfigurationIdentity, _state.ContentIdentity,
@@ -394,6 +394,7 @@ public sealed partial class TurnEngine
         {
             var work = CurrentPending.FirstOrDefault(x => x.Id == resolveWork.EffectId);
             return work is null ? Illegal("effect", "This pending effect is unavailable.") :
+                ValidateSourceTrash(work.Effect, work.Context) ??
                 Preflight([work.Effect], work.Context.RecipientId, work.Context.Space, payer: work.Context.PayerId, chooser: work.Context.DecisionOwnerId) ?? ValidateRemaining();
         }
         if (_frames.Count > 0 && !IsRevealRoot && !IsPostWinRewardRoot && !_deploying)
@@ -440,7 +441,9 @@ public sealed partial class TurnEngine
                 var optionEffects = spaceRule.PlacementOptions.IsEmpty ? [] : spaceRule.PlacementOptions[place.PaymentOption].Effects;
                 var selectedEffects = cardRule.AgentEffects.Concat(spaceRule.Effects).Concat(optionEffects);
                 var contextError = ValidateContext(cardRule.AgentEffects, cardSource: true, boardSource: true, active.Id) ??
-                    ValidateContext(spaceRule.Effects.Concat(optionEffects), cardSource: false, boardSource: true, active.Id);
+                    ValidateContext(spaceRule.Effects.Concat(optionEffects), cardSource: false, boardSource: true, active.Id) ??
+                    ValidateSourceTrash(new PlayerOrderedEffect(cardRule.AgentEffects),
+                        RootContext(active.Id, physical.Id, physical.Definition, place.Space, EffectProvenance.Card));
                 if (contextError is not null) return contextError;
                 var optionCost = spaceRule.PlacementOptions.IsEmpty ? new ResourceCost() : spaceRule.PlacementOptions[place.PaymentOption].Cost;
                 var placementPayments = CostPayments(active.Id, new(spaceRule.Cost.Solari + optionCost.Solari,
@@ -464,6 +467,8 @@ public sealed partial class TurnEngine
                         return Unsupported("reveal-support", "A remaining hand card has no executable Reveal definition.");
                     if (_cardErrors.TryGetValue(rule.Id, out var revealCardError)) return revealCardError;
                     if (ValidateContext(rule.RevealEffects, cardSource: true, boardSource: false, active.Id) is { } error) return error;
+                    if (ValidateSourceTrash(new PlayerOrderedEffect(rule.RevealEffects),
+                        RootContext(active.Id, card.Id, card.Definition, null, EffectProvenance.Card)) is { } sourceError) return sourceError;
                     revealEffects.AddRange(rule.RevealEffects);
                     revealResources.AddRange(rule.RevealEffects.Select(x => (x, active.Id, active.Id, (BoardSpaceId?)null)));
                 }
@@ -501,6 +506,8 @@ public sealed partial class TurnEngine
                     return Illegal("persuasion", "Insufficient Persuasion.");
                 (int Payer, ResourceKind Resource, int Amount)[] purchasePayments = [(active.Id, ResourceKind.Persuasion, purchase.Cost)];
                 return ValidateContext(purchase.AcquireEffects, cardSource: true, boardSource: false, active.Id) ??
+                    ValidateSourceTrash(new PlayerOrderedEffect(purchase.AcquireEffects),
+                        RootContext(active.Id, null, purchase.Id, null, EffectProvenance.Acquisition)) ??
                     ValidateSpecialOperations(Pending.Select(x => (x.Effect, x.Context.RecipientId))
                         .Concat(purchase.AcquireEffects.Select(x => (x, active.Id)))) ??
                     Preflight(purchase.AcquireEffects, active.Id, payments: purchasePayments) ??
@@ -607,7 +614,8 @@ public sealed partial class TurnEngine
     }
 
     private TurnDiagnostic? ValidateRemaining(IEnumerable<(Effect Effect, int Owner)>? selected = null, BoardSpaceId? sourceSpace = null,
-        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? selectedPayer = null, int? selectedChooser = null, SelectedCardTarget? removedTrash = null)
+        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? selectedPayer = null, int? selectedChooser = null,
+        SelectedCardTarget? removedTrash = null, ContentId? returnedReserve = null)
     {
         // A selected decision child finishes first, then the active frame, then its suspended parents.
         // Keep explicit Sequence order when projecting signed Influence across a suspended decision.
@@ -624,8 +632,10 @@ public sealed partial class TurnEngine
         children.AddRange(FutureRewardWork().Select(x => (Effect)new ForPlayerEffect(x.Owner, [x.Effect])));
         (Effect Effect, int Owner)[] work = [(new SequenceEffect([.. children]), 0)];
         var resources = work.Select(x => (x.Effect, x.Owner, 0, sourceSpace ?? Pending.Select(x => x.Context.Space).FirstOrDefault(x => x is not null)));
-        return ValidateTrashAvailability(resources, removedTrash) ??
-            ValidateSpecialOperations(work) ?? ValidateAcquisitionStock(work) ?? ValidateResourceBounds(resources, payments) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
+        return ValidateRemainingSources(selected, selectedPayer, selectedChooser, removedTrash) ??
+            ValidateTrashAvailability(resources, removedTrash) ??
+            ValidateSpecialOperations(work) ?? ValidateAcquisitionStock(work, returnedReserve: returnedReserve) ??
+            ValidateResourceBounds(resources, payments, returnedReserve: returnedReserve) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
     }
 
     private TurnDiagnostic? ValidatePermanentOperations(IEnumerable<(Effect Effect, int Owner)> work)
@@ -680,7 +690,8 @@ public sealed partial class TurnEngine
         ValidateResourceBounds(work.Select(x => (x.Effect, x.Owner, payer ?? x.Owner, space)), payments);
 
     private TurnDiagnostic? ValidateResourceBounds(IEnumerable<(Effect Effect, int Owner, int Payer, BoardSpaceId? Space)> work,
-        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, CardInstance? consumed = null)
+        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, CardInstance? consumed = null,
+        ContentId? returnedReserve = null)
     {
         var projection = ProjectFactionWork(work);
         if (projection.Error is { } error) return error;
@@ -828,7 +839,7 @@ public sealed partial class TurnEngine
                         var branchWork = selectedWork.AddRange(option.Effects.Select(x => (x, owner)));
                         var branchChoices = new HashSet<Effect>(selectedChoices, ReferenceEqualityComparer.Instance) { choice };
                         var mandatoryWork = materialized.Select(x => (x.Effect, x.Owner)).Concat(branchWork).ToArray();
-                        return HasCapacity(branch) && ValidateAcquisitionStock(mandatoryWork, consumed, branchChoices) is null &&
+                        return HasCapacity(branch) && ValidateAcquisitionStock(mandatoryWork, consumed, branchChoices, returnedReserve) is null &&
                             ValidateIntrigueReservations(mandatoryWork, branchChoices) is null &&
                             ValidatePermanentOperations(mandatoryWork) is null &&
                             !AmbiguousJointChoices(option.Effects.Select(x => (x, owner, payer, space)), branch, mandatoryWork, branchFunding) &&
@@ -981,7 +992,7 @@ public sealed partial class TurnEngine
     }
 
     private TurnDiagnostic? ValidateAcquisitionStock(IEnumerable<(Effect Effect, int Owner)> work,
-        CardInstance? consumed = null, IReadOnlySet<Effect>? selectedChoices = null)
+        CardInstance? consumed = null, IReadOnlySet<Effect>? selectedChoices = null, ContentId? returnedReserve = null)
     {
         var projection = ProjectFactionWork(work.Select(x => (x.Effect, x.Owner, x.Owner, (BoardSpaceId?)null)));
         if (projection.Error is { } error) return error;
@@ -1005,6 +1016,8 @@ public sealed partial class TurnEngine
                 // Only visible stock is safe to reserve; a refill cannot assume hidden deck content.
                 var stock = PurchaseZones().Sum(zone => zone.Cards.Count(card => card.Definition == target &&
                     card.Id != consumed?.Id));
+                // Only a verified selected target supplies one copy after the trash boundary.
+                if (target == returnedReserve) stock++;
                 if (counts.GetValueOrDefault(target) > stock) return false;
             }
             return true;
@@ -1173,6 +1186,8 @@ public sealed partial class TurnEngine
         if (!CanPay(Player(play.PlayerId), rule.Cost)) return Illegal("intrigue-cost", "This Intrigue is unaffordable.");
         return ValidateContext(rule.Effects, cardSource: true, boardSource: false, play.PlayerId,
             combatRetreat: window.Kind == DecisionWindowKind.Combat) ??
+            ValidateSourceTrash(new PlayerOrderedEffect(rule.Effects),
+                RootContext(play.PlayerId, card.Id, card.Definition, null, EffectProvenance.Card)) ??
             Preflight(rule.Effects, play.PlayerId, payments: CostPayments(play.PlayerId, rule.Cost)) ??
             ValidateRemaining(rule.Effects.Select(x => (x, play.PlayerId)), payments: CostPayments(play.PlayerId, rule.Cost));
     }
@@ -1497,7 +1512,7 @@ public sealed partial class TurnEngine
                 {
                     var zone = _state.Zones.SingleOrDefault(x => x.Cards.Any(c => c.Id == id));
                     if (zone is null) throw new InvalidOperationException("Self-trash source card is missing from the game.");
-                    if (zone != _state.Shared.Trashed) zone.MoveTo(id, _state.Shared.Trashed);
+                    MoveTrashedCard(zone.Cards.Single(x => x.Id == id), zone);
                 }
                 else throw new InvalidOperationException("Self-trash source context is missing.");
                 break;
@@ -1565,6 +1580,7 @@ public sealed partial class TurnEngine
         {
             SourceCard = card.Id,
             SourceDefinition = card.Definition,
+            SourceOwnerId = player.Id,
             Space = null,
             Provenance = EffectProvenance.Acquisition,
         }, EffectGroupMode.PlayerOrdered);
@@ -1572,7 +1588,8 @@ public sealed partial class TurnEngine
 
     private static EffectContext RootContext(int player, CardInstanceId? card, ContentId? definition,
         BoardSpaceId? space, EffectProvenance provenance) => new(player, player, player, player,
-            card, definition, space, provenance);
+        card, definition, space, provenance)
+        { SourceOwnerId = card is null ? null : player };
 
     private static EffectContext BindRoles(EffectContext context, int? chooser, int? payer, int? recipient) =>
         context with
@@ -1794,7 +1811,9 @@ public sealed partial class TurnEngine
                     trash.Targets.Select(x => x.Instance).Distinct().Count() != trash.Targets.Length)))
                 throw new InvalidOperationException("Selected trash decision payload is inconsistent with its execution frame.");
             foreach (var context in frame.Remaining.Select(x => x.Context).Concat(frame.Decision is { } active ? [active.Context] : []))
-                if (context.SelectedTarget is { } target && ValidateOwner(target.OwnerId) is not null)
+                if (context.SourceCard is not null && (context.SourceOwnerId is not { } sourceOwner || ValidateOwner(sourceOwner) is not null) ||
+                    context.SourceCard is null && context.SourceOwnerId is not null ||
+                    context.SelectedTarget is { } target && ValidateOwner(target.OwnerId) is not null)
                     throw new InvalidOperationException("Selected target provenance has an invalid owner.");
         }
         var cards = _state.Zones.SelectMany(x => x.Cards).ToArray();

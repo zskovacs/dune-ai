@@ -348,7 +348,7 @@ public sealed class SelectedTrashTests
     }
 
     [Fact]
-    public void ReserveTargetsRemainUnsupportedUntilSharedRoutingIsInstalled()
+    public void ReserveTargetsReturnToTheirSharedStack()
     {
         var (state, engine, _) = Ready([new SelectedTrashEffect([])]);
         var reserve = state.Shared.Reserves[0];
@@ -358,8 +358,9 @@ public sealed class SelectedTrashTests
         Resolve<SelectedTrashEffect>(engine);
         var selection = engine.CaptureTrustedSnapshot().Data.Decisions.Single().SelectedTrash!;
         var target = selection.Targets.Single(x => x.Instance == card.Id);
-        RejectUnchanged(engine, new SelectTrashCardAction(0, selection.Id, target.Source, target.Card), StepStatus.Unsupported);
-        Assert.Contains(card, state.Players[0].Discard.Cards);
+        Apply(engine, new SelectTrashCardAction(0, selection.Id, target.Source, target.Card));
+        Assert.Contains(card, reserve.Cards);
+        Assert.DoesNotContain(card, state.Players[0].Discard.Cards);
         Assert.Empty(state.Shared.Trashed.Cards);
     }
 

@@ -10,17 +10,17 @@ namespace Dune.Engine.Tests;
 public sealed class LifecycleReplayTests
 {
     [Fact]
-    public void LifecycleContractsUseExplicitV8TurnSchemasAndSupportVersions()
+    public void LifecycleContractsUseExplicitV9TurnSchemasAndSupportVersions()
     {
         var state = CreateState();
         var engine = new TurnEngine(state, Rules(state));
         Assert.Equal("dune-setup-snapshot-v5", state.CaptureTrustedSnapshot().Data.Schema);
-        Assert.Equal("dune-turn-snapshot-v8", engine.CaptureTrustedSnapshot().Data.Schema);
+        Assert.Equal("dune-turn-snapshot-v9", engine.CaptureTrustedSnapshot().Data.Schema);
         Assert.Equal("dune-setup-snapshot-v5", engine.CaptureTrustedSnapshot().Data.Game.Schema);
-        Assert.Equal("dune-turn-replay-v8", engine.CaptureReplay().Schema);
-        Assert.Equal("original-imperium-turn-support-v14", engine.CaptureReplay().SupportVersion);
-        Assert.Equal("imperium-2020-turn-preview-v14", OriginalImperiumTurnRules.Version);
-        Assert.Equal("imperium-2020-turn-preview-v14", OriginalImperiumTurnRules.Create().Version);
+        Assert.Equal("dune-turn-replay-v9", engine.CaptureReplay().Schema);
+        Assert.Equal("original-imperium-turn-support-v15", engine.CaptureReplay().SupportVersion);
+        Assert.Equal("imperium-2020-turn-preview-v15", OriginalImperiumTurnRules.Version);
+        Assert.Equal("imperium-2020-turn-preview-v15", OriginalImperiumTurnRules.Create().Version);
         Assert.Equal("dune-configuration-sha256-v1", state.CaptureTrustedSnapshot().Data.ConfigurationIdentityFormat);
     }
 
@@ -98,6 +98,9 @@ public sealed class LifecycleReplayTests
     [InlineData("dune-turn-replay-v7", "original-imperium-turn-support-v13")]
     [InlineData("dune-turn-replay-v7", "original-imperium-turn-support-v14")]
     [InlineData("dune-turn-replay-v8", "original-imperium-turn-support-v13")]
+    [InlineData("dune-turn-replay-v8", "original-imperium-turn-support-v14")]
+    [InlineData("dune-turn-replay-v8", "original-imperium-turn-support-v15")]
+    [InlineData("dune-turn-replay-v9", "original-imperium-turn-support-v14")]
     public void OlderReplayMetadataFailsValidationBeforeAnyActionsAreApplied(string schema, string supportVersion)
     {
         var state = CreateState();
@@ -150,8 +153,8 @@ public sealed class LifecycleReplayTests
         Assert.Equal(effectJson, JsonSerializer.Serialize(effect, ConfigurationJson.Options));
         Assert.Equal(effectJson, JsonSerializer.Serialize(JsonSerializer.Deserialize<Effect>(effectJson, ConfigurationJson.Options), ConfigurationJson.Options));
         var context = new EffectContext(0, 2, 2, 1, new(42), new("fixture:source"), null, EffectProvenance.Card, 3)
-        { SelectedTarget = new(new(43), new("fixture:target"), new("own:discard"), 2) };
-        const string contextJson = """{"initiatorId":0,"decisionOwnerId":2,"payerId":2,"recipientId":1,"sourceCard":{"value":42},"sourceDefinition":{"value":"fixture:source"},"space":null,"provenance":"Card","parentFrameId":3,"selectedTarget":{"instance":{"value":43},"definition":{"value":"fixture:target"},"source":{"value":"own:discard"},"ownerId":2}}""";
+        { SourceOwnerId = 0, SelectedTarget = new(new(43), new("fixture:target"), new("own:discard"), 2) };
+        const string contextJson = """{"initiatorId":0,"decisionOwnerId":2,"payerId":2,"recipientId":1,"sourceCard":{"value":42},"sourceDefinition":{"value":"fixture:source"},"space":null,"provenance":"Card","parentFrameId":3,"sourceOwnerId":0,"selectedTarget":{"instance":{"value":43},"definition":{"value":"fixture:target"},"source":{"value":"own:discard"},"ownerId":2}}""";
         Assert.Equal(contextJson, JsonSerializer.Serialize(context, ConfigurationJson.Options));
         Assert.Equal(context, JsonSerializer.Deserialize<EffectContext>(contextJson, ConfigurationJson.Options));
         var decision = new DecisionFrame(effect, context)
@@ -173,8 +176,8 @@ public sealed class LifecycleReplayTests
         var second = new TurnEngine(CreateState(), rules with { Cards = [.. rules.Cards.Reverse()], Spaces = [.. rules.Spaces.Reverse()], Leaders = [.. rules.Leaders.Reverse()] });
         Assert.Equal(first.CaptureReplay().RulesIdentity, second.CaptureReplay().RulesIdentity);
         Assert.Equal(first.CaptureTrustedSnapshot().Hash, second.CaptureTrustedSnapshot().Hash);
-        Assert.Equal("original-imperium-turn-support-v14", first.CaptureReplay().SupportVersion);
-        Assert.Equal("imperium-2020-turn-preview-v14", OriginalImperiumTurnRules.Version);
+        Assert.Equal("original-imperium-turn-support-v15", first.CaptureReplay().SupportVersion);
+        Assert.Equal("imperium-2020-turn-preview-v15", OriginalImperiumTurnRules.Version);
     }
 
     [Theory]
@@ -201,7 +204,7 @@ public sealed class LifecycleReplayTests
     {
         var replayJson = JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options);
         var replay = JsonSerializer.Deserialize<TurnReplay>(replayJson, ConfigurationJson.Options)!;
-        Assert.Equal("dune-turn-replay-v8", replay.Schema);
+        Assert.Equal("dune-turn-replay-v9", replay.Schema);
         var result = TurnEngine.Replay(replay, () => CreateState(), rules);
         Assert.True(result.IsSuccess, string.Join(";", result.Diagnostics));
         Assert.Equal(engine.CaptureTrustedSnapshot().Hash, result.Engine!.CaptureTrustedSnapshot().Hash);
