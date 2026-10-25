@@ -39,7 +39,7 @@
 - Trash decision: one optional arrow exchange. Taking it selects and trashes exactly one eligible own card; declining leaves Influence but no exchange reward. It cannot repeat.
 - Draw behavior: taking the exchange pushes Draw2 after the trash movement, using the seeded current-discard refill when the personal deck is empty.
 - Effect ordering: authored Influence and `SelectedTrashEffect([DrawEffect(2)])` are separate ordered roots; selected children finish before suspended parent work. Existing generated threshold descendants remain preflighted.
-- Official source references: original 2020 player aid `src-A` p.2; 2020-10-26 original rules `src-I` p.9 and p.16; publisher FAQ revised 2025-01-13 p.3 for optional arrow/mandatory ordinary effect and p.4 for retained The Spice Must Flow VP. I and A local SHA-256 match canonical inventory; approved FAQ hash is `7b54c283357244e5107d1d0f4e87817d39297e914c2014239acbb2c460c0c6b9`, locator `https://d19y2ttatozxjp.cloudfront.net/pdfs/DUNE_IMPERIUM_FAQ_25-1-13.pdf`.
+- Official source references: original 2020 player aid `src-A` p.2; 2020-10-26 original rules `src-I` p.9 and p.16; publisher FAQ revised 2025-01-13 p.3 for optional arrow/mandatory ordinary effect and p.4 for retained The Spice Must Flow VP. I and A local SHA-256 match canonical inventory; approved FAQ hash is `7b54c283357244e5107d1d0f4e87817d39297e914c2014239acbb2c460c0c6b9`, locator [publisher FAQ](https://d19y2ttatozxjp.cloudfront.net/pdfs/DUNE_IMPERIUM_FAQ_25-1-13.pdf).
 - Remaining limitations: only this sourced original placement is promoted; neither Secrets nor Foldspace space, other card faces or a complete legal board are implied.
 
 ## C. Engine Integration
