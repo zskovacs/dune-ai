@@ -198,6 +198,28 @@ class Authenticity(StrEnum):
     SYNTHETIC = "synthetic"
 
 
+class AbilityApplicability(StrEnum):
+    EXECUTABLE = "executable"
+    PHYSICAL_ONLY = "physical-only"
+
+
+class Priority(StrEnum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class RulingStatus(StrEnum):
+    RESOLVED = "resolved"
+    PARTIALLY_RESOLVED = "partially-resolved"
+    UNRESOLVED = "unresolved"
+
+
+class LeaderPolicy(StrEnum):
+    ALL_OFFICIAL = "all-official"
+    FIXED_SUBSET = "fixed-subset"
+
+
 class RegistryKind(StrEnum):
     CATALOG = "Catalog"
     CARD_RULE = "CardRule"
@@ -332,6 +354,8 @@ class ContentRecord:
     replaces: tuple[str, ...] = ()
     excludes: tuple[str, ...] = ()
     implementationReferences: tuple[RegistryReference, ...] = ()
+    abilityApplicability: AbilityApplicability = AbilityApplicability.EXECUTABLE
+    abilityApplicabilityEvidence: tuple[EvidenceClaim, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -386,6 +410,8 @@ class InteractionRecord:
     implementation: Implementation
     validation: Validation
     blockers: tuple[Blocker, ...]
+    rulingStatus: RulingStatus = RulingStatus.UNRESOLVED
+    scenarios: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -398,6 +424,12 @@ class BatchRecord:
     expectedDelta: str
     acceptance: str
     risks: tuple[str, ...]
+    title: str = ""
+    priority: Priority = Priority.LOW
+    order: int = 0
+    priorityRationale: str = ""
+    evidence: tuple[EvidenceClaim, ...] = ()
+    validationRequirements: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -408,7 +440,7 @@ class ConfigurationRecord:
     modules: tuple[Module, ...]
     mode: Mode
     seats: int
-    leaderPolicy: str
+    leaderPolicy: LeaderPolicy
     authenticity: Authenticity
     contentIds: tuple[str, ...]
     interactionIds: tuple[str, ...]
@@ -416,6 +448,10 @@ class ConfigurationRecord:
     initializationTests: tuple[TestReference, ...]
     fullGameTests: tuple[TestReference, ...]
     rlTests: tuple[TestReference, ...]
+    leaderContentIds: tuple[str, ...] = ()
+    preset: str | None = None
+    compositionTests: tuple[TestReference, ...] = ()
+    executionBlockers: tuple[Blocker, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -612,13 +648,12 @@ def _expectation_applies(
         return Module.BLOODLINES_TECH in config.modules
     if scope == ExpectationScope.BOXED_TIER_SUBSET_EXCLUDED:
         return config.base == Product.UPRISING
-    if scope.value.startswith("leader-specific-") and config.leaderPolicy.startswith(
-        "fixed:"
+    if (
+        scope.value.startswith("leader-specific-")
+        and config.leaderPolicy == LeaderPolicy.FIXED_SUBSET
     ):
-        return (
-            scope.value.removeprefix("leader-specific-")
-            in config.leaderPolicy.casefold()
-        )
+        leader_key = scope.value.removeprefix("leader-specific-")
+        return any(leader_key in leader_id for leader_id in config.leaderContentIds)
     return True
 
 
@@ -738,6 +773,7 @@ def _complete_face(item: ContentRecord, sources: dict[str, SourceRecord]) -> boo
     slots = {slot.slot: slot for slot in item.slots}
     return (
         item.faceComplete
+        and item.abilityApplicability == AbilityApplicability.EXECUTABLE
         and item.discovery == Discovery.DISCOVERED
         and item.category not in {Category.GAMEPLAY_COMPONENT, Category.BOARD_LAYOUT}
         and _official_claim(item.faceEvidence, EvidenceKind.SEMANTICS, sources)
@@ -747,8 +783,30 @@ def _complete_face(item: ContentRecord, sources: dict[str, SourceRecord]) -> boo
                 slot.discovery == SlotDiscovery.VERIFIED_ABSENT
                 and _official_claim(slot.evidence, EvidenceKind.SEMANTICS, sources)
             )
-            or (slot.discovery == SlotDiscovery.DISCOVERED and bool(slot.abilityIds))
+            or (
+                slot.discovery == SlotDiscovery.DISCOVERED
+                and bool(slot.abilityIds)
+                and all(
+                    any(a.id == ref and a.slot == slot.slot for a in item.abilities)
+                    for ref in slot.abilityIds
+                )
+            )
             for slot in slots.values()
+        )
+    )
+
+
+def _physical_only(item: ContentRecord, sources: dict[str, SourceRecord]) -> bool:
+    return (
+        item.abilityApplicability == AbilityApplicability.PHYSICAL_ONLY
+        and item.category in {Category.GAMEPLAY_COMPONENT, Category.BOARD_LAYOUT}
+        and item.discovery == Discovery.DISCOVERED
+        and item.authenticity == Authenticity.OFFICIAL
+        and not item.slots
+        and not item.abilities
+        and not item.faceComplete
+        and _official_claim(
+            item.abilityApplicabilityEvidence, EvidenceKind.APPLICABILITY, sources
         )
     )
 
@@ -983,6 +1041,23 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
     for item in inventory.content:
         evidence(item.evidence, item.id, "evidence", item.product)
         evidence(item.faceEvidence, item.id, "faceEvidence", item.product)
+        evidence(
+            item.abilityApplicabilityEvidence,
+            item.id,
+            "abilityApplicabilityEvidence",
+            item.product,
+        )
+        if (
+            item.abilityApplicability == AbilityApplicability.PHYSICAL_ONLY
+            and not _physical_only(item, sources)
+        ):
+            add(
+                "ability-applicability",
+                item.id,
+                "abilityApplicability",
+                "physical-only needs official non-executable evidence "
+                "and no ability slots or face claim",
+            )
         seen_registry_refs: set[tuple[RegistryKind, str, Slot | None]] = set()
         for ref in item.implementationReferences:
             ref_key = (ref.registryKind, ref.key, ref.slot)
@@ -1297,6 +1372,7 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
         )
         refs(batch.prerequisiteIds, batches, batch.id, "prerequisiteIds")
         refs(batch.sourceGates, sources, batch.id, "sourceGates")
+        evidence(batch.evidence, batch.id, "evidence")
     for ability in all_abilities:
         owners = [
             batch.id for batch in inventory.batches if ability.id in batch.memberIds
@@ -1307,6 +1383,17 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
                 ability.id,
                 "batchId",
                 "ability belongs to multiple batches",
+            )
+        if (
+            inventory.batches
+            and ability.implementation != Implementation.IMPLEMENTED
+            and (len(owners) != 1 or ability.batchId not in owners)
+        ):
+            add(
+                "batch-membership",
+                ability.id,
+                "batchId",
+                "known unsupported/partial ability requires exactly one primary batch",
             )
     for group, graph in (
         ("capabilities", {c.id: c.prerequisiteIds for c in inventory.capabilities}),
@@ -1334,6 +1421,52 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
             )
     for configuration in inventory.configurations:
         refs(configuration.contentIds, content, configuration.id, "contentIds")
+        refs(
+            configuration.leaderContentIds,
+            content,
+            configuration.id,
+            "leaderContentIds",
+        )
+        if (
+            configuration.leaderPolicy == LeaderPolicy.ALL_OFFICIAL
+            and configuration.leaderContentIds
+        ):
+            add(
+                "leader-policy",
+                configuration.id,
+                "leaderContentIds",
+                "all-official policy cannot restrict the leader pool",
+            )
+        if configuration.leaderPolicy == LeaderPolicy.FIXED_SUBSET and (
+            len(configuration.leaderContentIds) != configuration.seats
+            or len(set(configuration.leaderContentIds)) != configuration.seats
+            or any(
+                c not in content or content[c].category != Category.LEADER
+                for c in configuration.leaderContentIds
+            )
+        ):
+            add(
+                "leader-policy",
+                configuration.id,
+                "leaderContentIds",
+                "fixed subset needs one distinct known leader per seat",
+            )
+        for tests in (
+            configuration.compositionTests,
+            configuration.initializationTests,
+            configuration.fullGameTests,
+            configuration.rlTests,
+        ):
+            _validate_assertions(
+                configuration.id,
+                Implementation.NOT_IMPLEMENTED,
+                Validation.NOT_TESTED,
+                (),
+                tests,
+                (),
+                root,
+                add,
+            )
         for content_id in configuration.contentIds:
             if content_id in content and not _content_applies(
                 content[content_id], configuration
@@ -1603,6 +1736,24 @@ def build_report(inventory: AuditInventory) -> AuditReport:
     capabilities = {c.id: c for c in inventory.capabilities}
     interactions = {i.id: i for i in inventory.interactions}
 
+    def supported_interaction(interaction_id: str) -> bool:
+        interaction = interactions.get(interaction_id)
+        return (
+            interaction is not None
+            and interaction.implementation == Implementation.IMPLEMENTED
+            and interaction.validation == Validation.TESTED
+            and bool(interaction.implementationRefs)
+            and not _has_open_blocker(interaction.blockers)
+            and all(
+                _has_test(interaction.testRefs, {kind})
+                for kind in (
+                    EvidenceKind.BEHAVIOR,
+                    EvidenceKind.INTEGRATION,
+                    EvidenceKind.PRIVACY_REPLAY,
+                )
+            )
+        )
+
     def supported_ability(ability_id: str) -> bool:
         ability = abilities.get(ability_id)
         if ability is None:
@@ -1638,13 +1789,7 @@ def build_report(inventory: AuditInventory) -> AuditReport:
                 _capability_supported(ref, capabilities)
                 for ref in ability.capabilityIds
             )
-            and all(
-                ref in interactions
-                and interactions[ref].implementation == Implementation.IMPLEMENTED
-                and interactions[ref].validation == Validation.TESTED
-                and not _has_open_blocker(interactions[ref].blockers)
-                for ref in ability.interactionIds
-            )
+            and all(supported_interaction(ref) for ref in ability.interactionIds)
         )
 
     gates: list[ConfigurationGate] = []
@@ -1660,6 +1805,20 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             and _content_applies(c, config)
         }
         selected_content_ids = set(config.contentIds)
+        leader_policy_ok = (
+            config.leaderPolicy == LeaderPolicy.ALL_OFFICIAL
+            and not config.leaderContentIds
+        ) or (
+            config.leaderPolicy == LeaderPolicy.FIXED_SUBSET
+            and len(config.leaderContentIds) == config.seats
+            and len(set(config.leaderContentIds)) == config.seats
+            and all(
+                c in content
+                and content[c].category == Category.LEADER
+                and c in selected_content_ids
+                for c in config.leaderContentIds
+            )
+        )
         composition = (
             config.base in {Product.IMPERIUM, Product.UPRISING}
             and config.seats in {3, 4}
@@ -1668,7 +1827,8 @@ def build_report(inventory: AuditInventory) -> AuditReport:
                 for expansion in config.expansions
             )
             and not _configuration_dependencies(config)
-            and any(e.kind == EvidenceKind.COMPOSITION for e in config.evidence)
+            and leader_policy_ok
+            and _official_claim(config.evidence, EvidenceKind.COMPOSITION, sources)
         )
         inventory_ok = (
             composition
@@ -1685,7 +1845,16 @@ def build_report(inventory: AuditInventory) -> AuditReport:
         ]
         ability_ok = (
             inventory_ok
-            and all(_complete_face(content[c], sources) for c in required_content_ids)
+            and config.authenticity == Authenticity.OFFICIAL
+            and all(
+                content[c].authenticity == Authenticity.OFFICIAL
+                for c in required_content_ids
+            )
+            and all(
+                _complete_face(content[c], sources)
+                or _physical_only(content[c], sources)
+                for c in required_content_ids
+            )
             and all(supported_ability(a) for a in ability_ids)
         )
         required_interaction_ids = {
@@ -1697,13 +1866,7 @@ def build_report(inventory: AuditInventory) -> AuditReport:
         interactions_ok = (
             ability_ok
             and required_interaction_ids <= set(config.interactionIds)
-            and all(
-                i in interactions
-                and interactions[i].implementation == Implementation.IMPLEMENTED
-                and interactions[i].validation == Validation.TESTED
-                and not _has_open_blocker(interactions[i].blockers)
-                for i in config.interactionIds
-            )
+            and all(supported_interaction(i) for i in config.interactionIds)
         )
         authentic = config.authenticity == Authenticity.OFFICIAL and all(
             content[c].authenticity == Authenticity.OFFICIAL
@@ -1713,11 +1876,13 @@ def build_report(inventory: AuditInventory) -> AuditReport:
         init = (
             interactions_ok
             and authentic
+            and not _has_open_blocker(config.executionBlockers)
             and _has_test(config.initializationTests, {EvidenceKind.INITIALIZATION})
         )
         game = init and _has_test(config.fullGameTests, {EvidenceKind.FULL_GAME})
-        rl = game and _has_test(
-            config.rlTests, {EvidenceKind.RL, EvidenceKind.PRIVACY_REPLAY}
+        rl = game and all(
+            _has_test(config.rlTests, {kind})
+            for kind in (EvidenceKind.RL, EvidenceKind.PRIVACY_REPLAY)
         )
         reasons = tuple(
             name

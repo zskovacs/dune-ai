@@ -317,6 +317,7 @@ def test_unknown_copies_and_unique_totals_remain_unknown(tmp_path, raw):
 
 def test_explicit_residual_is_valid_but_incomplete(tmp_path, raw):
     raw["content"] = [content_record()]
+    raw.update(interactions=[], batches=[], configurations=[])
     assert not codes(raw, tmp_path)
     report = build_report(load(raw, tmp_path))
     q = next(
@@ -372,6 +373,7 @@ def test_optional_pdf_unavailable_offline_without_freshness(tmp_path, raw, monke
     root.mkdir()
     raw["content"] = []  # Isolate optional source files from required registry paths.
     raw["capabilities"] = []
+    raw.update(interactions=[], batches=[], configurations=[])
 
     def fail(*_args, **_kwargs):
         raise AssertionError("network called")
@@ -483,6 +485,7 @@ def test_configuration_without_composition_or_inventory_fails_closed(tmp_path, r
 
 def populated_inventory(raw: dict) -> tuple[dict, dict]:
     """A structurally complete one-definition fixture, separate from authored S1."""
+    raw.update(interactions=[], batches=[], configurations=[])
     expectation = next(
         e
         for e in raw["expectations"]
@@ -555,6 +558,7 @@ def populated_inventory(raw: dict) -> tuple[dict, dict]:
                 "page": 4,
                 "locator": "setup fixture",
                 "kind": "composition",
+                "verification": "verified",
             }
         ],
         "initializationTests": [],
@@ -941,8 +945,9 @@ def test_selected_ability_requires_its_interaction_in_configuration(tmp_path, ra
                 {
                     "path": "training/tests/test_content_coverage.py",
                     "name": "fixture",
-                    "kind": "behavior",
+                    "kind": kind,
                 }
+                for kind in ("behavior", "integration", "privacy-replay")
             ],
             "implementation": "implemented",
             "validation": "tested",
@@ -1060,3 +1065,250 @@ def test_valid_module_and_epic_dependencies_allow_composition(
         "mode-incompatible",
     }
     assert build_report(load(raw, tmp_path)).configurationGates[0].composition
+
+
+def test_physical_only_evidence_can_pass_ability_gate_without_face(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    item.update(
+        category="GameplayComponent",
+        faceComplete=False,
+        faceEvidence=[],
+        slots=[],
+        abilityApplicability="physical-only",
+        abilityApplicabilityEvidence=[
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "physical inventory fixture",
+                "kind": "applicability",
+                "verification": "verified",
+            }
+        ],
+    )
+    raw["expectations"][0]["category"] = "GameplayComponent"
+    assert not codes(raw, tmp_path)
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.inventory and gate.abilities and gate.interactions
+    assert not gate.initialization
+    item["abilityApplicabilityEvidence"] = []
+    assert "ability-applicability" in codes(raw, tmp_path)
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].abilities
+    item.pop("abilityApplicability")
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].abilities
+
+
+def test_physical_only_cannot_hide_unknown_executable_boxes(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    item.update(
+        abilityApplicability="physical-only",
+        abilityApplicabilityEvidence=[
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "false physical claim",
+                "kind": "applicability",
+                "verification": "verified",
+            }
+        ],
+    )
+    assert "ability-applicability" in codes(raw, tmp_path)
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].abilities
+
+
+def test_terminal_synthetic_evidence_cannot_certify_authentic_or_rl(tmp_path, raw):
+    item, config = populated_inventory(raw)
+    for field, kinds in (
+        ("initializationTests", ["initialization"]),
+        ("fullGameTests", ["full-game"]),
+        ("rlTests", ["rl", "privacy-replay"]),
+    ):
+        config[field] = [
+            {
+                "path": "training/tests/test_content_coverage.py",
+                "name": "positive gate fixture",
+                "kind": kind,
+            }
+            for kind in kinds
+        ]
+    positive = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert positive.initialization and positive.fullGame and positive.rl
+    config["rlTests"] = config["rlTests"][:1]
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].rl
+    config["authenticity"] = item["authenticity"] = "synthetic"
+    negative = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert not negative.abilities
+    assert not negative.initialization and not negative.fullGame and not negative.rl
+
+
+@pytest.mark.parametrize("interaction_id", ["int-unknown", "int-unsupported"])
+def test_unknown_or_unsupported_interaction_blocks_populated_gate(
+    tmp_path, raw, interaction_id
+):
+    item, config = populated_inventory(raw)
+    config["interactionIds"] = [interaction_id]
+    raw["interactions"] = [
+        {
+            "id": "int-unsupported",
+            "participantIds": [item["id"]],
+            "rulesets": [config["id"]],
+            "evidence": [],
+            "exceptions": [],
+            "requiredHook": "not implemented",
+            "implementationRefs": [],
+            "testRefs": [],
+            "implementation": "unsupported",
+            "validation": "not-tested",
+            "blockers": [],
+        }
+    ]
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.inventory and gate.abilities
+    assert not gate.interactions and not gate.initialization and not gate.rl
+
+
+def test_fixed_leader_subset_cannot_certify_all_official_policy(tmp_path, raw):
+    item, config = populated_inventory(raw)
+    item["category"] = raw["expectations"][0]["category"] = "Leader"
+    item["boxedQuantity"] = 1
+    raw["expectations"][0].update(expectedCopies=3, uniqueDefinitions=3)
+    raw["content"] = [
+        {**copy.deepcopy(item), "id": f"fixture:leader:{n}:v1", "name": f"Leader {n}"}
+        for n in range(3)
+    ]
+    config["contentIds"] = [c["id"] for c in raw["content"]]
+    config.update(
+        leaderPolicy="fixed-subset", leaderContentIds=config["contentIds"].copy()
+    )
+    assert not codes(raw, tmp_path)
+    assert build_report(load(raw, tmp_path)).configurationGates[0].abilities
+    config["leaderPolicy"] = "all-official"
+    assert "leader-policy" in codes(raw, tmp_path)
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].composition
+    config["leaderContentIds"] = []
+    fourth = {
+        **copy.deepcopy(raw["content"][0]),
+        "id": "fixture:leader:3:v1",
+        "name": "Leader 3",
+        "faceComplete": False,
+    }
+    raw["content"].append(fourth)
+    raw["expectations"][0].update(expectedCopies=4, uniqueDefinitions=4)
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].inventory
+    config["contentIds"].append(fourth["id"])
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.inventory and not gate.abilities
+
+
+def test_composed_expansion_does_not_certify_executable_setup(tmp_path, raw):
+    _, config = populated_inventory(raw)
+    config["expansions"] = ["RiseOfIx"]
+    config["initializationTests"] = [
+        {
+            "path": "training/tests/test_content_coverage.py",
+            "name": "fixture",
+            "kind": "initialization",
+        }
+    ]
+    config["executionBlockers"] = [
+        {
+            "id": "no-adapter",
+            "scope": "setup",
+            "reason": "No executable expansion adapter",
+            "open": True,
+            "blocking": True,
+        }
+    ]
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.composition and gate.inventory and gate.abilities and gate.interactions
+    assert not gate.initialization and not gate.fullGame and not gate.rl
+
+
+def test_known_blockers_have_one_primary_batch_and_topological_order(raw):
+    batches = {b["id"]: b for b in raw["batches"]}
+    known = [
+        a
+        for c in raw["content"]
+        for a in c["abilities"]
+        if a["implementation"] != "implemented"
+    ]
+    assert len(known) == 25
+    for a in known:
+        assert [b["id"] for b in batches.values() if a["id"] in b["memberIds"]] == [
+            a["batchId"]
+        ]
+    assert len({b["order"] for b in batches.values()}) == len(batches)
+    for b in batches.values():
+        assert b["title"] and b["priorityRationale"] and b["validationRequirements"]
+        assert b["evidence"] and b["acceptance"] and b["expectedDelta"]
+        assert all(batches[p]["order"] < b["order"] for p in b["prerequisiteIds"])
+    assert batches["batch-01-selected-trash"]["priority"] == "high"
+    assert not batches["batch-01-selected-trash"]["prerequisiteIds"]
+
+
+@pytest.mark.parametrize(
+    "mutation", ["cycle", "dangling", "double-primary", "unassigned"]
+)
+def test_batch_graph_and_primary_membership_reject_invalid_edits(
+    tmp_path, raw, mutation
+):
+    first, second = raw["batches"][:2]
+    if mutation == "cycle":
+        first["prerequisiteIds"] = [second["id"]]
+        second["prerequisiteIds"] = [first["id"]]
+        expected = "prerequisite-cycle"
+    elif mutation == "dangling":
+        first["prerequisiteIds"] = ["batch-does-not-exist"]
+        expected = "broken-reference"
+    elif mutation == "double-primary":
+        ability = next(
+            a
+            for c in raw["content"]
+            for a in c["abilities"]
+            if a["batchId"] == first["id"]
+        )
+        second["memberIds"].append(ability["id"])
+        expected = "batch-membership"
+    else:
+        ability = next(
+            a
+            for c in raw["content"]
+            for a in c["abilities"]
+            if a["batchId"] == first["id"]
+        )
+        first["memberIds"].remove(ability["id"])
+        ability["batchId"] = None
+        expected = "batch-membership"
+    assert expected in codes(raw, tmp_path)
+
+
+def test_canonical_seat_configurations_keep_composition_and_execution_separate(
+    tmp_path, raw
+):
+    gates = build_report(load(raw, tmp_path)).configurationGates
+    assert len(gates) == 6
+    assert all(g.recognized and g.composition for g in gates)
+    assert all(
+        not g.inventory
+        and not g.abilities
+        and not g.interactions
+        and not g.initialization
+        and not g.fullGame
+        and not g.rl
+        for g in gates
+    )
+    assert {c["seats"] for c in raw["configurations"]} == {3, 4}
+    assert all(
+        c["leaderPolicy"] == "all-official" and not c["leaderContentIds"]
+        for c in raw["configurations"]
+    )
+    assert all(
+        c["compositionTests"] and c["executionBlockers"] for c in raw["configurations"]
+    )
+
+
+def test_unknown_ability_reference_blocks_even_a_claimed_complete_face(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    slot = next(s for s in item["slots"] if s["slot"] == "Agent")
+    slot.update(discovery="discovered", abilityIds=[item["id"] + "#slot:unknown"])
+    assert "broken-reference" in codes(raw, tmp_path)
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].abilities

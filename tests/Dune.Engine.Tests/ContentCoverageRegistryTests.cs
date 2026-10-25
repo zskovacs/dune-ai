@@ -1,5 +1,8 @@
 using System.Text.Json;
+using Dune.Engine.Configuration;
 using Dune.Engine.Content;
+using Dune.Engine.Rulesets;
+using Dune.Engine.Setup;
 using Dune.Engine.Turns;
 
 namespace Dune.Engine.Tests;
@@ -19,6 +22,49 @@ public class ContentCoverageRegistryTests
     private static bool BoardEffectsMatchAudit(JsonElement item, BoardRule rule) =>
         HasAuditedAbility(item, "Reveal") == !rule.RevealEffects.IsDefaultOrEmpty &&
         HasAuditedAbility(item, "Triggered", "controller-payout") == (rule.ControlReward is not null);
+
+    [Fact]
+    public void AuditedConfigurationGatesAgreeWithActualPresetsAndInitializer()
+    {
+        using var document = LoadInventory();
+        var configurations = document.RootElement.GetProperty("configurations").EnumerateArray().ToArray();
+        Assert.Equal(6, configurations.Length);
+        foreach (var item in configurations)
+        {
+            var preset = ConfigurationPresets.All[item.GetProperty("preset").GetString()!];
+            var seats = item.GetProperty("seats").GetInt32();
+            var configuration = preset with
+            {
+                Players = preset.Players with { Count = seats },
+                Leaders = preset.Leaders with { PlayerOrder = [.. Enumerable.Range(0, seats)] },
+            };
+            Assert.Equal(configuration.BaseGame.ToString(), item.GetProperty("base").GetString());
+            Assert.Equal(configuration.Mode.ToString(), item.GetProperty("mode").GetString());
+            Assert.Equal(configuration.Expansions.Select(x => x.ToString()).Order(),
+                item.GetProperty("expansions").EnumerateArray().Select(x => x.GetString()).Order());
+            Assert.Empty(configuration.Modules);
+            Assert.Empty(item.GetProperty("modules").EnumerateArray());
+            Assert.Equal(LeaderSelectionStrategy.Random, configuration.Leaders.Strategy);
+            Assert.Equal("all-official", item.GetProperty("leaderPolicy").GetString());
+            Assert.Empty(item.GetProperty("leaderContentIds").EnumerateArray());
+
+            var composed = RulesetComposer.CreateDefault().Compose(configuration);
+            Assert.True(composed.IsSuccess);
+            Assert.Equal(ConfigurationSupport.Validated, composed.Support);
+            Assert.Equal(GameplaySupport.NotImplemented, composed.Gameplay);
+            var definition = composed.Definition!;
+            Assert.Equal(CatalogCompleteness.Representative, definition.CatalogCompleteness);
+            Assert.Equal(configuration.Expansions.IsEmpty, definition.Setup is not null);
+            var initialized = new GameInitializer().Create(configuration);
+            Assert.False(initialized.IsSuccess);
+            Assert.Null(initialized.State);
+            Assert.Contains(initialized.Errors, x => x.Code ==
+                (configuration.Expansions.IsEmpty ? "incomplete-catalog" : "unsupported-setup"));
+            Assert.Empty(item.GetProperty("initializationTests").EnumerateArray());
+            Assert.Empty(item.GetProperty("fullGameTests").EnumerateArray());
+            Assert.Empty(item.GetProperty("rlTests").EnumerateArray());
+        }
+    }
 
     [Fact]
     public void OriginalCatalogDefinitionsHaveInventoryIdentityAndQuantity()
