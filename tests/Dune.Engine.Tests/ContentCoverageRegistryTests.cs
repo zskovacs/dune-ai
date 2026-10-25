@@ -100,13 +100,14 @@ public class ContentCoverageRegistryTests
             var discovery = slot.GetProperty("discovery").GetString();
             if (unsupported)
             {
-                Assert.True(discovery is "undiscovered" or "unreadable" or "discovered",
-                    $"Unsupported {Id(item)} {name} was declared absent");
-                if (discovery == "discovered")
-                    foreach (var abilityId in slot.GetProperty("abilityIds").EnumerateArray())
-                        Assert.Contains(item.GetProperty("abilities").EnumerateArray(), ability =>
-                            Id(ability) == abilityId.GetString() &&
-                            ability.GetProperty("implementation").GetString() != "implemented");
+                Assert.True(discovery is "discovered" or "unreadable");
+                if (discovery == "unreadable")
+                    Assert.False(string.IsNullOrWhiteSpace(slot.GetProperty("reason").GetString()));
+                Assert.NotEmpty(slot.GetProperty("abilityIds").EnumerateArray());
+                foreach (var abilityId in slot.GetProperty("abilityIds").EnumerateArray())
+                    Assert.Contains(item.GetProperty("abilities").EnumerateArray(), ability =>
+                        Id(ability) == abilityId.GetString() &&
+                        ability.GetProperty("implementation").GetString() == "unsupported");
             }
             else if (hasEffect)
             {
@@ -128,8 +129,40 @@ public class ContentCoverageRegistryTests
                 !card.AcquireEffects.IsDefaultOrEmpty && card.AcquireEffects.Any(x => x is UnsupportedEffect));
         }
         foreach (var space in turns.Spaces)
-            AssertBox(items[space.Id.Value], "Agent", space.Effects.Length > 0 ||
+        {
+            var item = items[space.Id.Value];
+            AssertBox(item, "Agent", space.Effects.Length > 0 ||
                 !space.PlacementOptions.IsDefaultOrEmpty, space.Effects.Any(x => x is UnsupportedEffect));
+            if (!space.RevealEffects.IsDefaultOrEmpty)
+                AssertBox(item, "Reveal", true, space.RevealEffects.Any(x => x is UnsupportedEffect));
+            if (space.ControlReward is not null)
+                AssertBox(item, "Triggered", true, false);
+            var placement = item.GetProperty("abilities").EnumerateArray()
+                .Single(x => x.GetProperty("slot").GetString() == "Agent");
+            if (space.Combat)
+                Assert.Contains(placement.GetProperty("descriptors").EnumerateArray(), x =>
+                    x.GetProperty("value").GetString() == "Combat placement");
+            if (space.RequiredInfluence > 0)
+                Assert.Contains(placement.GetProperty("descriptors").EnumerateArray(), x =>
+                    x.GetProperty("kind").GetString() == "precondition" &&
+                    x.GetProperty("value").GetString()!.Contains("two Fremen influence"));
+            if (space.OncePerGame)
+                Assert.Contains(placement.GetProperty("descriptors").EnumerateArray(), x =>
+                    x.GetProperty("kind").GetString() == "usage" &&
+                    x.GetProperty("value").GetString() == "once per player per game");
+            if (space.Effects.Any(x => x is HighCouncilEffect))
+                AssertBox(item, "PersistentModifier", true, false);
+        }
+        foreach (var key in new[] { "foldspace", "secrets", "selective-breeding" })
+        {
+            var id = $"imperium:space:{key}:v1";
+            Assert.DoesNotContain(turns.Spaces, x => x.Id.Value == id);
+            var item = items[id];
+            Assert.Equal("discovered", Slot(item, "Agent").GetProperty("discovery").GetString());
+            Assert.Contains(item.GetProperty("abilities").EnumerateArray(), x =>
+                x.GetProperty("slot").GetString() == "Agent" &&
+                x.GetProperty("implementation").GetString() == "unsupported");
+        }
         foreach (var intrigue in lifecycle.Intrigues)
         {
             var item = items[intrigue.Id.Value];

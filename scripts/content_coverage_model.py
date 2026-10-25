@@ -664,62 +664,35 @@ def _configuration_dependencies(
 
 _CARD_SLOTS = frozenset(
     {
-        Slot.SETUP,
-        Slot.PASSIVE,
         Slot.AGENT,
         Slot.REVEAL,
         Slot.ACQUIRE,
-        Slot.SIGNET_RING,
-        Slot.COMBAT,
-        Slot.POST_WIN,
-        Slot.ENDGAME,
-        Slot.TRIGGERED,
-        Slot.PERSISTENT_MODIFIER,
     }
 )
 _INTRIGUE_SLOTS = frozenset(
     {
-        Slot.SETUP,
-        Slot.PASSIVE,
         Slot.INTRIGUE,
         Slot.COMBAT,
         Slot.POST_WIN,
         Slot.ENDGAME,
-        Slot.TRIGGERED,
-        Slot.PERSISTENT_MODIFIER,
     }
 )
 _CONFLICT_SLOTS = frozenset(
     {
-        Slot.SETUP,
-        Slot.COMBAT,
         Slot.POST_WIN,
-        Slot.ENDGAME,
         Slot.TRIGGERED,
         Slot.PERSISTENT_MODIFIER,
     }
 )
 _LEADER_SLOTS = frozenset(
     {
-        Slot.SETUP,
         Slot.PASSIVE,
-        Slot.AGENT,
         Slot.SIGNET_RING,
-        Slot.COMBAT,
-        Slot.POST_WIN,
-        Slot.ENDGAME,
-        Slot.TRIGGERED,
-        Slot.PERSISTENT_MODIFIER,
     }
 )
 _BOARD_SLOTS = frozenset(
     {
-        Slot.SETUP,
-        Slot.PASSIVE,
         Slot.AGENT,
-        Slot.COMBAT,
-        Slot.TRIGGERED,
-        Slot.PERSISTENT_MODIFIER,
     }
 )
 _FACE_SLOTS: dict[Category, frozenset[Slot]] = {
@@ -731,14 +704,14 @@ _FACE_SLOTS: dict[Category, frozenset[Slot]] = {
     Category.CONFLICT_CARD: _CONFLICT_SLOTS,
     Category.LEADER: _LEADER_SLOTS,
     Category.BOARD_SPACE: _BOARD_SLOTS,
-    Category.BOARD_LAYOUT: _BOARD_SLOTS,
+    Category.BOARD_LAYOUT: frozenset(),
     Category.TECH_TILE: _CARD_SLOTS,
     Category.CONTRACT: _CARD_SLOTS,
     Category.OBJECTIVE: _CARD_SLOTS,
     Category.RIVAL: _BOARD_SLOTS,
     Category.HOUSE_HAGAL_CARD: _CARD_SLOTS,
     Category.SARDAUKAR_COMMANDER_SKILL: _CARD_SLOTS,
-    Category.GAMEPLAY_COMPONENT: frozenset(Slot),
+    Category.GAMEPLAY_COMPONENT: frozenset(),
 }
 
 
@@ -766,6 +739,7 @@ def _complete_face(item: ContentRecord, sources: dict[str, SourceRecord]) -> boo
     return (
         item.faceComplete
         and item.discovery == Discovery.DISCOVERED
+        and item.category not in {Category.GAMEPLAY_COMPONENT, Category.BOARD_LAYOUT}
         and _official_claim(item.faceEvidence, EvidenceKind.SEMANTICS, sources)
         and _FACE_SLOTS[item.category] <= slots.keys()
         and all(

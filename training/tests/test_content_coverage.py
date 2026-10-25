@@ -177,7 +177,18 @@ def test_original_physical_components_accounted_for_without_double_counting(
     components = [
         c for c in inventory.content if c.category.value == "GameplayComponent"
     ]
-    assert all(not c.runtimeDefinition and not c.abilities for c in components)
+    assert all(
+        not c.runtimeDefinition and not c.abilities and not c.slots for c in components
+    )
+
+
+def test_board_face_requires_placement_slot_without_extra_slots(raw, tmp_path):
+    board = next(c for c in raw["content"] if c["id"] == "imperium:space:foldspace:v1")
+    assert board["faceComplete"]
+    assert [slot["slot"] for slot in board["slots"]] == ["Agent"]
+    assert "false-complete" not in codes(raw, tmp_path)
+    board["slots"] = []
+    assert "false-complete" in codes(raw, tmp_path)
 
 
 def test_duplicate_content_and_ability_ids_rejected(tmp_path, raw):
