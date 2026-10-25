@@ -27,6 +27,10 @@ backends can also record URLs/checksums. This is not a promise of hermetic OS in
 | `mise run test:cli`        | CLI logging, persistence and command-boundary tests             |
 | `mise run test:dotnet`     | All C# tests                                                    |
 | `mise run test:python`     | Python boundary tests                                           |
+| `mise run content:report`  | Regenerate offline content coverage projections                |
+| `mise run content:validate` | Check audit integrity and report freshness without edits      |
+| `mise run content:test`    | Focused Python content audit tests                              |
+| `mise run content:registry` | Engine content registry drift test                             |
 | `mise run lint`            | Ruff static checks; C# analyzers also run during build/check    |
 | `mise run format`          | Apply C# and Python formatting                                  |
 | `mise run format-check`    | Verify formatting without modifying source                      |

@@ -1,5 +1,12 @@
 # SLICE-004 implemented mechanics and support matrix
 
+For current per-identity source, status and behavior links, see the generated
+[ability coverage](content/ability-coverage.md) and
+[interaction matrix](content/interaction-matrix.md). Those bounded links do not
+establish whole-face or authentic game support; independent gates are in
+[readiness](content/readiness-gates.md). Historical registry snapshots below
+remain scoped to the slices that recorded them.
+
 The original Imperium (2020) turn engine is a **development preview**. No selected
 configuration is authentic complete gameplay or RL-ready. Tests can use explicitly
 synthetic inventory and effects; these do not establish full rules coverage.

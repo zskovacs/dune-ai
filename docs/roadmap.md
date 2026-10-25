@@ -74,6 +74,14 @@ remain. No authentic complete-game, expansion gameplay or RL-readiness claim.
 
 ## SLICE-004.5 — card catalog and ability coverage audit
 
+The [generated coverage reports](content/inventory-audit.md) track current
+physical quantities, abilities, shared capabilities, interactions, ordered
+batches and [separate readiness gates](content/readiness-gates.md). The offline
+audit and [ADR 0007](adr/0007-offline-content-coverage-audit.md) do not promote
+authentic initialization, complete games or RL eligibility. Proposed mechanics
+retain source, acceptance and future test requirements in the
+[batch report](content/implementation-batches.md).
+
 After SLICE-004 establishes actual timing/reward/result contracts, reconcile sourced
 inventories and classify each executable box, ability capability and interaction.
 Keep source/evidence, metadata completeness and implementation status separate.

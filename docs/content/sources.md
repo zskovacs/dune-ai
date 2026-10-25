@@ -1,5 +1,12 @@
 # Content source assessment
 
+The generated [inventory audit](inventory-audit.md), [ability coverage](ability-coverage.md),
+[interaction matrix](interaction-matrix.md), [implementation batches](implementation-batches.md)
+and [readiness gates](readiness-gates.md) project the current canonical records.
+The source-quality findings below remain editorial evidence assessments; they
+do not authorize redistribution or convert candidate community rows into
+official definitions.
+
 Reviewed 2026-10-25 for SLICE-004.5. The canonical evidence and quantity records are in [`coverage/inventory.json`](coverage/inventory.json); its initial S1 revision is **not** a complete catalog. The seven supplied PDFs are the authority for their own component lists and setup. A boxed count does not prove every card identity, effect, or ruleset availability. All PDF page citations here are one-based and their exact filenames, bounds, and hashes are in the [rules index](../rules-index.md).
 
 ## Publisher documents and current rulings

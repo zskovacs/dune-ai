@@ -57,6 +57,13 @@ Focused tasks: `test:engine`, `test:simulation`, `test:cli`, `test:dotnet`, `tes
 and `toolchain-check`. Use `mise tasks` to list task descriptions. Benchmark
 timings are separate from correctness checks; see the performance notes in the
 [architecture](docs/architecture.md).
+
+Content audit tasks: `content:report` regenerates the five offline reports;
+`content:validate` checks integrity and freshness; `content:test` and
+`content:registry` run focused Python and engine registry tests. Start with the
+[inventory audit](docs/content/inventory-audit.md) and
+[readiness gates](docs/content/readiness-gates.md). The reports do not establish
+authentic gameplay or RL readiness.
 For a quick harness check, use `mise run benchmark -- --job Dry --filter '*'`.
 Dry timings are not a reliable performance comparison.
 

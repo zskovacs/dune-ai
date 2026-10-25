@@ -63,6 +63,11 @@ permission and game-rule verification are separate checks.
 
 ## SLICE-002 coverage and readiness
 
+The latest offline [inventory audit](inventory-audit.md) and
+[readiness gates](readiness-gates.md) supersede static coverage snapshots below;
+the table records the historical SLICE-002 representative catalog state. Audit
+records do not enter the embedded catalog or runtime fingerprints.
+
 The bundled catalog remains **Representative**. Added `base-setup.json` contains
 six missing starter definitions and Arrakis Liaison, transcribed only as minimum
 name/quantity/category metadata from original rulebook p.3. Together with existing

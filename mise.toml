@@ -55,6 +55,26 @@ description = "Run Python boundary tests"
 depends = ["setup:python"]
 run = "uv run --locked pytest"
 
+[tasks."content:report"]
+description = "Regenerate offline content coverage reports"
+depends = ["setup:python"]
+run = "uv run --locked python scripts/content_coverage.py report"
+
+[tasks."content:validate"]
+description = "Validate content audit and report freshness"
+depends = ["setup:python"]
+run = ["uv run --locked python scripts/content_coverage.py validate", "uv run --locked python scripts/content_coverage.py report --check"]
+
+[tasks."content:test"]
+description = "Run focused content audit tests"
+depends = ["setup:python"]
+run = "uv run --locked pytest training/tests/test_content_coverage.py"
+
+[tasks."content:registry"]
+description = "Check engine content registry drift"
+depends = ["build"]
+run = "dotnet test tests/Dune.Engine.Tests --configuration Release --no-build --no-restore --filter FullyQualifiedName~ContentCoverageRegistryTests"
+
 [tasks.test]
 description = "Run .NET and Python tests"
 depends = ["test:dotnet", "test:python"]
@@ -86,7 +106,7 @@ run = "dotnet run --project src/Dune.Cli --configuration Release --no-build --no
 
 [tasks.check]
 description = "Verify toolchains, builds, tests, lint and formatting"
-depends = ["toolchain-check", "test", "lint", "format-check"]
+depends = ["toolchain-check", "test", "lint", "format-check", "content:validate"]
 
 [settings]
 lockfile = true

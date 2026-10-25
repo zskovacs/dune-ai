@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from content_coverage_model import (  # noqa: E402
     load_inventory,
     validate_inventory,
 )
+from content_coverage_reports import render_reports, update_region  # noqa: E402
 
 
 @pytest.fixture
@@ -36,6 +38,122 @@ def codes(raw: dict, tmp_path: Path, root: Path = ROOT) -> set[str]:
         for issue in validate_inventory(load(raw, tmp_path), root)
         if issue.severity == "error"
     }
+
+
+def test_generated_reports_are_stable_and_preserve_prose(raw, tmp_path):
+    inventory = load(raw, tmp_path)
+    report = build_report(inventory)
+    first = render_reports(report, inventory)
+    assert len(first) == 5
+    assert first == render_reports(build_report(inventory), inventory)
+    for body in first.values():
+        document = (
+            "intro\n<!-- BEGIN GENERATED CONTENT COVERAGE -->\nold\n"
+            "<!-- END GENERATED CONTENT COVERAGE -->\noutro\n"
+        )
+        updated = update_region(document, body)
+        assert updated.startswith("intro\n") and updated.endswith("outro\n")
+        assert update_region(updated, body) == updated
+        assert "old\n" not in updated
+    assert "unknown" in first[Path("docs/content/inventory-audit.md")]
+    assert (
+        "authentic-execution-unverified"
+        in first[Path("docs/content/readiness-gates.md")]
+    )
+
+
+def test_generated_reports_sort_set_like_records(raw, tmp_path):
+    first = render_reports(build_report(load(raw, tmp_path)), load(raw, tmp_path))
+    for key in (
+        "sources",
+        "expectations",
+        "content",
+        "capabilities",
+        "interactions",
+        "batches",
+        "configurations",
+    ):
+        raw[key].reverse()
+    reordered = load(raw, tmp_path)
+    assert first == render_reports(build_report(reordered), reordered)
+
+
+def test_report_check_detects_stale_without_writing(raw, tmp_path, monkeypatch):
+    import content_coverage  # noqa: PLC0415
+
+    inventory = load(raw, tmp_path)
+    monkeypatch.setattr(content_coverage, "load_inventory", lambda _: inventory)
+    monkeypatch.setattr(content_coverage, "validate_inventory", lambda *_: ())
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "docs/content").mkdir(parents=True)
+    assert (
+        content_coverage.main(["report", "--inventory", "fixture.json", "--check"]) == 1
+    )
+    assert not (tmp_path / "docs/content/inventory-audit.md").exists()
+    assert content_coverage.main(["report", "--inventory", "fixture.json"]) == 0
+    paths = sorted((tmp_path / "docs/content").glob("*.md"))
+    assert len(paths) == 5
+    original = {path: path.read_bytes() for path in paths}
+    assert content_coverage.main(["report", "--inventory", "fixture.json"]) == 0
+    assert {path: path.read_bytes() for path in paths} == original
+    assert (
+        content_coverage.main(["report", "--inventory", "fixture.json", "--check"]) == 0
+    )
+    stale_path = tmp_path / "docs/content/inventory-audit.md"
+    stale_path.write_text(stale_path.read_text().replace("Sources:", "Stale sources:"))
+    stale = {path: path.read_bytes() for path in paths}
+    assert (
+        content_coverage.main(["report", "--inventory", "fixture.json", "--check"]) == 1
+    )
+    assert {path: path.read_bytes() for path in paths} == stale
+
+
+def test_quantity_null_and_zero_are_distinct(raw, tmp_path):
+    inventory = load(raw, tmp_path)
+    report = build_report(inventory)
+    quantity = next(q for q in report.quantities if q.uniqueDefinitions is None)
+    path = Path("docs/content/inventory-audit.md")
+    unknown = render_reports(report, inventory)[path]
+    zero = render_reports(
+        replace(
+            report,
+            quantities=tuple(
+                replace(q, uniqueDefinitions=0) if q == quantity else q
+                for q in report.quantities
+            ),
+        ),
+        inventory,
+    )[path]
+    assert unknown != zero
+    assert f"| {quantity.expectationId} |" in unknown
+    assert f"| unknown | {quantity.discoveredDefinitions} |" in unknown
+    assert f"| 0 | {quantity.discoveredDefinitions} |" in zero
+
+
+def test_report_count_projections_match_canonical_records(raw, tmp_path):
+    inventory = load(raw, tmp_path)
+    report = build_report(inventory)
+    rendered = render_reports(report, inventory)
+    assert (
+        f"physical content records: {len(inventory.content)}"
+        in rendered[Path("docs/content/inventory-audit.md")]
+    )
+    assert (
+        f"Known ability slots: {report.abilityCount}"
+        in rendered[Path("docs/content/ability-coverage.md")]
+    )
+    assert (
+        f"Known interactions: {len(inventory.interactions)}"
+        in rendered[Path("docs/content/interaction-matrix.md")]
+    )
+    assert (
+        f"Prioritized batches: {len(inventory.batches)}"
+        in rendered[Path("docs/content/implementation-batches.md")]
+    )
+    assert (
+        f"Configurations assessed: {len(inventory.configurations)}"
+        in rendered[Path("docs/content/readiness-gates.md")]
+    )
 
 
 def content_record() -> dict:

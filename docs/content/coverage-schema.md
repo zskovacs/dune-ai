@@ -2,6 +2,13 @@
 
 `coverage/inventory.json` is the sole manually authored source for audit quantities and evidence. It is an **offline audit** and is never loaded into engine rulesets or included in canonical game identities. Authored content, capabilities, interactions, batches and configurations retain incomplete and unsupported findings explicitly. An empty collection means **not audited yet**, not complete or supported. The strict Python model and validator enforce the contract below.
 
+`mise run content:report` regenerates the five marked Markdown projections;
+`mise run content:validate` checks offline integrity and report freshness without
+mutation. `content:test` runs focused Python tests and `content:registry` checks
+authored engine registry drift. Integrity success is not gameplay readiness.
+See [ADR 0007](../adr/0007-offline-content-coverage-audit.md) for the audit/runtime
+boundary and versioning matrix.
+
 ## Root and stable references
 
 The root has `schemaVersion: "dune-content-coverage-v1"`, `auditRevision` (this audit's authored revision), `repositoryRevision` (the Git baseline assessed), and the seven named collections. `src-*` and `exp-*` IDs are stable, globally unique within their namespaces. Later records refer to these IDs; renaming one requires a deliberate migration of references. `auditRevision` does not change an engine fingerprint, content version, ruleset revision, or replay format. Keep these collections in deterministic ID order when editing. The current data has a source-first, then product/scope order; a later formatter may normalize that order without changing IDs.

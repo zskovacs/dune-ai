@@ -1,5 +1,11 @@
 # Rule sources and implementation ledger
 
+The latest offline [coverage audit](content/inventory-audit.md),
+[source assessment](content/sources.md) and
+[readiness gates](content/readiness-gates.md) track inventory and implementation
+gaps separately from this rule evidence ledger. Proposed mechanics require
+exact applicable source and behavior evidence before becoming ledger claims.
+
 The supplied local PDFs in `docs/rules/` are the primary mechanics authority.
 [The rules index](rules-index.md) identifies all seven documents, SHA-256
 checksums and every page. All references below use **1-based PDF page numbers**.
