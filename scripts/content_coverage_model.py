@@ -799,6 +799,25 @@ def _capability_supported(
     )
 
 
+def _capability_implemented(
+    capability_id: str,
+    capabilities: dict[str, CapabilityRecord],
+    active: frozenset[str] = frozenset(),
+) -> bool:
+    capability = capabilities.get(capability_id)
+    if capability is None or capability_id in active:
+        return False
+    return (
+        capability.implementation == Implementation.IMPLEMENTED
+        and bool(capability.memberRefs)
+        and not _has_open_blocker(capability.blockers)
+        and all(
+            _capability_implemented(ref, capabilities, active | {capability_id})
+            for ref in capability.prerequisiteIds
+        )
+    )
+
+
 def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssue, ...]:
     issues: list[AuditIssue] = []
 
@@ -1211,7 +1230,7 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
     for capability in inventory.capabilities:
         refs(capability.prerequisiteIds, capabilities, capability.id, "prerequisiteIds")
         if capability.implementation == Implementation.IMPLEMENTED and any(
-            not _capability_supported(ref, capabilities)
+            not _capability_implemented(ref, capabilities)
             for ref in capability.prerequisiteIds
         ):
             add(
@@ -1477,18 +1496,6 @@ def _validate_support(
             "unsupported ability needs an engine boundary reason",
         )
     if ability.implementation == Implementation.IMPLEMENTED:
-        for kind in (
-            EvidenceKind.BEHAVIOR,
-            EvidenceKind.INTEGRATION,
-            EvidenceKind.PRIVACY_REPLAY,
-        ):
-            if not _has_test(ability.testRefs, {kind}):
-                add(
-                    "support-test",
-                    ability.id,
-                    "testRefs",
-                    f"implemented ability needs current {kind.value} evidence",
-                )
         if (
             not ability.semanticClaim
             or ability.discovery != Discovery.DISCOVERED
@@ -1509,26 +1516,18 @@ def _validate_support(
                 "classification",
                 "unresolved ability cannot be implemented",
             )
-        if ability.validation != Validation.TESTED:
-            add(
-                "validation",
-                ability.id,
-                "validation",
-                "implemented ability needs behavioral validation",
-            )
         if any(
-            not _capability_supported(ref, capabilities)
+            not _capability_implemented(ref, capabilities)
             for ref in ability.capabilityIds
         ):
             add(
                 "capability-dependency",
                 ability.id,
                 "capabilityIds",
-                "required capability is unsupported or unverified",
+                "required capability is not implemented",
             )
         if any(
             interactions[i].implementation != Implementation.IMPLEMENTED
-            or interactions[i].validation != Validation.TESTED
             for i in ability.interactionIds
             if i in interactions
         ):
@@ -1536,7 +1535,7 @@ def _validate_support(
                 "interaction-dependency",
                 ability.id,
                 "interactionIds",
-                "required interaction is unsupported or unverified",
+                "required interaction is not implemented",
             )
 
 

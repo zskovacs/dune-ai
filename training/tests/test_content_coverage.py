@@ -705,6 +705,59 @@ def test_synthetic_tested_ability_cannot_raise_authentic_gate(tmp_path, raw):
     assert not gate.abilities
 
 
+def test_implemented_behavior_can_lack_full_readiness_evidence(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    ability = ability_record(item["id"])
+    ability.update(
+        classification="primitive",
+        classificationReason=None,
+        semanticClaim="sourced executable reward",
+        discovery="discovered",
+        sourcing="fully-sourced",
+        verification="verified",
+        implementation="implemented",
+        validation="tested",
+        evidence=[
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "complete reward",
+                "kind": "semantics",
+                "verification": "verified",
+            }
+        ],
+        implementationRefs=["scripts/content_coverage_model.py::build_report"],
+        testRefs=[
+            {
+                "path": "training/tests/test_content_coverage.py",
+                "name": "test_implemented_behavior_can_lack_full_readiness_evidence",
+                "kind": "behavior",
+            }
+        ],
+    )
+    item["abilities"] = [ability]
+    next(s for s in item["slots"] if s["slot"] == "Agent").update(
+        discovery="discovered", abilityIds=[ability["id"]]
+    )
+    assert not codes(raw, tmp_path)
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.inventory
+    assert not gate.abilities  # Integration and privacy/replay evidence still absent.
+
+
+def test_canonical_tested_abilities_do_not_underreport_implementation(raw):
+    tested = [
+        ability
+        for content in raw["content"]
+        for ability in content["abilities"]
+        if ability["validation"] == "tested"
+    ]
+    assert len(tested) == 28
+    assert all(ability["implementation"] == "implemented" for ability in tested)
+    master = next(a for a in tested if "master-tactician" in a["id"])
+    assert master["implementation"] == "implemented"
+
+
 def test_selected_configuration_cannot_omit_reconciled_definition(tmp_path, raw):
     item, config = populated_inventory(raw)
     expectation = raw["expectations"][0]

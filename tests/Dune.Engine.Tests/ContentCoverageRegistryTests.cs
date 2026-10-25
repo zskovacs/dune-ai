@@ -11,6 +11,15 @@ public class ContentCoverageRegistryTests
 
     private static string Id(JsonElement item) => item.GetProperty("id").GetString()!;
 
+    private static bool HasAuditedAbility(JsonElement item, string slot, string? key = null) =>
+        item.GetProperty("abilities").EnumerateArray().Any(x =>
+            x.GetProperty("slot").GetString() == slot &&
+            (key is null || Id(x).EndsWith($"#slot:{key}", StringComparison.Ordinal)));
+
+    private static bool BoardEffectsMatchAudit(JsonElement item, BoardRule rule) =>
+        HasAuditedAbility(item, "Reveal") == !rule.RevealEffects.IsDefaultOrEmpty &&
+        HasAuditedAbility(item, "Triggered", "controller-payout") == (rule.ControlReward is not null);
+
     [Fact]
     public void OriginalCatalogDefinitionsHaveInventoryIdentityAndQuantity()
     {
@@ -131,6 +140,7 @@ public class ContentCoverageRegistryTests
         foreach (var space in turns.Spaces)
         {
             var item = items[space.Id.Value];
+            Assert.True(BoardEffectsMatchAudit(item, space), $"Board effect drift: {space.Id.Value}");
             AssertBox(item, "Agent", space.Effects.Length > 0 ||
                 !space.PlacementOptions.IsDefaultOrEmpty, space.Effects.Any(x => x is UnsupportedEffect));
             if (!space.RevealEffects.IsDefaultOrEmpty)
@@ -179,5 +189,23 @@ public class ContentCoverageRegistryTests
         Assert.Empty(turns.Leaders);
         Assert.Empty(lifecycle.Conflicts);
         Assert.DoesNotContain(items.Values, x => x.GetProperty("authenticity").GetString() == "synthetic");
+    }
+
+    [Fact]
+    public void RemovingAuditedBoardRevealOrControllerRewardIsDetected()
+    {
+        using var document = LoadInventory();
+        var items = document.RootElement.GetProperty("content").EnumerateArray().ToDictionary(Id);
+        var rules = OriginalImperiumTurnRules.Create().Spaces;
+        var hall = rules.Single(x => x.Id.Value == "imperium:space:hall-of-oratory:v1");
+        Assert.True(BoardEffectsMatchAudit(items[hall.Id.Value], hall));
+        Assert.False(BoardEffectsMatchAudit(items[hall.Id.Value], hall with { RevealEffects = [] }));
+
+        foreach (var name in new[] { "arrakeen", "carthag", "imperial-basin" })
+        {
+            var rule = rules.Single(x => x.Id.Value == $"imperium:space:{name}:v1");
+            Assert.True(BoardEffectsMatchAudit(items[rule.Id.Value], rule));
+            Assert.False(BoardEffectsMatchAudit(items[rule.Id.Value], rule with { ControlReward = null }));
+        }
     }
 }
