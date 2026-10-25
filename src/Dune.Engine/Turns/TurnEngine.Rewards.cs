@@ -434,11 +434,15 @@ public sealed partial class TurnEngine
 
     private TurnDiagnostic? ValidateSpecialOperations(IEnumerable<(Effect Effect, int Owner)> work)
     {
+        // Generated threshold children use the same causal projection as stock/resource/permanent
+        // checks, including selected work, suspended parents and later Conflict recipients.
+        var projection = ProjectFactionWork(work.Select(x => (x.Effect, x.Owner, x.Owner, (BoardSpaceId?)null)));
+        if (projection.Error is { } projectionError) return projectionError;
         var controls = new List<(BoardSpaceId Space, int Owner)>();
         var mentats = new List<int>();
         var agents = new Dictionary<int, long>();
         TurnDiagnostic? error = null;
-        foreach (var (effect, owner) in work) Visit(effect, owner, 0);
+        foreach (var (effect, owner, _, _) in projection.Work) Visit(effect, owner, 0);
         if (error is not null) return error;
         if (mentats.Count > 1 || mentats.Count > 0 && (_state.Board.Mentat.OwnerId is not null ||
             _state.Board.Mentat.Space is null || _state.Board.Mentat.Space != _state.Board.Definition.InitialMentatSpace))

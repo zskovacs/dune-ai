@@ -401,6 +401,185 @@ public sealed class FactionRewardTests
         RejectUnchanged(engine, new PlaceAgentAction(0, Card(state.Players[0].Hand.Cards[0]), Space("wealth")), "alliance-bonus");
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GeneratedMandatoryMentatRejectsBeforePlacementIncludingForeignRecipient(bool foreign)
+    {
+        var recipient = foreign ? 2 : 0;
+        Effect influence = new InfluenceEffect(Faction.Fremen);
+        if (foreign) influence = new ForPlayerEffect(1, [influence]) { DecisionOwnerId = 0, PayerId = 0, RecipientId = 2 };
+        var (state, engine, action, _) = Prepare(Faction.Fremen, foreign ? 0 : 3,
+            [influence, new GainEffect(ResourceKind.Spice, 7)], [new TakeMentatEffect(true)], state =>
+            {
+                if (foreign) SetTrack(state, recipient, Faction.Fremen, 3);
+                GiveMentat(state, 1);
+            });
+        Assert.DoesNotContain(action, engine.LegalActions(0));
+        RejectUnchanged(engine, action, "mentat-unavailable");
+        Assert.Equal(3, Track(state, recipient, Faction.Fremen));
+        Assert.Equal(1, state.Board.Mentat.OwnerId);
+        Assert.Empty(state.Players[0].InPlay.Cards);
+        Assert.Equal(0, state.Players[0].Resources.Spice);
+    }
+
+    [Fact]
+    public void AvailableMandatoryGeneratedMentatResolvesAfterInfluence()
+    {
+        var (state, engine, action, _) = Prepare(Faction.Fremen, 3,
+            [new InfluenceEffect(Faction.Fremen)], [new TakeMentatEffect(true)]);
+        Assert.Contains(action, engine.LegalActions(0));
+        Apply(engine, action);
+        ResolveAll(engine);
+        Assert.Equal(4, Track(state, 0, Faction.Fremen));
+        Assert.Equal(0, state.Board.Mentat.OwnerId);
+        Assert.Equal(1, state.Players[0].Units.AvailableMentats);
+    }
+
+    [Fact]
+    public void AvailableGeneratedMentatPreservesForeignRecipientPayerAndParentContinuation()
+    {
+        var (state, engine, action, _) = Prepare(Faction.Fremen, 0,
+            [new ForPlayerEffect(1, [new SequenceEffect([new InfluenceEffect(Faction.Fremen), new GainEffect(ResourceKind.Spice, 7)])])
+                { DecisionOwnerId = 2, RecipientId = 1, PayerId = 0 }],
+            [new OptionalPaymentEffect(new(Water: 1), [new TakeMentatEffect(true)])],
+            state => SetTrack(state, 1, Faction.Fremen, 3));
+        Apply(engine, action);
+        Resolve<ForPlayerEffect>(engine);
+        Resolve<SequenceEffect>(engine);
+        Assert.Equal(0, state.Players[1].Resources.Spice);
+        Resolve<OptionalPaymentEffect>(engine);
+        var context = engine.CaptureTrustedSnapshot().Data.Frames[^1].Decision!.Context;
+        Assert.Equal((2, 0, 1), (context.DecisionOwnerId, context.PayerId, context.RecipientId));
+        Apply(engine, new ChooseOptionAction(2, 1));
+        ResolveAll(engine);
+        Assert.Equal(1, state.Board.Mentat.OwnerId);
+        Assert.Equal(1, state.Players[1].Units.AvailableMentats);
+        Assert.Equal(7, state.Players[1].Resources.Spice);
+        Assert.Equal(0, state.Players[0].Resources.Water);
+    }
+
+    [Fact]
+    public void GeneratedAndEnclosingMandatoryMentatsCompeteBeforeAnyGrant()
+    {
+        var (_, engine, action, _) = Prepare(Faction.Fremen, 3,
+            [new InfluenceEffect(Faction.Fremen), new ForPlayerEffect(1, [new TakeMentatEffect(true)])],
+            [new TakeMentatEffect(true)]);
+        RejectUnchanged(engine, action, "mentat-unavailable");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GeneratedSwordmasterAndMentatShareCombinedAgentBounds(bool overflow)
+    {
+        var (state, engine, action, _) = Prepare(Faction.Fremen, 3,
+            [new OptionalPaymentEffect(new(Water: 1), [new InfluenceEffect(Faction.Fremen), new TakeMentatEffect(true)])],
+            [new SwordmasterEffect()], state =>
+            {
+                // A typed large-count fixture isolates combined capacity from single-upgrade multiplicity.
+                state.Players[0].Units = state.Players[0].Units with
+                { AvailableAgents = int.MaxValue - (overflow ? 0 : 1), OrdinaryAgents = int.MaxValue - (overflow ? 0 : 1) };
+            });
+        Apply(engine, action); // Placement consumes one Agent before the two selected awards.
+        Resolve<OptionalPaymentEffect>(engine);
+        if (overflow)
+        {
+            RejectUnchanged(engine, new ChooseOptionAction(0, 1), "resource-bounds");
+            Apply(engine, new ChooseOptionAction(0, 0));
+            Assert.Equal(3, Track(state, 0, Faction.Fremen));
+            return;
+        }
+        Apply(engine, new ChooseOptionAction(0, 1));
+        ResolveAll(engine);
+        Assert.Equal(int.MaxValue, state.Players[0].Units.AvailableAgents);
+        Assert.Equal(1, state.Players[0].Units.AvailableSwordmasters);
+        Assert.Equal(1, state.Players[0].Units.AvailableMentats);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void MandatoryChoiceDetectsGeneratedScarceChildrenIncludingOptionalDescendants(bool wrapped)
+    {
+        Effect influence = new InfluenceEffect(Faction.Fremen);
+        if (wrapped) influence = new OptionalPaymentEffect(new(), [influence]);
+        var (_, engine, action, _) = Prepare(Faction.Fremen, 3,
+            [new ChoiceEffect([new("Generated award", new(), [influence]), new("Decline", new(), [])])],
+            [new TakeMentatEffect(true)]);
+        RejectUnchanged(engine, action, "special-choice");
+    }
+
+    [Fact]
+    public void UnavailableGeneratedOptionalMentatCanDeclineWithoutInfluenceOrPayment()
+    {
+        var (state, engine, action, _) = Prepare(Faction.Fremen, 3,
+            [new OptionalPaymentEffect(new(Water: 1), [new InfluenceEffect(Faction.Fremen)])],
+            [new TakeMentatEffect(true)], state => GiveMentat(state, 1));
+        Apply(engine, action);
+        Resolve<OptionalPaymentEffect>(engine);
+        RejectUnchanged(engine, new ChooseOptionAction(0, 1), "mentat-unavailable");
+        Assert.Equal([new ChooseOptionAction(0, 0)], engine.LegalActions(0));
+        Apply(engine, new ChooseOptionAction(0, 0));
+        Assert.Equal(3, Track(state, 0, Faction.Fremen));
+        Assert.Equal(1, state.Players[0].Resources.Water);
+    }
+
+    [Fact]
+    public void OptionalMentatCannotConsumeGeneratedAwardReservedInSuspendedParent()
+    {
+        var (state, engine, action, _) = Prepare(Faction.Fremen, 3,
+            [new SequenceEffect([new OptionalPaymentEffect(new(Water: 1), [new TakeMentatEffect(true)]), new InfluenceEffect(Faction.Fremen)])],
+            [new TakeMentatEffect(true)]);
+        Apply(engine, action);
+        Resolve<SequenceEffect>(engine);
+        RejectUnchanged(engine, new ChooseOptionAction(0, 1), "mentat-unavailable");
+        Apply(engine, new ChooseOptionAction(0, 0));
+        Assert.Equal(4, Track(state, 0, Faction.Fremen));
+        ResolveAll(engine);
+        Assert.Equal(0, state.Board.Mentat.OwnerId);
+        Assert.Equal(1, state.Players[0].Resources.Water);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GeneratedControlUsesCoherentMarkerSupplyAndIdempotentReservations(bool alreadyOwned)
+    {
+        var target = Space("arrakeen");
+        var (state, engine, action, _) = Prepare(Faction.Fremen, 3,
+            [new InfluenceEffect(Faction.Fremen), new ControlSpaceEffect(target)], [new ControlSpaceEffect(target)], state =>
+            {
+                foreach (var space in state.Board.Spaces.Where(x => x.Definition.Controllable && (alreadyOwned || x.Definition.Id != target)))
+                {
+                    space.ControllerId = 0;
+                    state.Players[0].Units = state.Players[0].Units with { ControlMarkers = state.Players[0].Units.ControlMarkers - 1 };
+                }
+                Assert.Equal(alreadyOwned ? 0 : 1, state.Players[0].Units.ControlMarkers);
+            });
+        Apply(engine, action);
+        ResolveAll(engine);
+        Assert.Equal(0, state.Board.Spaces.Single(x => x.Definition.Id == target).ControllerId);
+        Assert.Equal(0, state.Players[0].Units.ControlMarkers);
+    }
+
+    [Fact]
+    public void GeneratedControlCompetesWithAnotherMandatoryRecipientBeforePlacement()
+    {
+        var target = Space("arrakeen");
+        var (_, engine, action, _) = Prepare(Faction.Fremen, 3,
+            [new InfluenceEffect(Faction.Fremen), new ForPlayerEffect(1, [new ControlSpaceEffect(target)])],
+            [new ControlSpaceEffect(target)]);
+        RejectUnchanged(engine, action, "control-order");
+    }
+
+    private static void GiveMentat(GameState state, int owner)
+    {
+        state.Board.Mentat = new(null, owner);
+        var player = state.Players[owner];
+        player.Units = player.Units with { AvailableAgents = player.Units.AvailableAgents + 1, AvailableMentats = 1 };
+    }
+
     private static (GameState State, TurnEngine Engine, PlaceAgentAction Action, TurnRuleSet Rules) Prepare(
         Faction faction, int initial, ImmutableArray<Effect> effects, ImmutableArray<Effect>? reward = null, Action<GameState>? configure = null)
     {
@@ -466,11 +645,18 @@ public sealed class FactionRewardTests
     }
     private static void RejectUnchanged(TurnEngine engine, GameAction action, string code)
     {
-        var before = engine.CaptureTrustedSnapshot().Hash;
+        var before = engine.CaptureTrustedSnapshot();
+        var replay = JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options);
         var result = engine.Step(action);
         Assert.False(result.IsSuccess);
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
-        Assert.Equal(before, engine.CaptureTrustedSnapshot().Hash);
+        var after = engine.CaptureTrustedSnapshot();
+        Assert.Equal(before.Hash, after.Hash);
+        Assert.Equal(before.CanonicalJson, after.CanonicalJson);
+        Assert.Equal(before.Data.Game.MainRandom, after.Data.Game.MainRandom);
+        Assert.Equal(before.Data.Game.LeaderRandom, after.Data.Game.LeaderRandom);
+        Assert.Equal(before.Data.Actions, after.Data.Actions);
+        Assert.Equal(replay, JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options));
     }
     private static void CheckReplay(TurnEngine engine, TurnRuleSet rules)
     {

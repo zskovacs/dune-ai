@@ -76,6 +76,78 @@ public sealed class ConflictRewardTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public void GeneratedRewardMentatRejectsUnavailableOrCompetingGrantsBeforeFinalPass(bool competition)
+    {
+        var state = CombatState([8, 6, 4]);
+        state.Players[1].Influence = [.. state.Players[1].Influence.Select(x => x.Faction == Faction.Fremen ? x with { Amount = 3 } : x)];
+        state.Players[1].Resources = state.Players[1].Resources with { VictoryPoints = 1 };
+        if (!competition)
+        {
+            state.Board.Mentat = new(null, 0);
+            state.Players[0].Units = state.Players[0].Units with
+            { AvailableAgents = state.Players[0].Units.AvailableAgents + 1, AvailableMentats = 1 };
+        }
+        var rules = FremenMentat(LifecycleFixture.Rules(state));
+        rules = Rewards(rules, 1, competition ? [new TakeMentatEffect(true)] : []);
+        rules = Rewards(rules, 2, [new InfluenceEffect(Faction.Fremen)]);
+        var engine = new TurnEngine(state, rules);
+        Apply(engine, new PassPriorityAction(0));
+        Apply(engine, new PassPriorityAction(1));
+        var before = engine.CaptureTrustedSnapshot();
+        var replay = JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options);
+        var result = engine.Step(new PassPriorityAction(2));
+        Assert.Equal("mentat-unavailable", Assert.Single(result.Diagnostics).Code);
+        Assert.Equal(before.CanonicalJson, engine.CaptureTrustedSnapshot().CanonicalJson);
+        Assert.Equal(before.Hash, engine.CaptureTrustedSnapshot().Hash);
+        Assert.Equal(before.Data.Game.MainRandom, engine.CaptureTrustedSnapshot().Data.Game.MainRandom);
+        Assert.Equal(before.Data.Game.LeaderRandom, engine.CaptureTrustedSnapshot().Data.Game.LeaderRandom);
+        Assert.Equal(before.Data.Actions, engine.CaptureTrustedSnapshot().Data.Actions);
+        Assert.Equal(replay, JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options));
+    }
+
+    [Fact]
+    public void GeneratedPostWinSelectionReservesLaterRecipientsMandatoryMentat()
+    {
+        var state = CombatState([8, 6, 4]);
+        state.Players[0].Influence = [.. state.Players[0].Influence.Select(x => x.Faction == Faction.Fremen ? x with { Amount = 3 } : x)];
+        state.Players[0].Resources = state.Players[0].Resources with { VictoryPoints = 1 };
+        var rules = Rewards(FremenMentat(LifecycleFixture.Rules(state)), 1,
+            [new OptionalPaymentEffect(new(Water: 1), [new InfluenceEffect(Faction.Fremen)])]);
+        rules = Rewards(rules, 2, [new TakeMentatEffect(true)]);
+        var engine = new TurnEngine(state, rules);
+        CloseCombat(engine);
+        Resolve<OptionalPaymentEffect>(engine);
+        var before = engine.CaptureTrustedSnapshot();
+        var replay = JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options);
+        var result = engine.Step(new ChooseOptionAction(0, 1));
+        Assert.Equal("mentat-unavailable", Assert.Single(result.Diagnostics).Code);
+        Assert.Equal(before.CanonicalJson, engine.CaptureTrustedSnapshot().CanonicalJson);
+        Assert.Equal(before.Hash, engine.CaptureTrustedSnapshot().Hash);
+        Assert.Equal(replay, JsonSerializer.Serialize(engine.CaptureReplay(), ConfigurationJson.Options));
+        Apply(engine, new ChooseOptionAction(0, 0));
+        Apply(engine, new PassPriorityAction(0));
+        Resolve<TakeMentatEffect>(engine);
+        Assert.Equal(1, state.Board.Mentat.OwnerId);
+        Assert.Equal(1, state.Players[1].Units.AvailableMentats);
+        Assert.Equal(3, state.Players[0].Influence.Single(x => x.Faction == Faction.Fremen).Amount);
+        Assert.Equal(1, state.Players[0].Resources.Water);
+    }
+
+    private static TurnRuleSet FremenMentat(TurnRuleSet rules) => rules with
+    {
+        Lifecycle = rules.Lifecycle! with
+        {
+            Factions = [.. OriginalImperiumTurnRules.CreateLifecycleRules().Factions.Select(x => x.Faction == Faction.Fremen ? x with
+            {
+                ThresholdFourReward = [new TakeMentatEffect(true)],
+                Sources = [new("Synthetic faction reward fixture, not official content", 1, "Invented threshold Mentat")],
+            } : x)]
+        }
+    };
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public void WinnerCanFundPostWinPaymentWithRewardOrEarlierCardAndResumeExactRoot(bool cardFunds)
     {
         GameState Create()
