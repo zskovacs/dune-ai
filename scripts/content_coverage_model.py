@@ -26,6 +26,16 @@ class Product(StrEnum):
     BLOODLINES = "Bloodlines"
 
 
+class Module(StrEnum):
+    UPRISING_CHOAM = "UprisingChoam"
+    BLOODLINES_TECH = "BloodlinesTech"
+
+
+class Mode(StrEnum):
+    STANDARD = "Standard"
+    EPIC = "Epic"
+
+
 class Category(StrEnum):
     IMPERIUM_CARD = "ImperiumCard"
     INTRIGUE_CARD = "IntrigueCard"
@@ -248,6 +258,18 @@ class SlotRecord:
 
 
 @dataclass(frozen=True)
+class AvailabilityRecord:
+    baseGames: tuple[Product, ...]
+    requiredExpansions: tuple[Product, ...]
+    excludedExpansions: tuple[Product, ...]
+    requiredModules: tuple[Module, ...]
+    excludedModules: tuple[Module, ...]
+    modes: tuple[Mode, ...]
+    minimumSeats: int
+    maximumSeats: int
+
+
+@dataclass(frozen=True)
 class Blocker:
     id: str
     open: bool
@@ -284,8 +306,9 @@ class ContentRecord:
     faceComplete: bool
     slots: tuple[SlotRecord, ...]
     abilities: tuple[AbilityRecord, ...]
+    availability: AvailabilityRecord
+    faceEvidence: tuple[EvidenceClaim, ...] = ()
     runtimeDefinition: bool = False
-    availability: str = "ordinary"
     replaces: tuple[str, ...] = ()
     excludes: tuple[str, ...] = ()
 
@@ -361,8 +384,8 @@ class ConfigurationRecord:
     id: str
     base: Product
     expansions: tuple[Product, ...]
-    modules: tuple[str, ...]
-    mode: str
+    modules: tuple[Module, ...]
+    mode: Mode
     seats: int
     leaderPolicy: str
     authenticity: Authenticity
@@ -539,6 +562,175 @@ def _quantity_for(
     return content.boxedQuantity
 
 
+def _expectation_applies(
+    expectation: InventoryExpectation, config: ConfigurationRecord
+) -> bool:
+    if expectation.product not in (config.base, *config.expansions):
+        return False
+    scope = expectation.scope
+    if scope in {
+        ExpectationScope.EXCLUDED_SOLO_ONLY,
+        ExpectationScope.EXCLUDED_SOLO_TWO_PLAYER,
+        ExpectationScope.EXCLUDED_SIX_PLAYER_VARIANT,
+    }:
+        return False
+    if scope in {
+        ExpectationScope.BOXED_EPIC_VARIANT,
+        ExpectationScope.EXCLUDED_EPIC_VARIANT,
+    }:
+        return config.mode == Mode.EPIC
+    if scope in {
+        ExpectationScope.EXCLUDED_UNLESS_CHOAM_MODULE,
+        ExpectationScope.EXCLUDED_UNLESS_CHOAM_AND_IX,
+    }:
+        return Module.UPRISING_CHOAM in config.modules and (
+            scope != ExpectationScope.EXCLUDED_UNLESS_CHOAM_AND_IX
+            or Product.IX in config.expansions
+        )
+    if scope == ExpectationScope.EXCLUDED_UNLESS_TECH_MODULE:
+        return Module.BLOODLINES_TECH in config.modules
+    if scope == ExpectationScope.BOXED_TIER_SUBSET_EXCLUDED:
+        return config.base == Product.UPRISING
+    if scope.value.startswith("leader-specific-") and config.leaderPolicy.startswith(
+        "fixed:"
+    ):
+        return (
+            scope.value.removeprefix("leader-specific-")
+            in config.leaderPolicy.casefold()
+        )
+    return True
+
+
+def _content_applies(content: ContentRecord, config: ConfigurationRecord) -> bool:
+    availability = content.availability
+    return (
+        (not availability.baseGames or config.base in availability.baseGames)
+        and all(exp in config.expansions for exp in availability.requiredExpansions)
+        and not any(exp in config.expansions for exp in availability.excludedExpansions)
+        and all(module in config.modules for module in availability.requiredModules)
+        and not any(module in config.modules for module in availability.excludedModules)
+        and (not availability.modes or config.mode in availability.modes)
+        and availability.minimumSeats <= config.seats <= availability.maximumSeats
+    )
+
+
+_CARD_SLOTS = frozenset(
+    {
+        Slot.SETUP,
+        Slot.PASSIVE,
+        Slot.AGENT,
+        Slot.REVEAL,
+        Slot.ACQUIRE,
+        Slot.SIGNET_RING,
+        Slot.COMBAT,
+        Slot.POST_WIN,
+        Slot.ENDGAME,
+        Slot.TRIGGERED,
+        Slot.PERSISTENT_MODIFIER,
+    }
+)
+_INTRIGUE_SLOTS = frozenset(
+    {
+        Slot.SETUP,
+        Slot.PASSIVE,
+        Slot.INTRIGUE,
+        Slot.COMBAT,
+        Slot.POST_WIN,
+        Slot.ENDGAME,
+        Slot.TRIGGERED,
+        Slot.PERSISTENT_MODIFIER,
+    }
+)
+_CONFLICT_SLOTS = frozenset(
+    {
+        Slot.SETUP,
+        Slot.COMBAT,
+        Slot.POST_WIN,
+        Slot.ENDGAME,
+        Slot.TRIGGERED,
+        Slot.PERSISTENT_MODIFIER,
+    }
+)
+_LEADER_SLOTS = frozenset(
+    {
+        Slot.SETUP,
+        Slot.PASSIVE,
+        Slot.AGENT,
+        Slot.SIGNET_RING,
+        Slot.COMBAT,
+        Slot.POST_WIN,
+        Slot.ENDGAME,
+        Slot.TRIGGERED,
+        Slot.PERSISTENT_MODIFIER,
+    }
+)
+_BOARD_SLOTS = frozenset(
+    {
+        Slot.SETUP,
+        Slot.PASSIVE,
+        Slot.AGENT,
+        Slot.COMBAT,
+        Slot.TRIGGERED,
+        Slot.PERSISTENT_MODIFIER,
+    }
+)
+_FACE_SLOTS: dict[Category, frozenset[Slot]] = {
+    Category.IMPERIUM_CARD: _CARD_SLOTS,
+    Category.STARTING_CARD: _CARD_SLOTS,
+    Category.RESERVE_CARD: _CARD_SLOTS,
+    Category.TLEILAXU_CARD: _CARD_SLOTS,
+    Category.INTRIGUE_CARD: _INTRIGUE_SLOTS,
+    Category.CONFLICT_CARD: _CONFLICT_SLOTS,
+    Category.LEADER: _LEADER_SLOTS,
+    Category.BOARD_SPACE: _BOARD_SLOTS,
+    Category.BOARD_LAYOUT: _BOARD_SLOTS,
+    Category.TECH_TILE: _CARD_SLOTS,
+    Category.CONTRACT: _CARD_SLOTS,
+    Category.OBJECTIVE: _CARD_SLOTS,
+    Category.RIVAL: _BOARD_SLOTS,
+    Category.HOUSE_HAGAL_CARD: _CARD_SLOTS,
+    Category.SARDAUKAR_COMMANDER_SKILL: _CARD_SLOTS,
+    Category.GAMEPLAY_COMPONENT: frozenset(Slot),
+}
+
+
+def _official_claim(
+    claims: tuple[EvidenceClaim, ...],
+    kind: EvidenceKind,
+    sources: dict[str, SourceRecord],
+) -> bool:
+    return any(
+        claim.kind == kind
+        and claim.verification == Verification.VERIFIED
+        and claim.sourceId in sources
+        and sources[claim.sourceId].kind
+        in {
+            SourceKind.OFFICIAL_LOCAL_PDF,
+            SourceKind.OFFICIAL_PDF_WEB,
+            SourceKind.OFFICIAL_WEB,
+        }
+        for claim in claims
+    )
+
+
+def _complete_face(item: ContentRecord, sources: dict[str, SourceRecord]) -> bool:
+    slots = {slot.slot: slot for slot in item.slots}
+    return (
+        item.faceComplete
+        and item.discovery == Discovery.DISCOVERED
+        and _official_claim(item.faceEvidence, EvidenceKind.SEMANTICS, sources)
+        and _FACE_SLOTS[item.category] <= slots.keys()
+        and all(
+            (
+                slot.discovery == SlotDiscovery.VERIFIED_ABSENT
+                and _official_claim(slot.evidence, EvidenceKind.SEMANTICS, sources)
+            )
+            or (slot.discovery == SlotDiscovery.DISCOVERED and bool(slot.abilityIds))
+            for slot in slots.values()
+        )
+    )
+
+
 def _cycles(graph: dict[str, tuple[str, ...]]) -> set[str]:
     active: set[str] = set()
     done: set[str] = set()
@@ -559,6 +751,30 @@ def _cycles(graph: dict[str, tuple[str, ...]]) -> set[str]:
     for node in graph:
         visit(node)
     return cyclic
+
+
+def _capability_supported(
+    capability_id: str,
+    capabilities: dict[str, CapabilityRecord],
+    active: frozenset[str] = frozenset(),
+) -> bool:
+    capability = capabilities.get(capability_id)
+    if capability is None or capability_id in active:
+        return False
+    return (
+        capability.implementation == Implementation.IMPLEMENTED
+        and capability.validation == Validation.TESTED
+        and bool(capability.memberRefs)
+        and _has_test(
+            capability.testRefs,
+            {EvidenceKind.BEHAVIOR, EvidenceKind.INTEGRATION},
+        )
+        and not _has_open_blocker(capability.blockers)
+        and all(
+            _capability_supported(ref, capabilities, active | {capability_id})
+            for ref in capability.prerequisiteIds
+        )
+    )
 
 
 def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssue, ...]:
@@ -725,6 +941,33 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
 
     for item in inventory.content:
         evidence(item.evidence, item.id, "evidence", item.product)
+        evidence(item.faceEvidence, item.id, "faceEvidence", item.product)
+        availability = item.availability
+        if (
+            availability.minimumSeats < 1
+            or availability.maximumSeats > 6
+            or availability.minimumSeats > availability.maximumSeats
+            or any(
+                base not in {Product.IMPERIUM, Product.UPRISING}
+                for base in availability.baseGames
+            )
+            or any(
+                expansion in {Product.IMPERIUM, Product.UPRISING}
+                for expansion in (
+                    *availability.requiredExpansions,
+                    *availability.excludedExpansions,
+                )
+            )
+            or set(availability.requiredExpansions)
+            & set(availability.excludedExpansions)
+            or set(availability.requiredModules) & set(availability.excludedModules)
+        ):
+            add(
+                "availability",
+                item.id,
+                "availability",
+                "invalid or contradictory availability constraints",
+            )
         refs(item.expectationIds, expectations, item.id, "expectationIds")
         refs(item.replaces + item.excludes, content, item.id, "replaces/excludes")
         if item.variantOf:
@@ -754,19 +997,24 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
                 "verification",
                 "verified content needs full source evidence",
             )
-        if item.faceComplete and (
-            item.discovery != Discovery.DISCOVERED
-            or not item.slots
-            or any(
-                s.discovery in {SlotDiscovery.UNDISCOVERED, SlotDiscovery.UNREADABLE}
-                for s in item.slots
-            )
+        if (
+            item.verification == Verification.VERIFIED
+            and item.discovery == Discovery.DISCOVERED
+            and not _official_claim(item.evidence, EvidenceKind.IDENTITY, sources)
         ):
+            add(
+                "identity-evidence",
+                item.id,
+                "evidence",
+                "verified identity needs an official identity claim",
+            )
+        if item.faceComplete and not _complete_face(item, sources):
             add(
                 "false-complete",
                 item.id,
                 "faceComplete",
-                "unknown slots prevent complete face",
+                "complete face needs official face evidence and a full "
+                "applicable slot account",
             )
         if len({s.slot for s in item.slots}) != len(item.slots):
             add("duplicate-slot", item.id, "slots", "duplicate slot")
@@ -792,8 +1040,8 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
                     "discovered slot needs an ability",
                 )
             evidence(slot.evidence, item.id, "slots.evidence", item.product)
-            if slot.discovery == SlotDiscovery.VERIFIED_ABSENT and not any(
-                claim.kind == EvidenceKind.SEMANTICS for claim in slot.evidence
+            if slot.discovery == SlotDiscovery.VERIFIED_ABSENT and not _official_claim(
+                slot.evidence, EvidenceKind.SEMANTICS, sources
             ):
                 add(
                     "absent-slot-evidence",
@@ -822,7 +1070,7 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
         if (
             (item.boxedQuantity is not None or item.perPlayerQuantity is not None)
             and item.verification == Verification.VERIFIED
-            and not any(e.kind == EvidenceKind.QUANTITY for e in item.evidence)
+            and not _official_claim(item.evidence, EvidenceKind.QUANTITY, sources)
         ):
             add(
                 "quantity-evidence",
@@ -915,6 +1163,16 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
 
     for capability in inventory.capabilities:
         refs(capability.prerequisiteIds, capabilities, capability.id, "prerequisiteIds")
+        if capability.implementation == Implementation.IMPLEMENTED and any(
+            not _capability_supported(ref, capabilities)
+            for ref in capability.prerequisiteIds
+        ):
+            add(
+                "capability-prerequisite",
+                capability.id,
+                "prerequisiteIds",
+                "implemented capability has an unmet prerequisite",
+            )
         if (
             capability.implementation == Implementation.UNSUPPORTED
             and not capability.missingDelta
@@ -1010,6 +1268,16 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
             )
     for configuration in inventory.configurations:
         refs(configuration.contentIds, content, configuration.id, "contentIds")
+        for content_id in configuration.contentIds:
+            if content_id in content and not _content_applies(
+                content[content_id], configuration
+            ):
+                add(
+                    "content-applicability",
+                    configuration.id,
+                    "contentIds",
+                    f"{content_id} is unavailable in this configuration",
+                )
         refs(
             configuration.interactionIds,
             interactions,
@@ -1200,10 +1468,8 @@ def _validate_support(
                 "implemented ability needs behavioral validation",
             )
         if any(
-            capabilities[c].implementation != Implementation.IMPLEMENTED
-            or capabilities[c].validation != Validation.TESTED
-            for c in ability.capabilityIds
-            if c in capabilities
+            not _capability_supported(ref, capabilities)
+            for ref in ability.capabilityIds
         ):
             add(
                 "capability-dependency",
@@ -1227,6 +1493,7 @@ def _validate_support(
 
 def build_report(inventory: AuditInventory) -> AuditReport:
     all_abilities = tuple(a for c in inventory.content for a in c.abilities)
+    sources = {s.id: s for s in inventory.sources}
     quantities: list[QuantityResult] = []
     gaps: list[str] = []
     for expectation in inventory.expectations:
@@ -1235,7 +1502,7 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             _quantity_for(c, expectation) or 0
             for c in matched
             if c.verification == Verification.VERIFIED
-            and any(e.kind == EvidenceKind.QUANTITY for e in c.evidence)
+            and _official_claim(c.evidence, EvidenceKind.QUANTITY, sources)
         )
         sourced = sum(
             _quantity_for(c, expectation) or 0
@@ -1243,7 +1510,7 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             if c.sourcing != Sourcing.UNSOURCED
             and (
                 c.verification != Verification.VERIFIED
-                or not any(e.kind == EvidenceKind.QUANTITY for e in c.evidence)
+                or not _official_claim(c.evidence, EvidenceKind.QUANTITY, sources)
             )
         )
         unknown = sum(_quantity_for(c, expectation) is None for c in matched)
@@ -1257,7 +1524,8 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             and overcount == 0
             and all(
                 c.verification == Verification.VERIFIED
-                and any(e.kind == EvidenceKind.QUANTITY for e in c.evidence)
+                and _official_claim(c.evidence, EvidenceKind.QUANTITY, sources)
+                and _official_claim(c.evidence, EvidenceKind.IDENTITY, sources)
                 for c in matched
             )
             and (
@@ -1265,7 +1533,7 @@ def build_report(inventory: AuditInventory) -> AuditReport:
                 and discovered == expectation.uniqueDefinitions
             )
             and discovered == len(matched)
-            and all(c.faceComplete for c in matched)
+            and all(_complete_face(c, sources) for c in matched)
         )
         quantities.append(
             QuantityResult(
@@ -1320,10 +1588,7 @@ def build_report(inventory: AuditInventory) -> AuditReport:
                 )
             )
             and all(
-                ref in capabilities
-                and capabilities[ref].implementation == Implementation.IMPLEMENTED
-                and capabilities[ref].validation == Validation.TESTED
-                and not _has_open_blocker(capabilities[ref].blockers)
+                _capability_supported(ref, capabilities)
                 for ref in ability.capabilityIds
             )
             and all(
@@ -1338,12 +1603,16 @@ def build_report(inventory: AuditInventory) -> AuditReport:
     gates: list[ConfigurationGate] = []
     for config in inventory.configurations:
         expected_ids = {
-            e.id
-            for e in inventory.expectations
-            if e.product in (config.base, *config.expansions)
-            and not e.scope.startswith("excluded-")
+            e.id for e in inventory.expectations if _expectation_applies(e, config)
         }
         relevant = [q for q in quantities if q.expectationId in expected_ids]
+        required_content_ids = {
+            c.id
+            for c in inventory.content
+            if any(ref in expected_ids for ref in c.expectationIds)
+            and _content_applies(c, config)
+        }
+        selected_content_ids = set(config.contentIds)
         composition = (
             config.base in {Product.IMPERIUM, Product.UPRISING}
             and config.seats in {3, 4}
@@ -1357,8 +1626,9 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             composition
             and bool(relevant)
             and all(q.complete for q in relevant)
-            and bool(config.contentIds)
-            and all(content[c].faceComplete for c in config.contentIds if c in content)
+            and bool(required_content_ids)
+            and selected_content_ids == required_content_ids
+            and all(_complete_face(content[c], sources) for c in required_content_ids)
         )
         ability_ids = [
             a.id
@@ -1367,11 +1637,22 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             for a in content[c].abilities
         ]
         ability_ok = inventory_ok and all(supported_ability(a) for a in ability_ids)
-        interactions_ok = ability_ok and all(
-            i in interactions
-            and interactions[i].implementation == Implementation.IMPLEMENTED
-            and interactions[i].validation == Validation.TESTED
-            for i in config.interactionIds
+        required_interaction_ids = {
+            ref
+            for a in ability_ids
+            if a in abilities
+            for ref in abilities[a].interactionIds
+        }
+        interactions_ok = (
+            ability_ok
+            and required_interaction_ids <= set(config.interactionIds)
+            and all(
+                i in interactions
+                and interactions[i].implementation == Implementation.IMPLEMENTED
+                and interactions[i].validation == Validation.TESTED
+                and not _has_open_blocker(interactions[i].blockers)
+                for i in config.interactionIds
+            )
         )
         authentic = config.authenticity == Authenticity.OFFICIAL and all(
             content[c].authenticity == Authenticity.OFFICIAL
@@ -1430,10 +1711,12 @@ def build_report(inventory: AuditInventory) -> AuditReport:
         len(inventory.content),
         len(all_abilities),
         sum(
-            s.discovery != SlotDiscovery.VERIFIED_ABSENT
-            and s.discovery != SlotDiscovery.DISCOVERED
+            len(_FACE_SLOTS[c.category] - {s.slot for s in c.slots})
+            + sum(
+                s.discovery in {SlotDiscovery.UNDISCOVERED, SlotDiscovery.UNREADABLE}
+                for s in c.slots
+            )
             for c in inventory.content
-            for s in c.slots
         ),
         tuple(quantities),
         tuple(gates),

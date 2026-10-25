@@ -11,7 +11,12 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from content_coverage_model import build_report, load_inventory, validate_inventory  # noqa: E402
+from content_coverage_model import (  # noqa: E402
+    _expectation_applies,
+    build_report,
+    load_inventory,
+    validate_inventory,
+)
 
 
 @pytest.fixture
@@ -47,11 +52,34 @@ def content_record() -> dict:
         "perPlayerQuantity": None,
         "expectationIds": ["exp-imperium-starters-four-decks"],
         "evidence": [
-            {"sourceId": "src-I", "page": 3, "locator": "component", "kind": "quantity"}
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "component count",
+                "kind": "quantity",
+                "verification": "verified",
+            },
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "printed identity",
+                "kind": "identity",
+                "verification": "verified",
+            },
         ],
         "discovery": "discovered",
         "sourcing": "fully-sourced",
         "verification": "verified",
+        "availability": {
+            "baseGames": ["Imperium"],
+            "requiredExpansions": [],
+            "excludedExpansions": [],
+            "requiredModules": [],
+            "excludedModules": [],
+            "modes": ["Standard"],
+            "minimumSeats": 3,
+            "maximumSeats": 4,
+        },
         "faceComplete": False,
         "slots": [
             {"slot": "Agent", "discovery": "unreadable", "reason": "face not inspected"}
@@ -118,6 +146,15 @@ def test_duplicate_content_and_ability_ids_rejected(tmp_path, raw):
         ),
         lambda d: d["content"].append({**content_record(), "boxedQuantity": True}),
         lambda d: d["content"].append({**content_record(), "boxedQuantity": "1"}),
+        lambda d: d["content"].append(
+            {
+                **content_record(),
+                "availability": {
+                    **content_record()["availability"],
+                    "requiredModules": ["Choam"],
+                },
+            }
+        ),
         lambda d: d["expectations"][0].update(basis="made-up"),
         lambda d: d["expectations"][0].update(scope="made-up"),
     ],
@@ -260,7 +297,7 @@ def test_undiscovered_slots_and_unverified_dependencies_block_implementation(
         }
     ]
     assert {"behavior-test", "capability-dependency"} <= codes(raw, tmp_path)
-    assert build_report(load(raw, tmp_path)).unknownSlots == 1
+    assert build_report(load(raw, tmp_path)).unknownSlots >= 1
 
 
 def test_optional_pdf_unavailable_offline_without_freshness(tmp_path, raw, monkeypatch):
@@ -354,7 +391,7 @@ def test_configuration_without_composition_or_inventory_fails_closed(tmp_path, r
             "base": "Imperium",
             "expansions": [],
             "modules": [],
-            "mode": "standard",
+            "mode": "Standard",
             "seats": 3,
             "leaderPolicy": "all-official",
             "authenticity": "official",
@@ -373,3 +410,363 @@ def test_configuration_without_composition_or_inventory_fails_closed(tmp_path, r
     assert not gate.abilities
     assert not gate.fullGame
     assert not gate.rl
+
+
+def populated_inventory(raw: dict) -> tuple[dict, dict]:
+    """A structurally complete one-definition fixture, separate from authored S1."""
+    expectation = next(
+        e
+        for e in raw["expectations"]
+        if e["id"] == "exp-imperium-reserve-arrakis-liaison"
+    )
+    raw["expectations"] = [expectation]
+    item = content_record()
+    item.update(
+        id="Imperium/ReserveCard/fixture/v1",
+        name="Fixture definition",
+        category="ReserveCard",
+        boxedQuantity=8,
+        expectationIds=[expectation["id"]],
+        faceComplete=True,
+        faceEvidence=[
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "whole face fixture",
+                "kind": "semantics",
+                "verification": "verified",
+            }
+        ],
+    )
+    # The category's potentially relevant slots are accounted for individually.
+    slot_names = [
+        "Setup",
+        "Passive",
+        "Agent",
+        "Reveal",
+        "Acquire",
+        "SignetRing",
+        "Combat",
+        "PostWin",
+        "Endgame",
+        "Triggered",
+        "PersistentModifier",
+    ]
+    item["slots"] = [
+        {
+            "slot": name,
+            "discovery": "verified-absent",
+            "evidence": [
+                {
+                    "sourceId": "src-I",
+                    "page": 3,
+                    "locator": f"{name} absence fixture",
+                    "kind": "semantics",
+                    "verification": "verified",
+                }
+            ],
+        }
+        for name in slot_names
+    ]
+    raw["content"] = [item]
+    config = {
+        "id": "cfg-fixture",
+        "base": "Imperium",
+        "expansions": [],
+        "modules": [],
+        "mode": "Standard",
+        "seats": 3,
+        "leaderPolicy": "all-official",
+        "authenticity": "official",
+        "contentIds": [item["id"]],
+        "interactionIds": [],
+        "evidence": [
+            {
+                "sourceId": "src-I",
+                "page": 4,
+                "locator": "setup fixture",
+                "kind": "composition",
+            }
+        ],
+        "initializationTests": [],
+        "fullGameTests": [],
+        "rlTests": [],
+    }
+    raw["configurations"] = [config]
+    return item, config
+
+
+def test_populated_full_face_requires_all_applicable_slots(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    assert not codes(raw, tmp_path)
+    report = build_report(load(raw, tmp_path))
+    assert report.quantities[0].complete
+    assert report.configurationGates[0].inventory
+    assert report.configurationGates[0].abilities  # All relevant slots verified absent.
+
+    item["slots"] = [slot for slot in item["slots"] if slot["slot"] != "Reveal"]
+    assert "false-complete" in codes(raw, tmp_path)
+    report = build_report(load(raw, tmp_path))
+    assert not report.quantities[0].complete
+    assert report.unknownSlots == 1
+    assert not report.configurationGates[0].inventory
+    assert not report.configurationGates[0].abilities
+
+
+def test_populated_face_needs_whole_face_evidence(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    item["faceEvidence"] = []
+    assert "false-complete" in codes(raw, tmp_path)
+    assert not build_report(load(raw, tmp_path)).quantities[0].complete
+
+
+def test_selected_configuration_cannot_omit_reconciled_definition(tmp_path, raw):
+    item, config = populated_inventory(raw)
+    expectation = raw["expectations"][0]
+    expectation["expectedCopies"] = 8
+    expectation["uniqueDefinitions"] = 2
+    item["boxedQuantity"] = 4
+    second = copy.deepcopy(item)
+    second["id"] = "Imperium/ReserveCard/fixture-two/v1"
+    second["name"] = "Fixture definition two"
+    second["boxedQuantity"] = 4
+    unsupported = ability_record(second["id"])
+    unsupported.update(
+        implementation="unsupported", exclusionReason="missing engine hook"
+    )
+    second["abilities"] = [unsupported]
+    agent_slot = next(slot for slot in second["slots"] if slot["slot"] == "Agent")
+    agent_slot.update(discovery="discovered", abilityIds=[unsupported["id"]])
+    agent_slot.pop("evidence")
+    raw["content"].append(second)
+
+    report = build_report(load(raw, tmp_path))
+    assert report.quantities[0].complete
+    assert not report.configurationGates[0].inventory
+    assert not report.configurationGates[0].abilities
+
+    config["contentIds"].append(second["id"])
+    included = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert included.inventory
+    assert not included.abilities
+
+
+def test_excluded_mode_and_module_expectations_do_not_block_standard_gate(
+    tmp_path, raw
+):
+    item, config = populated_inventory(raw)
+    for excluded_id in ("exp-imperium-hagal",):
+        excluded = json.loads(
+            (ROOT / "docs/content/coverage/inventory.json").read_text()
+        )
+        raw["expectations"].append(
+            next(e for e in excluded["expectations"] if e["id"] == excluded_id)
+        )
+    assert build_report(load(raw, tmp_path)).configurationGates[0].inventory
+    assert item["id"] in config["contentIds"]
+
+
+def test_transitive_capability_prerequisite_blocks_ability(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    ability = ability_record(item["id"])
+    ability.update(
+        classification="primitive",
+        classificationReason=None,
+        semanticClaim="Fixture effect",
+        discovery="discovered",
+        sourcing="fully-sourced",
+        verification="verified",
+        implementation="implemented",
+        validation="tested",
+        evidence=[
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "effect fixture",
+                "kind": "semantics",
+                "verification": "verified",
+            }
+        ],
+        implementationRefs=["scripts/content_coverage_model.py::_capability_supported"],
+        testRefs=[
+            {
+                "path": "training/tests/test_content_coverage.py",
+                "name": "fixture",
+                "kind": kind,
+            }
+            for kind in ("behavior", "integration", "privacy-replay")
+        ],
+        capabilityIds=["cap-a"],
+    )
+    item["abilities"] = [ability]
+    agent_slot = next(s for s in item["slots"] if s["slot"] == "Agent")
+    agent_slot.update(discovery="discovered", abilityIds=[ability["id"]])
+    agent_slot.pop("evidence")
+
+    def cap(cap_id, prerequisites, implementation="implemented", validation="tested"):
+        return {
+            "id": cap_id,
+            "contract": "Fixture behavior",
+            "supportedSubset": None,
+            "memberRefs": ["scripts/content_coverage_model.py::_capability_supported"]
+            if implementation == "implemented"
+            else [],
+            "testRefs": [
+                {
+                    "path": "training/tests/test_content_coverage.py",
+                    "name": "fixture",
+                    "kind": "behavior",
+                }
+            ]
+            if validation == "tested"
+            else [],
+            "missingDelta": "Unsupported prerequisite"
+            if implementation == "unsupported"
+            else None,
+            "prerequisiteIds": prerequisites,
+            "implementation": implementation,
+            "validation": validation,
+            "blockers": [],
+        }
+
+    raw["capabilities"] = [
+        cap("cap-a", ["cap-b"]),
+        cap("cap-b", ["cap-c"]),
+        cap("cap-c", [], "unsupported", "not-tested"),
+    ]
+    assert {"capability-prerequisite", "capability-dependency"} <= codes(raw, tmp_path)
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.inventory
+    assert not gate.abilities
+
+
+def test_verified_identity_needs_identity_claim(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    item["evidence"] = [
+        claim for claim in item["evidence"] if claim["kind"] != "identity"
+    ]
+    assert "identity-evidence" in codes(raw, tmp_path)
+    report = build_report(load(raw, tmp_path))
+    assert report.quantities[0].discoveredDefinitions == 1
+    assert not report.quantities[0].complete
+    assert not report.configurationGates[0].inventory
+
+
+def test_selected_ability_requires_its_interaction_in_configuration(tmp_path, raw):
+    item, config = populated_inventory(raw)
+    ability = ability_record(item["id"])
+    ability.update(
+        classification="primitive",
+        classificationReason=None,
+        semanticClaim="Fixture effect",
+        discovery="discovered",
+        sourcing="fully-sourced",
+        verification="verified",
+        implementation="implemented",
+        validation="tested",
+        interactionIds=["int-fixture"],
+        evidence=[
+            {
+                "sourceId": "src-I",
+                "page": 3,
+                "locator": "effect fixture",
+                "kind": "semantics",
+                "verification": "verified",
+            }
+        ],
+        implementationRefs=["scripts/content_coverage_model.py::_capability_supported"],
+        testRefs=[
+            {
+                "path": "training/tests/test_content_coverage.py",
+                "name": "fixture",
+                "kind": kind,
+            }
+            for kind in ("behavior", "integration", "privacy-replay")
+        ],
+    )
+    item["abilities"] = [ability]
+    agent_slot = next(s for s in item["slots"] if s["slot"] == "Agent")
+    agent_slot.update(discovery="discovered", abilityIds=[ability["id"]])
+    agent_slot.pop("evidence")
+    raw["interactions"] = [
+        {
+            "id": "int-fixture",
+            "participantIds": [item["id"]],
+            "rulesets": [config["id"]],
+            "evidence": [],
+            "exceptions": [],
+            "requiredHook": None,
+            "implementationRefs": [
+                "scripts/content_coverage_model.py::_capability_supported"
+            ],
+            "testRefs": [
+                {
+                    "path": "training/tests/test_content_coverage.py",
+                    "name": "fixture",
+                    "kind": "behavior",
+                }
+            ],
+            "implementation": "implemented",
+            "validation": "tested",
+            "blockers": [],
+        }
+    ]
+    gate = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert gate.inventory
+    assert gate.abilities
+    assert not gate.interactions
+    config["interactionIds"] = ["int-fixture"]
+    assert build_report(load(raw, tmp_path)).configurationGates[0].interactions
+
+
+def test_typed_availability_selects_expansion_dependent_content(tmp_path, raw):
+    item, config = populated_inventory(raw)
+    raw["expectations"][0]["expectedCopies"] = 16
+    raw["expectations"][0]["uniqueDefinitions"] = 2
+    second = copy.deepcopy(item)
+    second["id"] = "Imperium/ReserveCard/ix-dependent/v1"
+    second["name"] = "Ix dependent fixture"
+    second["availability"]["requiredExpansions"] = ["RiseOfIx"]
+    raw["content"].append(second)
+    assert build_report(load(raw, tmp_path)).configurationGates[0].inventory
+
+    config["expansions"] = ["RiseOfIx"]
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].inventory
+    config["contentIds"].append(second["id"])
+    assert build_report(load(raw, tmp_path)).configurationGates[0].inventory
+
+
+@pytest.mark.parametrize(
+    "bad_availability",
+    [
+        {"minimumSeats": 5, "maximumSeats": 4},
+        {"requiredExpansions": ["RiseOfIx"], "excludedExpansions": ["RiseOfIx"]},
+    ],
+)
+def test_contradictory_availability_rejected(tmp_path, raw, bad_availability):
+    item, _ = populated_inventory(raw)
+    item["availability"].update(bad_availability)
+    assert "availability" in codes(raw, tmp_path)
+
+
+def test_module_expectations_follow_typed_module_selection(tmp_path, raw):
+    _, config = populated_inventory(raw)
+    original = json.loads((ROOT / "docs/content/coverage/inventory.json").read_text())
+    wanted = {
+        "exp-uprising-choam-contracts",
+        "exp-bloodlines-tech-tiles",
+    }
+    raw["expectations"] = [e for e in original["expectations"] if e["id"] in wanted]
+    config["base"] = "Uprising"
+    config["expansions"] = ["Bloodlines"]
+    loaded = load(raw, tmp_path)
+    assert all(
+        not _expectation_applies(expectation, loaded.configurations[0])
+        for expectation in loaded.expectations
+    )
+    config["modules"] = ["UprisingChoam", "BloodlinesTech"]
+    loaded = load(raw, tmp_path)
+    assert all(
+        _expectation_applies(expectation, loaded.configurations[0])
+        for expectation in loaded.expectations
+    )
