@@ -1,0 +1,1827 @@
+{
+  "schemaVersion": "dune-content-coverage-v1",
+  "auditRevision": "slice-004.5-s1-2026-10-25",
+  "repositoryRevision": "c256caadd8c077c8514fef611aa63f1488354fa0",
+  "sources": [
+    {
+      "id": "src-I",
+      "kind": "official-local-pdf",
+      "title": "DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+      "locator": "docs/rules/DUNE_IMPERIUM_Rules_2020_10_26.pdf",
+      "revision": "2020-10-26",
+      "sha256": "a689f19e7bda36ec03240ba19cbc481dd4d681f55837529cd8170ec9d19be6db",
+      "pages": 20,
+      "products": [
+        "Imperium"
+      ],
+      "claimTypes": [
+        "quantity",
+        "identity",
+        "applicability",
+        "rules"
+      ],
+      "completeness": "component-and-rules-reference-not-complete-face-catalog",
+      "verification": "locally-reviewed-2026-10-25",
+      "rights": "reference-only-no-redistribution-grant",
+      "notes": "Original components, setup, phases and board-space guide; pp.3–5, 17–18 used for expectations.",
+      "discrepancies": []
+    },
+    {
+      "id": "src-A",
+      "kind": "official-local-pdf",
+      "title": "DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf",
+      "locator": "docs/rules/DUNE_IMPERIUM_Player_Aid_Icons_and_Board_Spaces.pdf",
+      "revision": "2020",
+      "sha256": "b191bffe4658bacc3ae5626312ef4fc83c51134aeb007daffa171bb85c9ba44d",
+      "pages": 2,
+      "products": [
+        "Imperium"
+      ],
+      "claimTypes": [
+        "quantity",
+        "identity",
+        "applicability",
+        "rules"
+      ],
+      "completeness": "component-and-rules-reference-not-complete-face-catalog",
+      "verification": "locally-reviewed-2026-10-25",
+      "rights": "reference-only-no-redistribution-grant",
+      "notes": "Original icons and complete 22-location guide on p.2.",
+      "discrepancies": []
+    },
+    {
+      "id": "src-X",
+      "kind": "official-local-pdf",
+      "title": "DUNE_IMPERIUM_RISE_OF_IX_Rulebook_22-2-11.pdf",
+      "locator": "docs/rules/DUNE_IMPERIUM_RISE_OF_IX_Rulebook_22-2-11.pdf",
+      "revision": "2022-02-11",
+      "sha256": "ca010552db0b043cb8630352f95eafb06bfe50ba4dc5a7bd318eb5b24a03658f",
+      "pages": 12,
+      "products": [
+        "RiseOfIx"
+      ],
+      "claimTypes": [
+        "quantity",
+        "identity",
+        "applicability",
+        "rules"
+      ],
+      "completeness": "component-and-rules-reference-not-complete-face-catalog",
+      "verification": "locally-reviewed-2026-10-25",
+      "rights": "reference-only-no-redistribution-grant",
+      "notes": "Components p.2 and setup/combination instructions.",
+      "discrepancies": []
+    },
+    {
+      "id": "src-M",
+      "kind": "official-local-pdf",
+      "title": "DUNE_IMPERIUM_IMMORTALITY_Rulebook.pdf",
+      "locator": "docs/rules/DUNE_IMPERIUM_IMMORTALITY_Rulebook.pdf",
+      "revision": "2022",
+      "sha256": "2a7ba3b8129bc108a82c3b2677d7ce27ffc64be88532b691f55836bf48666a79",
+      "pages": 16,
+      "products": [
+        "Immortality"
+      ],
+      "claimTypes": [
+        "quantity",
+        "identity",
+        "applicability",
+        "rules"
+      ],
+      "completeness": "component-and-rules-reference-not-complete-face-catalog",
+      "verification": "locally-reviewed-2026-10-25",
+      "rights": "reference-only-no-redistribution-grant",
+      "notes": "Components p.3 and setup pp.4–5.",
+      "discrepancies": []
+    },
+    {
+      "id": "src-U",
+      "kind": "official-local-pdf",
+      "title": "DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+      "locator": "docs/rules/DUNE_IMPERIUM_UPRISING_Main_Rulebook_23-10-12.pdf",
+      "revision": "2023-10-12",
+      "sha256": "0a8daa36f73c09316143d05bbd5d845183d1ae6f56ce211d93c59b360074f7db",
+      "pages": 20,
+      "products": [
+        "Uprising"
+      ],
+      "claimTypes": [
+        "quantity",
+        "identity",
+        "applicability",
+        "rules"
+      ],
+      "completeness": "component-and-rules-reference-not-complete-face-catalog",
+      "verification": "locally-reviewed-2026-10-25",
+      "rights": "reference-only-no-redistribution-grant",
+      "notes": "Components p.3, CHOAM p.16 and combinations p.18.",
+      "discrepancies": []
+    },
+    {
+      "id": "src-S",
+      "kind": "official-local-pdf",
+      "title": "DUNE_IMPERIUM_UPRISING_Rules_Supplements_23-10-12.pdf",
+      "locator": "docs/rules/DUNE_IMPERIUM_UPRISING_Rules_Supplements_23-10-12.pdf",
+      "revision": "2023-10-12",
+      "sha256": "454ea3ef442f0622f4bf5b83b8368b24e34aaf4f0dc0f02d93dfba66e690c075",
+      "pages": 14,
+      "products": [
+        "Uprising"
+      ],
+      "claimTypes": [
+        "quantity",
+        "identity",
+        "applicability",
+        "rules"
+      ],
+      "completeness": "component-and-rules-reference-not-complete-face-catalog",
+      "verification": "locally-reviewed-2026-10-25",
+      "rights": "reference-only-no-redistribution-grant",
+      "notes": "Rival components p.3 and six-player components p.7.",
+      "discrepancies": []
+    },
+    {
+      "id": "src-B",
+      "kind": "official-local-pdf",
+      "title": "DUNE_IMPERIUM_BLOODLINES_Rulebook.pdf",
+      "locator": "docs/rules/DUNE_IMPERIUM_BLOODLINES_Rulebook.pdf",
+      "revision": "2024",
+      "sha256": "5f0b4646ab59f467a1027b95e2b6f67809c77c224d98ddab26dd661d7e2b042a",
+      "pages": 12,
+      "products": [
+        "Bloodlines"
+      ],
+      "claimTypes": [
+        "quantity",
+        "identity",
+        "applicability",
+        "rules"
+      ],
+      "completeness": "component-and-rules-reference-not-complete-face-catalog",
+      "verification": "locally-reviewed-2026-10-25",
+      "rights": "reference-only-no-redistribution-grant",
+      "notes": "Components/module splits p.2; original-base exclusions p.3; Tech p.6; Rivals p.8.",
+      "discrepancies": [
+        "Community DuneBlend skill inventory totals 12 versus this document’s 14; authoritative boxed expectation remains 14."
+      ]
+    },
+    {
+      "id": "src-publisher-resources",
+      "kind": "official-web",
+      "title": "Dire Wolf Dune: Imperium resources",
+      "locator": "https://www.direwolfdigital.com/dune-imperium/resources/",
+      "revision": "observed-2026-10-25",
+      "sha256": null,
+      "pages": null,
+      "products": [
+        "Imperium",
+        "RiseOfIx",
+        "Immortality",
+        "Uprising",
+        "Bloodlines"
+      ],
+      "claimTypes": [
+        "source-discovery"
+      ],
+      "completeness": "rules-and-aids-index-not-card-database",
+      "verification": "web-reviewed-2026-10-25",
+      "rights": "public-reference-no-catalog-license-located",
+      "notes": "Links supplied editions and later FAQ; page content can change.",
+      "discrepancies": []
+    },
+    {
+      "id": "src-publisher-faq-2025",
+      "kind": "official-pdf-web",
+      "title": "Dune: Imperium Errata and Frequently Asked Questions",
+      "locator": "https://d19y2ttatozxjp.cloudfront.net/pdfs/DUNE_IMPERIUM_FAQ_25-1-13.pdf",
+      "revision": "last-updated-2025-01-13",
+      "sha256": "7b54c283357244e5107d1d0f4e87817d39297e914c2014239acbb2c460c0c6b9",
+      "pages": 4,
+      "products": [
+        "Imperium",
+        "RiseOfIx",
+        "Immortality",
+        "Uprising",
+        "Bloodlines"
+      ],
+      "claimTypes": [
+        "errata",
+        "ruling"
+      ],
+      "completeness": "rulings-not-inventory-or-card-catalog",
+      "verification": "retrieved-to-uncommitted-temporary-file-2026-10-25",
+      "rights": "reference-only-no-redistribution-grant",
+      "notes": "Publisher resources linked the exact 25-1-13 PDF. Recheck rulings before authoring faces; first-print corrections are edition-sensitive.",
+      "discrepancies": []
+    },
+    {
+      "id": "src-cards-hub",
+      "kind": "community-web",
+      "title": "Dune Cards Hub",
+      "locator": "https://dunecardshub.com/",
+      "revision": "observed-2026-10-25; no immutable public snapshot",
+      "sha256": null,
+      "pages": null,
+      "products": [
+        "Imperium",
+        "RiseOfIx",
+        "Immortality",
+        "Uprising",
+        "Bloodlines"
+      ],
+      "claimTypes": [
+        "identity-discovery",
+        "possible-copy-count",
+        "face-image"
+      ],
+      "completeness": "broad-uncurated-index-including-out-of-scope-products",
+      "verification": "sampled-2026-10-25",
+      "rights": "no-affirmative-dataset-or-image-redistribution-license-located",
+      "notes": "Index and sampled Bloodlines pages expose categories, module filters and copy counts, but HTML face pages expose images rather than verified semantic text; not authoritative.",
+      "discrepancies": [
+        "Index includes Conspiracy and promos outside approved product scope; filter totals cannot stand for boxed inventory."
+      ]
+    },
+    {
+      "id": "src-duneblend",
+      "kind": "community-repository",
+      "title": "DuneBlend",
+      "locator": "https://github.com/anttttti/DuneBlend/tree/ce830e0241beb8269b82024680e1d53d499ef3c0",
+      "revision": "ce830e0241beb8269b82024680e1d53d499ef3c0; committed-2026-06-14",
+      "sha256": null,
+      "pages": null,
+      "products": [
+        "Imperium",
+        "RiseOfIx",
+        "Immortality",
+        "Uprising",
+        "Bloodlines"
+      ],
+      "claimTypes": [
+        "identity-discovery",
+        "possible-copy-count",
+        "possible-face-prose"
+      ],
+      "completeness": "508-editor-rows-not-official-boxed-inventory",
+      "verification": "github-api-and-json-structure-reviewed-2026-10-25",
+      "rights": "github-license-endpoint-404-and-no-license-file-in-pinned-tree; no-bulk-reuse",
+      "notes": "resources.json has 12 category arrays; local resource_id repeats across arrays; user blend selections, ratings and compatibility strings are not official predicates. Six Bloodlines skill rows x2=12 versus official 14.",
+      "discrepancies": [
+        "Bloodlines six Sardaukar skill rows at count 2 yield 12 physical copies; official B p.2 lists 14.",
+        "Broad Bloodlines compatibility strings do not encode B pp.2–3,6 module and original-base exclusions."
+      ]
+    },
+    {
+      "id": "src-fan-art-policy",
+      "kind": "official-web",
+      "title": "Dire Wolf fan art policy",
+      "locator": "https://www.direwolfdigital.com/fan-art-policy/",
+      "revision": "observed-2026-10-25; mutable page",
+      "sha256": null,
+      "pages": null,
+      "products": [
+        "Imperium",
+        "RiseOfIx",
+        "Immortality",
+        "Uprising",
+        "Bloodlines"
+      ],
+      "claimTypes": [
+        "rights-context"
+      ],
+      "completeness": "policy-not-content-source",
+      "verification": "web-reviewed-2026-10-25",
+      "rights": "restricted-art-and-assets; no-explicit-bulk-card-catalog-grant",
+      "notes": "Community discussion allowance does not establish permission for a copied dataset or card art; obtain specific rights review before import.",
+      "discrepancies": []
+    }
+  ],
+  "expectations": [
+    {
+      "id": "exp-imperium-imperium",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ImperiumCard",
+      "tier": null,
+      "expectedCopies": 67,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-intrigue",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "IntrigueCard",
+      "tier": null,
+      "expectedCopies": 40,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-conflict",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ConflictCard",
+      "tier": null,
+      "expectedCopies": 18,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-reserve",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ReserveCard",
+      "tier": null,
+      "expectedCopies": 24,
+      "uniqueDefinitions": 3,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-leaders",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "Leader",
+      "tier": null,
+      "expectedCopies": 8,
+      "uniqueDefinitions": 8,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-starters-four-decks",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 40,
+      "uniqueDefinitions": 7,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": "Four ordinary player sets; not a selected three-seat count."
+    },
+    {
+      "id": "exp-imperium-conflict-i",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ConflictCard",
+      "tier": "I",
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-conflict-ii",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ConflictCard",
+      "tier": "II",
+      "expectedCopies": 10,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-conflict-iii",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ConflictCard",
+      "tier": "III",
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-reserve-arrakis-liaison",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ReserveCard",
+      "tier": null,
+      "expectedCopies": 8,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-identity-subset",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-reserve-spice-must-flow",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ReserveCard",
+      "tier": null,
+      "expectedCopies": 10,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-identity-subset",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-reserve-foldspace",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ReserveCard",
+      "tier": null,
+      "expectedCopies": 6,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-identity-subset",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-starter-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 10,
+      "uniqueDefinitions": 7,
+      "unit": "card-or-component",
+      "basis": "per-player-copies",
+      "scope": "ordinary-player-recipe",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": "Seven printed identities: Convincing Argument (2), Dagger (2), Diplomacy (1), Dune, the Desert Planet (2), Reconnaissance (1), Seek Allies (1), Signet Ring (1). Four boxed player sets give 40 copies; setup I p.5 uses one per participant."
+    },
+    {
+      "id": "exp-imperium-board-locations",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "BoardSpace",
+      "tier": null,
+      "expectedCopies": 22,
+      "uniqueDefinitions": 22,
+      "unit": "card-or-component",
+      "basis": "named-locations",
+      "scope": "original-board",
+      "evidence": [
+        {
+          "sourceId": "src-A",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": "Alphabetical list has 11 left and 11 right; corroborated by I pp.17–18. This is a location count, not 22 cards."
+    },
+    {
+      "id": "exp-imperium-hagal",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "HouseHagalCard",
+      "tier": null,
+      "expectedCopies": 31,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-solo-two-player",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-baron-tokens",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-tokens",
+      "scope": "leader-specific-baron",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-imperium-alliance-tokens",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-tokens",
+      "scope": "standard-setup",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": "Four Faction Alliance tokens; placement I p.4."
+    },
+    {
+      "id": "exp-imperium-mentat",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-piece",
+      "scope": "standard-setup",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": "Shared Mentat; placement I p.4."
+    },
+    {
+      "id": "exp-imperium-control-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 3,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "per-player-tokens",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-imperium",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "ImperiumCard",
+      "tier": null,
+      "expectedCopies": 35,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-intrigue",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "IntrigueCard",
+      "tier": null,
+      "expectedCopies": 17,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-leaders",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "Leader",
+      "tier": null,
+      "expectedCopies": 6,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-conflict",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "ConflictCard",
+      "tier": null,
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-tech",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "TechTile",
+      "tier": null,
+      "expectedCopies": 18,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-conflict-i",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "ConflictCard",
+      "tier": "I",
+      "expectedCopies": 2,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-conflict-ii",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "ConflictCard",
+      "tier": "II",
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-conflict-iii",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "ConflictCard",
+      "tier": "III",
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-hagal",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "HouseHagalCard",
+      "tier": null,
+      "expectedCopies": 9,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-solo-two-player",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-ix-rival-aids",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "Rival",
+      "tier": null,
+      "expectedCopies": 2,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-solo-two-player",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": "Reference cards, not Uprising Rival cards."
+    },
+    {
+      "id": "exp-ix-epic-starter",
+      "product": "RiseOfIx",
+      "edition": "2022-02-11",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "per-player-copies",
+      "scope": "excluded-epic-variant",
+      "evidence": [
+        {
+          "sourceId": "src-X",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": "Control the Spice, one per player in Epic mode; not standard deck."
+    },
+    {
+      "id": "exp-immortality-imperium",
+      "product": "Immortality",
+      "edition": "2022",
+      "category": "ImperiumCard",
+      "tier": null,
+      "expectedCopies": 30,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-M",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-immortality-intrigue",
+      "product": "Immortality",
+      "edition": "2022",
+      "category": "IntrigueCard",
+      "tier": null,
+      "expectedCopies": 15,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-M",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-immortality-tleilaxu",
+      "product": "Immortality",
+      "edition": "2022",
+      "category": "TleilaxuCard",
+      "tier": null,
+      "expectedCopies": 18,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-M",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-immortality-reserve",
+      "product": "Immortality",
+      "edition": "2022",
+      "category": "ReserveCard",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-M",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-immortality-experimentation",
+      "product": "Immortality",
+      "edition": "2022",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 2,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "per-player-copies",
+      "scope": "per-player-replacement",
+      "evidence": [
+        {
+          "sourceId": "src-M",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": "Two Experimentation copies replace two Dune, the Desert Planet; setup M p.5."
+    },
+    {
+      "id": "exp-immortality-hagal",
+      "product": "Immortality",
+      "edition": "2022",
+      "category": "HouseHagalCard",
+      "tier": null,
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-solo-only",
+      "evidence": [
+        {
+          "sourceId": "src-M",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-imperium",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "ImperiumCard",
+      "tier": null,
+      "expectedCopies": 69,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-intrigue",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "IntrigueCard",
+      "tier": null,
+      "expectedCopies": 44,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-leaders",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "Leader",
+      "tier": null,
+      "expectedCopies": 9,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-conflict",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "ConflictCard",
+      "tier": null,
+      "expectedCopies": 16,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-objective",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "Objective",
+      "tier": null,
+      "expectedCopies": 5,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-reserve",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "ReserveCard",
+      "tier": null,
+      "expectedCopies": 18,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-conflict-i",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "ConflictCard",
+      "tier": "I",
+      "expectedCopies": 3,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-conflict-ii",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "ConflictCard",
+      "tier": "II",
+      "expectedCopies": 9,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-conflict-iii",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "ConflictCard",
+      "tier": "III",
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-choam-imperium",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "ImperiumCard",
+      "tier": null,
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-choam-module",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 16,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-choam-intrigue",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "IntrigueCard",
+      "tier": null,
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-choam-module",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 16,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-choam-leader",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "Leader",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-choam-module",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 16,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-choam-contracts",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "Contract",
+      "tier": null,
+      "expectedCopies": 20,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-choam-module",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 16,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-choam-ix-contracts",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "Contract",
+      "tier": null,
+      "expectedCopies": 10,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-choam-and-ix",
+      "evidence": [
+        {
+          "sourceId": "src-U",
+          "page": 16,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": "Separate contrasting-back contracts; not in ordinary 20-contract pool."
+    },
+    {
+      "id": "exp-uprising-hagal",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "HouseHagalCard",
+      "tier": null,
+      "expectedCopies": 37,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-solo-two-player",
+      "evidence": [
+        {
+          "sourceId": "src-S",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-rival",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "Rival",
+      "tier": null,
+      "expectedCopies": 10,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-solo-two-player",
+      "evidence": [
+        {
+          "sourceId": "src-S",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-uprising-six-player-starters",
+      "product": "Uprising",
+      "edition": "2023-10-12",
+      "category": "StartingCard",
+      "tier": null,
+      "expectedCopies": 20,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "two-commander-decks",
+      "scope": "excluded-six-player-variant",
+      "evidence": [
+        {
+          "sourceId": "src-S",
+          "page": 7,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": "Two distinct 10-card Commander starting decks."
+    },
+    {
+      "id": "exp-bloodlines-imperium",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "ImperiumCard",
+      "tier": null,
+      "expectedCopies": 32,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-intrigue",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "IntrigueCard",
+      "tier": null,
+      "expectedCopies": 18,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-leader",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "Leader",
+      "tier": null,
+      "expectedCopies": 9,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-conflict",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "ConflictCard",
+      "tier": null,
+      "expectedCopies": 2,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-skills",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "SardaukarCommanderSkill",
+      "tier": null,
+      "expectedCopies": 14,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-conflict-i",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "ConflictCard",
+      "tier": "I",
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset-excluded-with-original",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-conflict-ii",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "ConflictCard",
+      "tier": "II",
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "boxed-tier-subset-excluded-with-original",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-choam-imperium",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "ImperiumCard",
+      "tier": null,
+      "expectedCopies": 5,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-choam-module",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-choam-intrigue",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "IntrigueCard",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-choam-module",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-tech-imperium",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "ImperiumCard",
+      "tier": null,
+      "expectedCopies": 2,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-tech-module",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 6,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-tech-intrigue",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "IntrigueCard",
+      "tier": null,
+      "expectedCopies": 2,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-tech-module",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 6,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-tech-leader",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "Leader",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-tech-module",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 6,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-tech-tiles",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "TechTile",
+      "tier": null,
+      "expectedCopies": 18,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-tech-module",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 6,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-choam-contracts",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "Contract",
+      "tier": null,
+      "expectedCopies": 8,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-unless-choam-module",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-navigation",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 10,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-cards",
+      "scope": "leader-specific-steersman",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "exp-bloodlines-twisted-intrigue",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 12,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-cards",
+      "scope": "leader-specific-piter",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 2,
+          "locator": "components"
+        }
+      ],
+      "note": "Not part of ordinary 18-card Bloodlines Intrigue pool."
+    },
+    {
+      "id": "exp-bloodlines-commanders-usable",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 7,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "usable-units",
+      "scope": "standard-setup-limited-pool",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 3,
+          "locator": "components"
+        }
+      ],
+      "note": "Seven wood and seven plastic alternative representations; only seven used, not fourteen units."
+    },
+    {
+      "id": "exp-bloodlines-hagal",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "HouseHagalCard",
+      "tier": null,
+      "expectedCopies": 6,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-solo-two-player",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 8,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": "Four of six require Tech Module."
+    },
+    {
+      "id": "exp-bloodlines-rival",
+      "product": "Bloodlines",
+      "edition": "2024",
+      "category": "Rival",
+      "tier": null,
+      "expectedCopies": 6,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "physical-copies",
+      "scope": "excluded-solo-two-player",
+      "evidence": [
+        {
+          "sourceId": "src-B",
+          "page": 8,
+          "locator": "setup/guide"
+        }
+      ],
+      "note": "One of six requires Tech Module."
+    },
+    {
+      "id": "exp-imperium-selected-conflicts",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ConflictCard",
+      "tier": null,
+      "expectedCopies": 10,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "selected-game-cards",
+      "scope": "standard-setup-selection",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 4,
+          "locator": "Setup B: Conflict Deck"
+        }
+      ],
+      "note": "Selected from the 18 boxed cards; unused cards return to the box."
+    },
+    {
+      "id": "exp-imperium-selected-conflict-i",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ConflictCard",
+      "tier": "I",
+      "expectedCopies": 1,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "selected-game-cards",
+      "scope": "standard-setup-selection",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 4,
+          "locator": "Setup B: Conflict Deck"
+        }
+      ],
+      "note": "Selected from the 18 boxed cards; unused cards return to the box."
+    },
+    {
+      "id": "exp-imperium-selected-conflict-ii",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ConflictCard",
+      "tier": "II",
+      "expectedCopies": 5,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "selected-game-cards",
+      "scope": "standard-setup-selection",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 4,
+          "locator": "Setup B: Conflict Deck"
+        }
+      ],
+      "note": "Selected from the 18 boxed cards; unused cards return to the box."
+    },
+    {
+      "id": "exp-imperium-selected-conflict-iii",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "ConflictCard",
+      "tier": "III",
+      "expectedCopies": 4,
+      "uniqueDefinitions": null,
+      "unit": "card-or-component",
+      "basis": "selected-game-cards",
+      "scope": "standard-setup-selection",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 4,
+          "locator": "Setup B: Conflict Deck"
+        }
+      ],
+      "note": "Selected from the 18 boxed cards; unused cards return to the box."
+    }
+  ],
+  "content": [],
+  "capabilities": [],
+  "interactions": [],
+  "batches": [],
+  "configurations": []
+}
