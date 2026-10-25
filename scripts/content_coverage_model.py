@@ -59,6 +59,7 @@ class QuantityBasis(StrEnum):
     NAMED_LOCATIONS = "named-locations"
     PER_PLAYER_COPIES = "per-player-copies"
     PER_PLAYER_TOKENS = "per-player-tokens"
+    PER_PLAYER_PIECES = "per-player-pieces"
     PHYSICAL_CARDS = "physical-cards"
     PHYSICAL_COPIES = "physical-copies"
     PHYSICAL_PIECE = "physical-piece"

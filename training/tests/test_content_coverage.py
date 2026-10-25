@@ -139,9 +139,45 @@ def test_canonical_inventory_is_valid_but_incomplete(tmp_path, raw):
     assert not [i for i in validate_inventory(inventory, ROOT) if i.severity == "error"]
     report = build_report(inventory)
     assert report.sourceCount == 12
-    assert report.expectationCount == 80
-    assert len(report.gaps) == 73
-    assert sum(q.complete for q in report.quantities) == 7
+    assert report.expectationCount == 93
+    assert len(report.gaps) == 72
+    assert sum(q.complete for q in report.quantities) == 21
+
+
+def test_original_physical_components_accounted_for_without_double_counting(
+    raw, tmp_path
+):
+    inventory = load(raw, tmp_path)
+    report = build_report(inventory)
+    quantities = {q.expectationId: q for q in report.quantities}
+    physical_counts = {
+        "first-player-marker": 1,
+        "water-tokens": 15,
+        "solari-tokens": 24,  # Four value-five plus 20 value-one pieces.
+        "spice-tokens": 23,  # Three value-five plus 20 value-one pieces.
+        "agents-per-player": 3,
+        "swordmaster-per-player": 1,
+        "cubes-per-player": 16,
+        "influence-cubes-per-player": 4,
+        "troop-cubes-per-player": 12,
+        "discs-per-player": 2,
+        "score-marker-per-player": 1,
+        "councilor-token-per-player": 1,
+        "combat-marker-per-player": 1,
+        "control-per-player": 3,
+    }
+    for suffix, expected in physical_counts.items():
+        quantity = quantities[f"exp-imperium-{suffix}"]
+        assert quantity.expectedCopies == expected
+        assert quantity.verifiedCopies == expected
+        assert quantity.complete
+    assert quantities["exp-imperium-agents-per-player"].verifiedCopies == 2 + 1
+    assert quantities["exp-imperium-cubes-per-player"].verifiedCopies == 4 + 12
+    assert quantities["exp-imperium-discs-per-player"].verifiedCopies == 1 + 1
+    components = [
+        c for c in inventory.content if c.category.value == "GameplayComponent"
+    ]
+    assert all(not c.runtimeDefinition and not c.abilities for c in components)
 
 
 def test_duplicate_content_and_ability_ids_rejected(tmp_path, raw):

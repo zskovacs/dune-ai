@@ -1,6 +1,6 @@
 {
   "schemaVersion": "dune-content-coverage-v1",
-  "auditRevision": "slice-004.5-i1-2026-10-25",
+  "auditRevision": "slice-004.5-i1-review-fix-2026-10-25",
   "repositoryRevision": "c256caadd8c077c8514fef611aa63f1488354fa0",
   "sources": [
     {
@@ -671,7 +671,7 @@
       "category": "GameplayComponent",
       "tier": null,
       "expectedCopies": 3,
-      "uniqueDefinitions": null,
+      "uniqueDefinitions": 1,
       "unit": "card-or-component",
       "basis": "per-player-tokens",
       "scope": "ordinary-player-components",
@@ -682,7 +682,7 @@
           "locator": "components"
         }
       ],
-      "note": null
+      "note": "Three identical per-player Control marker flags shown on I p.3; this is a per-player component count, not an additional boxed count."
     },
     {
       "id": "exp-ix-imperium",
@@ -1903,6 +1903,266 @@
         }
       ],
       "note": "Convincing Argument (2), Dagger (2), Diplomacy (1), Dune, the Desert Planet (2), Reconnaissance (1), Seek Allies (1), Signet Ring (1). One deck is used per participant."
+    },
+    {
+      "id": "exp-imperium-agents-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 3,
+      "uniqueDefinitions": 2,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: three Agents per player"
+        }
+      ],
+      "note": "Player Components: three Agents per player; setup p.5 places two on Leader and reserves the third Swordmaster"
+    },
+    {
+      "id": "exp-imperium-combat-marker-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: one Combat marker per player, separate from the two discs"
+        }
+      ],
+      "note": "Player Components: one Combat marker per player, separate from the two discs"
+    },
+    {
+      "id": "exp-imperium-councilor-token-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: one Councilor token; subset of two discs"
+        }
+      ],
+      "note": "Player Components: one Councilor token; subset of two discs"
+    },
+    {
+      "id": "exp-imperium-cubes-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 16,
+      "uniqueDefinitions": 2,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: 16 cubes per player"
+        }
+      ],
+      "note": "Player Components: 16 cubes per player; 4 Influence cubes and 12 troops in setup p.5"
+    },
+    {
+      "id": "exp-imperium-discs-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 2,
+      "uniqueDefinitions": 2,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: two discs per player"
+        }
+      ],
+      "note": "Player Components: two discs per player, one Score marker and one Councilor token"
+    },
+    {
+      "id": "exp-imperium-first-player-marker",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "physical-piece",
+      "scope": "standard-setup",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: First Player marker"
+        }
+      ],
+      "note": "Game Components: First Player marker"
+    },
+    {
+      "id": "exp-imperium-influence-cubes-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 4,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G4: four faction Influence cubes; subset of cubes-per-player"
+        }
+      ],
+      "note": "Setup G4: four faction Influence cubes; subset of cubes-per-player"
+    },
+    {
+      "id": "exp-imperium-score-marker-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: one Score marker; subset of two discs"
+        }
+      ],
+      "note": "Player Components: one Score marker; subset of two discs"
+    },
+    {
+      "id": "exp-imperium-solari-tokens",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 24,
+      "uniqueDefinitions": 2,
+      "unit": "card-or-component",
+      "basis": "physical-tokens",
+      "scope": "standard-setup",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: four large and 20 small Solari tokens"
+        }
+      ],
+      "note": "Game Components: four large and 20 small Solari tokens; 24 physical pieces, not 40 Solari value"
+    },
+    {
+      "id": "exp-imperium-spice-tokens",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 23,
+      "uniqueDefinitions": 2,
+      "unit": "card-or-component",
+      "basis": "physical-tokens",
+      "scope": "standard-setup",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: three large and 20 small spice tokens"
+        }
+      ],
+      "note": "Game Components: three large and 20 small spice tokens; 23 physical pieces, not 35 spice value"
+    },
+    {
+      "id": "exp-imperium-swordmaster-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 1,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G1: one of three Agents is the unacquired Swordmaster; subset of agents-per-player"
+        }
+      ],
+      "note": "Setup G1: one of three Agents is the unacquired Swordmaster; subset of agents-per-player"
+    },
+    {
+      "id": "exp-imperium-troop-cubes-per-player",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 12,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "per-player-pieces",
+      "scope": "ordinary-player-components",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G5: remaining 12 cubes are troops; subset of cubes-per-player"
+        }
+      ],
+      "note": "Setup G5: remaining 12 cubes are troops; subset of cubes-per-player"
+    },
+    {
+      "id": "exp-imperium-water-tokens",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "tier": null,
+      "expectedCopies": 15,
+      "uniqueDefinitions": 1,
+      "unit": "card-or-component",
+      "basis": "physical-tokens",
+      "scope": "standard-setup",
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: 15 water tokens"
+        }
+      ],
+      "note": "Game Components: 15 water tokens"
     }
   ],
   "content": [
@@ -2232,6 +2492,122 @@
       }
     },
     {
+      "id": "imperium:component:combat-marker:v1",
+      "name": "Combat marker",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": null,
+      "perPlayerQuantity": 1,
+      "expectationIds": [
+        "exp-imperium-combat-marker-per-player"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: Combat marker",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: Combat marker",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
       "id": "imperium:component:control-markers:v1",
       "name": "Control markers",
       "product": "Imperium",
@@ -2348,6 +2724,356 @@
       }
     },
     {
+      "id": "imperium:component:councilor-token:v1",
+      "name": "Councilor token disc",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": null,
+      "perPlayerQuantity": 1,
+      "expectationIds": [
+        "exp-imperium-discs-per-player",
+        "exp-imperium-councilor-token-per-player"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: one Councilor token disc",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: one Councilor token disc",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:first-player-marker:v1",
+      "name": "First Player marker",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": 1,
+      "perPlayerQuantity": null,
+      "expectationIds": [
+        "exp-imperium-first-player-marker"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: First Player marker",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: First Player marker",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:influence-cubes:v1",
+      "name": "Faction Influence cubes",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": null,
+      "perPlayerQuantity": 4,
+      "expectationIds": [
+        "exp-imperium-cubes-per-player",
+        "exp-imperium-influence-cubes-per-player"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G4: one cube on each of four Faction tracks",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G4: one cube on each of four Faction tracks",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
       "id": "imperium:component:mentat-piece:v1",
       "name": "Mentat piece",
       "product": "Imperium",
@@ -2373,6 +3099,1053 @@
           "sourceId": "src-I",
           "page": 3,
           "locator": "Game Components: one Mentat",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:ordinary-agents:v1",
+      "name": "Initial non-Swordmaster Agents",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": null,
+      "perPlayerQuantity": 2,
+      "expectationIds": [
+        "exp-imperium-agents-per-player"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G1: two Agents placed on Leader",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G1: two Agents placed on Leader",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:score-marker:v1",
+      "name": "Score marker disc",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": null,
+      "perPlayerQuantity": 1,
+      "expectationIds": [
+        "exp-imperium-discs-per-player",
+        "exp-imperium-score-marker-per-player"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: one Score marker disc",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Player Components: one Score marker disc",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:solari-token-large:v1",
+      "name": "Solari token (value 5)",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": 4,
+      "perPlayerQuantity": null,
+      "expectationIds": [
+        "exp-imperium-solari-tokens"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: four large Solari tokens (worth 5)",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: four large Solari tokens (worth 5)",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:solari-token-small:v1",
+      "name": "Solari token (value 1)",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": 20,
+      "perPlayerQuantity": null,
+      "expectationIds": [
+        "exp-imperium-solari-tokens"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: 20 small Solari tokens (worth 1)",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: 20 small Solari tokens (worth 1)",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:spice-token-large:v1",
+      "name": "Spice token (value 5)",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": 3,
+      "perPlayerQuantity": null,
+      "expectationIds": [
+        "exp-imperium-spice-tokens"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: three large spice tokens (worth 5)",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: three large spice tokens (worth 5)",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:spice-token-small:v1",
+      "name": "Spice token (value 1)",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": 20,
+      "perPlayerQuantity": null,
+      "expectationIds": [
+        "exp-imperium-spice-tokens"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: 20 small spice tokens (worth 1)",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: 20 small spice tokens (worth 1)",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:swordmaster-agent:v1",
+      "name": "Swordmaster Agent piece",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": null,
+      "perPlayerQuantity": 1,
+      "expectationIds": [
+        "exp-imperium-agents-per-player",
+        "exp-imperium-swordmaster-per-player"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G1: third Agent is Swordmaster",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G1: one Swordmaster Agent next to board",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:troop-cubes:v1",
+      "name": "Troop cubes",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": null,
+      "perPlayerQuantity": 12,
+      "expectationIds": [
+        "exp-imperium-cubes-per-player",
+        "exp-imperium-troop-cubes-per-player"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G5: remaining twelve cubes represent troops",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 5,
+          "locator": "Setup G5: remaining twelve cubes represent troops",
+          "kind": "quantity",
+          "verification": "verified"
+        }
+      ],
+      "discovery": "discovered",
+      "sourcing": "fully-sourced",
+      "verification": "verified",
+      "faceComplete": false,
+      "faceEvidence": [],
+      "slots": [
+        {
+          "slot": "Acquire",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Agent",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Combat",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Endgame",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Intrigue",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Passive",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PersistentModifier",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "PostWin",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Reveal",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Setup",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "SignetRing",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        },
+        {
+          "slot": "Triggered",
+          "discovery": "undiscovered",
+          "reason": "Whole-face slot semantics pending separate face review."
+        }
+      ],
+      "abilities": [],
+      "runtimeDefinition": false,
+      "replaces": [],
+      "excludes": [],
+      "availability": {
+        "baseGames": [
+          "Imperium"
+        ],
+        "requiredExpansions": [],
+        "excludedExpansions": [],
+        "requiredModules": [],
+        "excludedModules": [],
+        "modes": [
+          "Standard"
+        ],
+        "minimumSeats": 3,
+        "maximumSeats": 4
+      }
+    },
+    {
+      "id": "imperium:component:water-token:v1",
+      "name": "Water token",
+      "product": "Imperium",
+      "edition": "2020-10-26",
+      "category": "GameplayComponent",
+      "version": "v1",
+      "variantOf": null,
+      "authenticity": "official",
+      "boxedQuantity": 15,
+      "perPlayerQuantity": null,
+      "expectationIds": [
+        "exp-imperium-water-tokens"
+      ],
+      "evidence": [
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: 15 water tokens",
+          "kind": "identity",
+          "verification": "verified"
+        },
+        {
+          "sourceId": "src-I",
+          "page": 3,
+          "locator": "Game Components: 15 water tokens",
           "kind": "quantity",
           "verification": "verified"
         }
