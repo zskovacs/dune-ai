@@ -770,3 +770,55 @@ def test_module_expectations_follow_typed_module_selection(tmp_path, raw):
         _expectation_applies(expectation, loaded.configurations[0])
         for expectation in loaded.expectations
     )
+
+
+@pytest.mark.parametrize(
+    ("base", "expansions", "modules", "mode", "expected_code"),
+    [
+        ("Imperium", [], ["BloodlinesTech"], "Standard", "module-dependency"),
+        (
+            "Imperium",
+            ["Bloodlines"],
+            ["BloodlinesTech"],
+            "Standard",
+            "module-incompatible",
+        ),
+        ("Imperium", [], ["UprisingChoam"], "Standard", "module-incompatible"),
+        ("Imperium", [], [], "Epic", "mode-dependency"),
+        ("Uprising", ["RiseOfIx"], [], "Epic", "mode-incompatible"),
+    ],
+)
+def test_invalid_module_and_epic_composition_fails_validation_and_gate(
+    tmp_path, raw, base, expansions, modules, mode, expected_code
+):
+    _, config = populated_inventory(raw)
+    config.update(
+        base=base, expansions=expansions, modules=modules, mode=mode, contentIds=[]
+    )
+    assert expected_code in codes(raw, tmp_path)
+    assert not build_report(load(raw, tmp_path)).configurationGates[0].composition
+
+
+@pytest.mark.parametrize(
+    ("base", "expansions", "modules", "mode"),
+    [
+        ("Uprising", ["Bloodlines"], ["BloodlinesTech"], "Standard"),
+        ("Uprising", [], ["UprisingChoam"], "Standard"),
+        ("Imperium", ["RiseOfIx"], [], "Epic"),
+    ],
+)
+def test_valid_module_and_epic_dependencies_allow_composition(
+    tmp_path, raw, base, expansions, modules, mode
+):
+    _, config = populated_inventory(raw)
+    config.update(
+        base=base, expansions=expansions, modules=modules, mode=mode, contentIds=[]
+    )
+    errors = codes(raw, tmp_path)
+    assert not errors & {
+        "module-dependency",
+        "module-incompatible",
+        "mode-dependency",
+        "mode-incompatible",
+    }
+    assert build_report(load(raw, tmp_path)).configurationGates[0].composition

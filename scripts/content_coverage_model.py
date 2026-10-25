@@ -614,6 +614,33 @@ def _content_applies(content: ContentRecord, config: ConfigurationRecord) -> boo
     )
 
 
+def _configuration_dependencies(
+    config: ConfigurationRecord,
+) -> tuple[tuple[str, str, str], ...]:
+    failures: list[tuple[str, str, str]] = []
+    if Module.BLOODLINES_TECH in config.modules:
+        if Product.BLOODLINES not in config.expansions:
+            failures.append(
+                ("module-dependency", "modules", "BloodlinesTech requires Bloodlines")
+            )
+        if config.base != Product.UPRISING:
+            failures.append(
+                ("module-incompatible", "modules", "BloodlinesTech requires Uprising")
+            )
+    if Module.UPRISING_CHOAM in config.modules and config.base != Product.UPRISING:
+        failures.append(
+            ("module-incompatible", "modules", "UprisingChoam requires Uprising")
+        )
+    if config.mode == Mode.EPIC:
+        if Product.IX not in config.expansions:
+            failures.append(("mode-dependency", "mode", "Epic requires RiseOfIx"))
+        if config.base != Product.IMPERIUM:
+            failures.append(
+                ("mode-incompatible", "mode", "Epic is not composed with Uprising")
+            )
+    return tuple(failures)
+
+
 _CARD_SLOTS = frozenset(
     {
         Slot.SETUP,
@@ -1305,6 +1332,8 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
                 "expansions",
                 "base games cannot be expansions",
             )
+        for code, path, message in _configuration_dependencies(configuration):
+            add(code, configuration.id, path, message)
         if configuration.authenticity == Authenticity.OFFICIAL and any(
             content[c].authenticity == Authenticity.SYNTHETIC
             for c in configuration.contentIds
@@ -1620,6 +1649,7 @@ def build_report(inventory: AuditInventory) -> AuditReport:
                 expansion in {Product.IMPERIUM, Product.UPRISING}
                 for expansion in config.expansions
             )
+            and not _configuration_dependencies(config)
             and any(e.kind == EvidenceKind.COMPOSITION for e in config.evidence)
         )
         inventory_ok = (
