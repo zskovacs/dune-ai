@@ -1807,14 +1807,25 @@ public sealed partial class TurnEngine
             if (frame.Decision is { } decision &&
                 ((decision.Effect is SelectedTrashEffect) != (decision.SelectedTrash is not null) ||
                  decision.SelectedTrash is { } trash && (trash.Id <= 0 || trash.Id > _nextEffectId ||
-                    trash.Targets.IsDefault || trash.Targets.Select(x => (x.Source, x.Card)).Distinct().Count() != trash.Targets.Length ||
+                    trash.Targets.IsDefault || decision.Context.DecisionOwnerId != decision.Context.PayerId ||
+                    trash.Targets.Any(x => x.Card.Copy < 0 || !ValidTrashBinding(x.Source, x.Card.Definition, x.Instance, decision.Context.DecisionOwnerId)) ||
+                    trash.Targets.Select(x => (x.Source, x.Card)).Distinct().Count() != trash.Targets.Length ||
                     trash.Targets.Select(x => x.Instance).Distinct().Count() != trash.Targets.Length)))
                 throw new InvalidOperationException("Selected trash decision payload is inconsistent with its execution frame.");
             foreach (var context in frame.Remaining.Select(x => x.Context).Concat(frame.Decision is { } active ? [active.Context] : []))
                 if (context.SourceCard is not null && (context.SourceOwnerId is not { } sourceOwner || ValidateOwner(sourceOwner) is not null) ||
                     context.SourceCard is null && context.SourceOwnerId is not null ||
-                    context.SelectedTarget is { } target && ValidateOwner(target.OwnerId) is not null)
+                    context.SelectedTarget is { } target && !ValidTrashBinding(target.Source, target.Definition, target.Instance, target.OwnerId))
                     throw new InvalidOperationException("Selected target provenance has an invalid owner.");
+        }
+        // Frozen provenance may outlive a card's movement. Validate its original owner/zone and
+        // physical definition, leaving current membership and duplicate compaction to action validation.
+        bool ValidTrashBinding(CardZoneId source, ContentId definition, CardInstanceId instance, int owner)
+        {
+            if (ValidateOwner(owner) is not null) return false;
+            var player = Player(owner);
+            return new[] { player.Hand.Id, player.Discard.Id, player.InPlay.Id }.Contains(source) &&
+                _state.Zones.SelectMany(x => x.Cards).Any(x => x.Id == instance && x.Definition == definition);
         }
         var cards = _state.Zones.SelectMany(x => x.Cards).ToArray();
         if (cards.Length != _cardCount || cards.Select(x => x.Id).Distinct().Count() != cards.Length)

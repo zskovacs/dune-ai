@@ -66,6 +66,49 @@ public sealed class LifecycleEpisodeTests
         Assert.Equal(replay.FinalStateHash, reconstructed.Engine.CaptureTrustedSnapshot().Hash);
     }
 
+    [Theory]
+    [InlineData(3, false)]
+    [InlineData(4, false)]
+    [InlineData(3, true)]
+    [InlineData(4, true)]
+    public void FixtureAgentHandlesRealOwnerTargetAndDeclineOnlyDecisions(int players, bool declineOnly)
+    {
+        var state = LifecycleFixture.CreateSelectedTrashState(players);
+        var source = state.Players[0].Deck.Cards[0];
+        var rules = LifecycleFixture.SelectedTrashRules(state);
+        if (declineOnly)
+            rules = TurnEngineFixture.CardEffects(rules, source.Definition, agent:
+                [new ForPlayerEffect(1, [new SelectedTrashEffect([new UnsupportedEffect("Synthetic unavailable branch")])])]);
+        var engine = new TurnEngine(state, rules);
+        TurnEngineFixture.Apply(engine, new StartRoundAction());
+        TurnEngineFixture.Apply(engine, new PlaceAgentAction(0, TurnEngineFixture.Card(source), TurnEngineFixture.Space("selective-breeding")));
+        var effect = engine.Observe(0).PendingEffects.Single(x => x.Kind == (declineOnly ? nameof(ForPlayerEffect) : nameof(SelectedTrashEffect)));
+        TurnEngineFixture.Apply(engine, new ResolveEffectAction(0, effect.Id));
+        if (declineOnly)
+        {
+            var pending = engine.Observe(1).PendingEffects.Single(x => x.Kind == nameof(SelectedTrashEffect));
+            TurnEngineFixture.Apply(engine, new ResolveEffectAction(1, pending.Id));
+        }
+        var owner = engine.DecisionOwnerId!.Value;
+        var observation = engine.Observe(owner);
+        var legal = engine.LegalActions(owner);
+        Assert.Equal(declineOnly ? 1 : 0, owner);
+        Assert.Equal(owner, observation.Game.PlayerId);
+        Assert.Equal(owner, observation.Game.DecisionOwnerId);
+        Assert.All(legal, action => Assert.Equal(owner, action.PlayerId));
+        Assert.Empty(engine.LegalActions((owner + 1) % players));
+        var agent = new LifecycleFixtureAgent();
+        var action = agent.SelectAction(observation, legal, TestContext.Current.CancellationToken);
+        Assert.Equal(action, agent.SelectAction(observation, legal, TestContext.Current.CancellationToken));
+        if (declineOnly) Assert.IsType<DeclineTrashAction>(Assert.Single(legal));
+        else Assert.IsType<SelectTrashCardAction>(action);
+        Assert.Contains(action, legal);
+        TurnEngineFixture.Apply(engine, action);
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+        Assert.Throws<OperationCanceledException>(() => agent.SelectAction(observation, legal, cancelled.Token));
+    }
+
     [Fact]
     public void SerialAndParallelSchedulesKeepPolicySeedsAndResultsIndependentOfEnvironmentSeeds()
     {

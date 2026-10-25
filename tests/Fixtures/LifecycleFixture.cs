@@ -124,6 +124,51 @@ internal static class LifecycleFixture
         };
     }
 
+    /// <summary>Invented inventory for sourced Selective Breeding replay tests; the CLI recipe is unchanged.</summary>
+    internal static GameState CreateSelectedTrashState(int players = 3)
+    {
+        var state = CreateScenarioState(players, 42);
+        var owner = state.Players[0];
+        owner.Resources = owner.Resources with { Spice = 2 };
+        // The real StartRound draws five, leaving an empty deck and a nonempty discard for Draw2 refill.
+        foreach (var card in owner.Deck.Cards.Skip(5).ToArray()) owner.Deck.MoveTo(card.Id, owner.Discard);
+        var reserve =
+            state.Shared.Reserves.Single(x => x.Cards[0].Definition.Value == "imperium:reserve:arrakis-liaison:v1");
+        foreach (var card in reserve.Cards.Take(2).ToArray()) reserve.MoveTo(card.Id, owner.Discard);
+        return state;
+    }
+
+    internal static TurnRuleSet SelectedTrashRules(GameState state)
+    {
+        var rules = ScenarioRules(state);
+        var source = state.Players[0].Deck.Cards[0].Definition;
+        rules = TurnEngineFixture.CardEffects(rules, source, agent:
+        [
+            new ForPlayerEffect(1, [
+                new SelectedTrashEffect([
+                    new OptionalPaymentEffect(new(), [new GainEffect(ResourceKind.Water, 2)])
+                ])
+            ])
+        ]);
+        var endgame = state.Players[2].Intrigue.Cards[^1].Definition;
+        return rules with
+        {
+            Lifecycle = rules.Lifecycle! with
+            {
+                Intrigues =
+                [
+                    .. rules.Lifecycle.Intrigues.Select(x => x.Id == endgame
+                        ? x with
+                        {
+                            Timing = IntrigueTiming.Endgame,
+                            Effects = [new ForPlayerEffect(1, [new DrawEffect(2), new DrawIntrigueEffect(2)])]
+                        }
+                        : x)
+                ]
+            }
+        };
+    }
+
     internal static LifecycleRuleSet LifecycleRules(GameState state) => new("synthetic-lifecycle-tests-v1",
         [.. state.Definition.Content.Where(x => x.Category == ContentCategory.IntrigueCard).Select(x =>
             new IntrigueRule(x.Id, IntrigueTiming.Combat, new(), [], Sources))],

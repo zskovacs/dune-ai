@@ -64,6 +64,8 @@ internal sealed class LifecycleFixtureAgent : IAgent<TurnObservation, GameAction
         return legalActions.OfType<ResolveEffectAction>().FirstOrDefault()
             ?? (GameAction?)legalActions.OfType<ChooseOptionAction>().FirstOrDefault(x => x.Option == 1)
             ?? legalActions.OfType<ChooseOptionAction>().FirstOrDefault()
+            ?? legalActions.OfType<SelectTrashCardAction>().FirstOrDefault()
+            ?? legalActions.OfType<DeclineTrashAction>().FirstOrDefault()
             ?? legalActions.OfType<DeployAction>().LastOrDefault()
             ?? legalActions.OfType<PlaceAgentAction>().FirstOrDefault(x =>
                 observation.Game.Board.Spaces.Any(space => space.Id == x.Space && space.Name == "Arrakeen"))
