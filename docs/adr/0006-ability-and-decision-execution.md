@@ -1,7 +1,7 @@
 # ADR 0006: extend the existing ability and decision executor
 
 - Date: 2026-10-24
-- Status: Accepted; implemented and tested for the SLICE-004 supported original-base scope; final branch review pending
+- Status: Accepted; implemented, tested and reviewed for the SLICE-004 supported original-base scope
 - Scope: Ability composition, causal decisions, timing and narrow rule exceptions
 
 ## Context at the SLICE-003.5 decision
@@ -94,4 +94,5 @@ added. The catalog/leader/Conflict evidence, Plot, holder loss, tied positive
 shared Intrigue draws, contested Mentat and conservative composite-graph gates
 remain explicit. No expansion capability, general trigger framework, unexpected
 exception rollback, authentic complete-game or RL-ready claim follows.
-All task reviews are complete. The final whole-branch review is controller-owned and pending.
+All task reviews and the final whole-branch review are complete. The final F1
+correction passed scoped re-review; no Critical or Important finding remains.

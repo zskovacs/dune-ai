@@ -54,7 +54,7 @@ That documentation-only slice added no gameplay support. It established the
 causal continuation, role and window prerequisites subsequently implemented by
 SLICE-004 below.
 
-## SLICE-004 — supported lifecycle implemented; final review pending
+## SLICE-004 — supported lifecycle implemented, tested and reviewed
 
 Causal frames, explicit roles, phase-aware windows, Combat play/pass/retreat,
 tie rewards, faction prerequisites, PostWin interleaving, control/defense, Makers,
@@ -64,7 +64,9 @@ the existing episode runner and verifies replay. Every accepted prefix, invalid
 actions, privacy and concurrent isolation are integration-tested; synthetic
 measurements and retained gates are recorded in the
 [handoff](handoffs/SLICE-004-result.md) and [benchmarks](benchmarks/slice-004.md).
-Controller task/final reviews remain pending.
+All task reviews and final whole-branch review are complete. The final F1
+correction passed scoped re-review; authentic content and documented interaction
+gates remain for later work.
 
 Authentic initialization remains blocked by missing catalog, leader and Conflict
 evidence. Plot/Alliance-loss/tied shared draws/contested Mentat/composite gates

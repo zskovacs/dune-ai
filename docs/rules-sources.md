@@ -475,7 +475,7 @@ shares immutable definitions/rules across serial/parallel episode schedules.
 verifies registry quantities without claiming catalog completeness. CLI coverage
 uses accepted canonical actions and typed fixture timings, not declared phase
 names as proof of a path for arbitrary seeds. Makers/Recall are automatic
-consequences. Benchmarks, exact checks and pending review gates are in the
+consequences. Benchmarks, exact checks and completed review gates are in the
 [SLICE-004 report](benchmarks/slice-004.md) and [handoff](handoffs/SLICE-004-result.md).
 No SLICE-003.5 re-audit or SLICE-004.5 audit/schema implementation was performed.
 
