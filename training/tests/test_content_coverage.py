@@ -756,7 +756,7 @@ def test_canonical_tested_abilities_do_not_underreport_implementation(raw):
         for ability in content["abilities"]
         if ability["validation"] == "tested"
     ]
-    assert len(tested) == 28
+    assert len(tested) == 34
     assert all(ability["implementation"] == "implemented" for ability in tested)
     master = next(a for a in tested if "master-tactician" in a["id"])
     assert master["implementation"] == "implemented"
@@ -1115,8 +1115,19 @@ def test_physical_only_cannot_hide_unknown_executable_boxes(tmp_path, raw):
     assert not build_report(load(raw, tmp_path)).configurationGates[0].abilities
 
 
-def test_terminal_synthetic_evidence_cannot_certify_authentic_or_rl(tmp_path, raw):
+@pytest.mark.parametrize("reference_kind", ["existing-synthetic-test", "invented-test"])
+def test_terminal_synthetic_evidence_cannot_certify_authentic_or_rl(
+    tmp_path, raw, reference_kind
+):
     item, config = populated_inventory(raw)
+    path, name = (
+        (
+            "tests/Dune.Engine.Tests/LifecycleIntegrationTests.cs",
+            "EveryAcceptedPrefixReplaysNestedForeignRewardsThroughNaturalEndgame",
+        )
+        if reference_kind == "existing-synthetic-test"
+        else ("training/tests/test_content_coverage.py", "positive gate fixture")
+    )
     for field, kinds in (
         ("initializationTests", ["initialization"]),
         ("fullGameTests", ["full-game"]),
@@ -1124,16 +1135,18 @@ def test_terminal_synthetic_evidence_cannot_certify_authentic_or_rl(tmp_path, ra
     ):
         config[field] = [
             {
-                "path": "training/tests/test_content_coverage.py",
-                "name": "positive gate fixture",
+                "path": path,
+                "name": name,
                 "kind": kind,
             }
             for kind in kinds
         ]
-    positive = build_report(load(raw, tmp_path)).configurationGates[0]
-    assert positive.initialization and positive.fullGame and positive.rl
-    config["rlTests"] = config["rlTests"][:1]
-    assert not build_report(load(raw, tmp_path)).configurationGates[0].rl
+    assert item["authenticity"] == config["authenticity"] == "official"
+    assert not codes(raw, tmp_path)
+    official = build_report(load(raw, tmp_path)).configurationGates[0]
+    assert official.inventory and official.abilities and official.interactions
+    assert not official.initialization and not official.fullGame and not official.rl
+    assert "authentic-execution-unverified" in official.reasons
     config["authenticity"] = item["authenticity"] = "synthetic"
     negative = build_report(load(raw, tmp_path)).configurationGates[0]
     assert not negative.abilities
@@ -1312,3 +1325,57 @@ def test_unknown_ability_reference_blocks_even_a_claimed_complete_face(tmp_path,
     slot.update(discovery="discovered", abilityIds=[item["id"] + "#slot:unknown"])
     assert "broken-reference" in codes(raw, tmp_path)
     assert not build_report(load(raw, tmp_path)).configurationGates[0].abilities
+
+
+def test_baron_full_face_has_implementation_owner_after_source_gate(raw):
+    batches = {b["id"]: b for b in raw["batches"]}
+    owner = batches["batch-06c-baron-private-setup"]
+    assert "imperium:leader:baron-vladimir-harkonnen:v1" in owner["memberIds"]
+    assert "batch-05-leader-sources" in owner["prerequisiteIds"]
+    assert owner["id"] in batches["batch-20-authentic-validation"]["prerequisiteIds"]
+    assert "Passive/Signet/Setup" in owner["acceptance"]
+    assert "Future Passive/Signet ability IDs/counts" in owner["expectedDelta"]
+    baron = next(
+        c
+        for c in raw["content"]
+        if c["id"] == "imperium:leader:baron-vladimir-harkonnen:v1"
+    )
+    assert not baron["faceComplete"]
+    assert {s["slot"] for s in baron["slots"] if s["discovery"] == "undiscovered"} >= {
+        "Passive",
+        "SignetRing",
+    }
+    assert all(a["batchId"] == owner["id"] for a in baron["abilities"])
+
+
+def test_bounded_effects_link_existing_direct_behavior_instead_of_duplicate_batch(raw):
+    abilities = {a["id"]: a for c in raw["content"] for a in c["abilities"]}
+    crossing = "CrossingTwoInfluenceGrantsOneVictoryPoint"
+    hall = "HallOfOratoryAddsOnePersuasionOnReveal"
+    heighliner = "CompleteSourcedBoardSpacesGrantPrintedEffects"
+    mentat = "MentatSpaceAlwaysDrawsForPaidPlacementWhenTokenIsAbsent"
+    swordmaster = (
+        "SwordmasterAndHighCouncilPersistAfterUsedOrUnusedAgent"
+        "AndOnceGameSpacesRemainClosed"
+    )
+    expected = {
+        "imperium:imperium-card:sardaukar-legion:v1#slot:recruit": crossing,
+        "imperium:space:wealth:v1#slot:placement": crossing,
+        "imperium:space:hall-of-oratory:v1#slot:placement": hall,
+        "imperium:space:heighliner:v1#slot:placement": heighliner,
+        "imperium:space:mentat:v1#slot:placement": mentat,
+        "imperium:space:swordmaster:v1#slot:placement": swordmaster,
+    }
+    assert all(b["id"] != "batch-19-existing-evidence" for b in raw["batches"])
+    for aid, name in expected.items():
+        ability = abilities[aid]
+        assert ability["implementation"] == "implemented"
+        assert ability["validation"] == "tested"
+        assert ability["batchId"] is None
+        reference = next(t for t in ability["testRefs"] if t["name"] == name)
+        assert reference["kind"] == "behavior" and not reference.get(
+            "historical", False
+        )
+        assert name in (ROOT / reference["path"]).read_text()
+        # These bounded assertions alone do not supply full readiness evidence.
+        assert {t["kind"] for t in ability["testRefs"]} == {"behavior"}

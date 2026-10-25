@@ -1873,17 +1873,10 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             for c in config.contentIds
             if c in content
         )
-        init = (
-            interactions_ok
-            and authentic
-            and not _has_open_blocker(config.executionBlockers)
-            and _has_test(config.initializationTests, {EvidenceKind.INITIALIZATION})
-        )
-        game = init and _has_test(config.fullGameTests, {EvidenceKind.FULL_GAME})
-        rl = game and all(
-            _has_test(config.rlTests, {kind})
-            for kind in (EvidenceKind.RL, EvidenceKind.PRIVACY_REPLAY)
-        )
+        # Offline labels and file/name references cannot attest that an engine
+        # check ran authentic content for this exact preset, seat and policy.
+        # Keep operational gates closed until that provenance can be verified.
+        init = game = rl = False
         reasons = tuple(
             name
             for name, ok in (
@@ -1897,7 +1890,7 @@ def build_report(inventory: AuditInventory) -> AuditReport:
                 ("rl", rl),
             )
             if not ok
-        )
+        ) + ("authentic-execution-unverified",)
         gates.append(
             ConfigurationGate(
                 config.id,
