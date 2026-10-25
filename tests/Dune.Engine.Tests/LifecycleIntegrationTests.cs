@@ -21,7 +21,7 @@ public sealed class LifecycleIntegrationTests
         Assert.Equal(7, rules.Cards.Count(x => x.Id.Value.Contains(":starter:", StringComparison.Ordinal)));
         Assert.Equal(3, rules.Cards.Count(x => x.Id.Value.Contains(":reserve:", StringComparison.Ordinal)));
         Assert.Equal(2, rules.Cards.Count(x => x.Id.Value.Contains(":imperium-card:", StringComparison.Ordinal)));
-        Assert.Equal(19, rules.Spaces.Length);
+        Assert.Equal(20, rules.Spaces.Length);
         Assert.Empty(rules.Leaders);
         Assert.Equal(4, lifecycle.Intrigues.Length);
         Assert.Equal(3, lifecycle.Intrigues.Count(x => !x.Effects.Any(e => e is UnsupportedEffect)));
@@ -390,6 +390,7 @@ public sealed class LifecycleIntegrationTests
         return legal.OfType<ResolveEffectAction>().FirstOrDefault()
             ?? (GameAction?)legal.OfType<ChooseOptionAction>().FirstOrDefault(x => x.Option == 1)
             ?? legal.OfType<ChooseOptionAction>().FirstOrDefault()
+            ?? legal.OfType<DeclineTrashAction>().FirstOrDefault()
             ?? legal.OfType<DeployAction>().LastOrDefault()
             ?? legal.OfType<PlaceAgentAction>().FirstOrDefault(x => x.Space == Space("arrakeen"))
             ?? legal.OfType<PlaceAgentAction>().FirstOrDefault()

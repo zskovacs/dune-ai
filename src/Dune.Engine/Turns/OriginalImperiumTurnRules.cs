@@ -114,6 +114,15 @@ public static class OriginalImperiumTurnRules
             Space("hardy-warriors", AgentIcon.Fremen, [new InfluenceEffect(Faction.Fremen), new RecruitEffect(2)], new(Water: 1), combat: true, faction: Faction.Fremen),
             Space("carthag", AgentIcon.City, [new RecruitEffect(1), new DrawIntrigueEffect(1)], combat: true, control: ResourceKind.Solari),
             Space("conspire", AgentIcon.Emperor, [new InfluenceEffect(Faction.Emperor), new GainEffect(ResourceKind.Solari, 5), new RecruitEffect(2), new DrawIntrigueEffect(1)], new(Spice: 4), faction: Faction.Emperor),
+            Space("selective-breeding", AgentIcon.BeneGesserit,
+                [new InfluenceEffect(Faction.BeneGesserit), new SelectedTrashEffect([new DrawEffect(2)])],
+                new(Spice: 2), faction: Faction.BeneGesserit) with
+            {
+                Sources = [new(Aid, 2, "Selective Breeding: Bene Gesserit access, 2 Spice, +1 Influence, optional trash for draw 2"),
+                    new(Rules, 9, "Matching Agent, vacant space and prepayment; player orders card, board and Influence effects"),
+                    new(Rules, 16, "Own Hand, Discard or In Play may be trashed; draw refills from current discard"),
+                    new("DUNE_IMPERIUM_FAQ_25-1-13.pdf", 3, "2025-01-13 optional arrow exchange versus mandatory effects/self-trash; exchange at most once")]
+            },
             Space("heighliner", AgentIcon.SpacingGuild, [new InfluenceEffect(Faction.SpacingGuild), new RecruitEffect(5), new GainEffect(ResourceKind.Water, 2)], new(Spice: 6), combat: true, faction: Faction.SpacingGuild),
             Space("arrakeen", AgentIcon.City, [new RecruitEffect(1), new DrawEffect(1)], combat: true, control: ResourceKind.Solari),
             Space("sietch-tabr", AgentIcon.City, [new RecruitEffect(1), new GainEffect(ResourceKind.Water, 1)], combat: true, faction: Faction.Fremen, influence: 2),
