@@ -88,6 +88,26 @@ def content_record() -> dict:
     }
 
 
+def test_content_registry_reference_validates_key_path_and_duplicates(tmp_path, raw):
+    item = content_record()
+    ref = {
+        "registryKind": "Catalog",
+        "key": item["id"],
+        "path": "src/Dune.Engine/Content/base-setup.json",
+        "member": "ContentCatalog.LoadRepresentative",
+    }
+    item["implementationReferences"] = [ref]
+    raw["content"] = [item]
+    assert "registry-key" not in codes(raw, tmp_path)
+    item["implementationReferences"] = [ref, copy.deepcopy(ref)]
+    assert "duplicate-registry-reference" in codes(raw, tmp_path)
+    item["implementationReferences"] = [{**ref, "key": "wrong", "path": "../outside"}]
+    assert {"registry-key", "implementation-path"} <= codes(raw, tmp_path)
+    item["implementationReferences"] = [{**ref, "registryKind": "Unknown"}]
+    with pytest.raises(ValueError, match="unknown RegistryKind"):
+        load(raw, tmp_path)
+
+
 def ability_record(content_id: str) -> dict:
     return {
         "id": f"{content_id}#slot:Agent",
@@ -114,14 +134,14 @@ def ability_record(content_id: str) -> dict:
     }
 
 
-def test_canonical_s1_is_valid_but_incomplete(tmp_path, raw):
+def test_canonical_inventory_is_valid_but_incomplete(tmp_path, raw):
     inventory = load(raw, tmp_path)
     assert not [i for i in validate_inventory(inventory, ROOT) if i.severity == "error"]
     report = build_report(inventory)
     assert report.sourceCount == 12
     assert report.expectationCount == 80
-    assert len(report.gaps) == 80
-    assert all(not q.complete for q in report.quantities)
+    assert len(report.gaps) == 73
+    assert sum(q.complete for q in report.quantities) == 7
 
 
 def test_duplicate_content_and_ability_ids_rejected(tmp_path, raw):
@@ -303,6 +323,7 @@ def test_undiscovered_slots_and_unverified_dependencies_block_implementation(
 def test_optional_pdf_unavailable_offline_without_freshness(tmp_path, raw, monkeypatch):
     root = tmp_path / "empty-root"
     root.mkdir()
+    raw["content"] = []  # Isolate optional source files from required registry paths.
 
     def fail(*_args, **_kwargs):
         raise AssertionError("network called")
@@ -507,9 +528,9 @@ def test_populated_full_face_requires_all_applicable_slots(tmp_path, raw):
     item["slots"] = [slot for slot in item["slots"] if slot["slot"] != "Reveal"]
     assert "false-complete" in codes(raw, tmp_path)
     report = build_report(load(raw, tmp_path))
-    assert not report.quantities[0].complete
+    assert report.quantities[0].complete
     assert report.unknownSlots == 1
-    assert not report.configurationGates[0].inventory
+    assert report.configurationGates[0].inventory
     assert not report.configurationGates[0].abilities
 
 
@@ -517,7 +538,30 @@ def test_populated_face_needs_whole_face_evidence(tmp_path, raw):
     item, _ = populated_inventory(raw)
     item["faceEvidence"] = []
     assert "false-complete" in codes(raw, tmp_path)
-    assert not build_report(load(raw, tmp_path)).quantities[0].complete
+    report = build_report(load(raw, tmp_path))
+    assert report.quantities[0].complete
+    assert report.configurationGates[0].inventory
+    assert not report.configurationGates[0].abilities
+
+
+def test_complete_identity_quantity_with_unreadable_face_blocks_gameplay(tmp_path, raw):
+    item, _ = populated_inventory(raw)
+    item.update(
+        faceComplete=False,
+        faceEvidence=[],
+        slots=[
+            {"slot": "Agent", "discovery": "unreadable", "reason": "face unavailable"}
+        ],
+    )
+    assert not codes(raw, tmp_path)
+    report = build_report(load(raw, tmp_path))
+    assert report.quantities[0].complete
+    gate = report.configurationGates[0]
+    assert gate.inventory
+    assert not gate.abilities
+    assert not gate.initialization
+    assert not gate.fullGame
+    assert not gate.rl
 
 
 def test_selected_configuration_cannot_omit_reconciled_definition(tmp_path, raw):

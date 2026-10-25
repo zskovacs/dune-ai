@@ -197,6 +197,15 @@ class Authenticity(StrEnum):
     SYNTHETIC = "synthetic"
 
 
+class RegistryKind(StrEnum):
+    CATALOG = "Catalog"
+    CARD_RULE = "CardRule"
+    BOARD_RULE = "BoardRule"
+    INTRIGUE_RULE = "IntrigueRule"
+    LEADER_RULE = "LeaderRule"
+    CONFLICT_RULE = "ConflictRule"
+
+
 @dataclass(frozen=True)
 class Descriptor:
     kind: DescriptorKind
@@ -258,6 +267,16 @@ class SlotRecord:
 
 
 @dataclass(frozen=True)
+class RegistryReference:
+    registryKind: RegistryKind
+    key: str
+    path: str
+    member: str
+    slot: Slot | None = None
+    authored: bool = True
+
+
+@dataclass(frozen=True)
 class AvailabilityRecord:
     baseGames: tuple[Product, ...]
     requiredExpansions: tuple[Product, ...]
@@ -311,6 +330,7 @@ class ContentRecord:
     runtimeDefinition: bool = False
     replaces: tuple[str, ...] = ()
     excludes: tuple[str, ...] = ()
+    implementationReferences: tuple[RegistryReference, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -969,6 +989,31 @@ def validate_inventory(inventory: AuditInventory, root: Path) -> tuple[AuditIssu
     for item in inventory.content:
         evidence(item.evidence, item.id, "evidence", item.product)
         evidence(item.faceEvidence, item.id, "faceEvidence", item.product)
+        seen_registry_refs: set[tuple[RegistryKind, str, Slot | None]] = set()
+        for ref in item.implementationReferences:
+            ref_key = (ref.registryKind, ref.key, ref.slot)
+            if ref_key in seen_registry_refs:
+                add(
+                    "duplicate-registry-reference",
+                    item.id,
+                    "implementationReferences",
+                    "duplicate registry reference",
+                )
+            seen_registry_refs.add(ref_key)
+            if ref.key != item.id:
+                add(
+                    "registry-key",
+                    item.id,
+                    "implementationReferences",
+                    "registry key differs from content ID",
+                )
+            if not _is_safe_path(ref.path) or not (root / ref.path).is_file():
+                add(
+                    "implementation-path",
+                    item.id,
+                    "implementationReferences",
+                    "registry path is missing or unsafe",
+                )
         availability = item.availability
         if (
             availability.minimumSeats < 1
@@ -1562,7 +1607,6 @@ def build_report(inventory: AuditInventory) -> AuditReport:
                 and discovered == expectation.uniqueDefinitions
             )
             and discovered == len(matched)
-            and all(_complete_face(c, sources) for c in matched)
         )
         quantities.append(
             QuantityResult(
@@ -1658,7 +1702,6 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             and all(q.complete for q in relevant)
             and bool(required_content_ids)
             and selected_content_ids == required_content_ids
-            and all(_complete_face(content[c], sources) for c in required_content_ids)
         )
         ability_ids = [
             a.id
@@ -1666,7 +1709,11 @@ def build_report(inventory: AuditInventory) -> AuditReport:
             if c in content
             for a in content[c].abilities
         ]
-        ability_ok = inventory_ok and all(supported_ability(a) for a in ability_ids)
+        ability_ok = (
+            inventory_ok
+            and all(_complete_face(content[c], sources) for c in required_content_ids)
+            and all(supported_ability(a) for a in ability_ids)
+        )
         required_interaction_ids = {
             ref
             for a in ability_ids

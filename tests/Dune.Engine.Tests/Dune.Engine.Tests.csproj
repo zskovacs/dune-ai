@@ -16,5 +16,6 @@
     </PackageReference>
     <Using Include="Xunit" />
     <ProjectReference Include="../../src/Dune.Engine/Dune.Engine.csproj" />
+    <None Include="../../docs/content/coverage/inventory.json" Link="content-coverage/inventory.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
