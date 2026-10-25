@@ -19,12 +19,20 @@ public sealed record EffectContext(int InitiatorId, int DecisionOwnerId, int Pay
     CardInstanceId? SourceCard, ContentId? SourceDefinition, BoardSpaceId? Space,
     EffectProvenance Provenance, int? ParentFrameId = null)
 {
+    public SelectedCardTarget? SelectedTarget { get; init; }
+
     [JsonIgnore]
     public int OwnerId => DecisionOwnerId;
 }
 
 public sealed record PendingEffect(int Id, Effect Effect, EffectContext Context);
-public sealed record DecisionFrame(Effect Effect, EffectContext Context);
+public sealed record SelectedTrashOption(CardZoneId Source, CardSelector Card, CardInstanceId Instance);
+public sealed record SelectedTrashDecision(int Id, ImmutableArray<SelectedTrashOption> Targets);
+public sealed record SelectedCardTarget(CardInstanceId Instance, ContentId Definition, CardZoneId Source, int OwnerId);
+public sealed record DecisionFrame(Effect Effect, EffectContext Context)
+{
+    public SelectedTrashDecision? SelectedTrash { get; init; }
+}
 
 /// <summary>Episode-local immutable execution data; only the last frame can act.</summary>
 public sealed record EffectExecutionFrame(int Id, int? ParentId, EffectGroupMode Mode, int ChooserId,

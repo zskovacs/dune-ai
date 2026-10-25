@@ -15,6 +15,8 @@ public sealed record CardSelector(ContentId Definition, int Copy = 0);
 [JsonDerivedType(typeof(RevealAction), "reveal")]
 [JsonDerivedType(typeof(ResolveEffectAction), "effect")]
 [JsonDerivedType(typeof(ChooseOptionAction), "option")]
+[JsonDerivedType(typeof(SelectTrashCardAction), "select-trash-card")]
+[JsonDerivedType(typeof(DeclineTrashAction), "decline-trash")]
 [JsonDerivedType(typeof(DeployAction), "deploy")]
 [JsonDerivedType(typeof(AcquireCardAction), "acquire")]
 [JsonDerivedType(typeof(EndRevealAction), "end-reveal")]
@@ -27,6 +29,8 @@ public sealed record RevealAction(int PlayerId) : GameAction(PlayerId);
 public sealed record ResolveEffectAction(int PlayerId, int EffectId) : GameAction(PlayerId);
 /// <summary>Optional payments use 0 = decline, 1 = pay; choices use zero-based option indexes.</summary>
 public sealed record ChooseOptionAction(int PlayerId, int Option) : GameAction(PlayerId);
+public sealed record SelectTrashCardAction(int PlayerId, int DecisionId, CardZoneId Source, CardSelector Card) : GameAction(PlayerId);
+public sealed record DeclineTrashAction(int PlayerId, int DecisionId) : GameAction(PlayerId);
 public sealed record DeployAction(int PlayerId, int Troops) : GameAction(PlayerId);
 public sealed record AcquireCardAction(int PlayerId, CardSelector Card, CardZoneId Source) : GameAction(PlayerId);
 public sealed record EndRevealAction(int PlayerId) : GameAction(PlayerId);

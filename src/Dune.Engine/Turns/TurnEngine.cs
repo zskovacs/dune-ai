@@ -146,6 +146,7 @@ public sealed partial class TurnEngine
             decision = new(playerId, frame.Effect.GetType().Name, frame.Effect switch
             {
                 OptionalPaymentEffect => ["Decline", "Pay"],
+                SelectedTrashEffect trash => trash.Optional ? ["Decline"] : [],
                 ChoiceEffect choice => [.. choice.Options.Select(x => x.Label)],
                 RetreatEffect retreat => [.. Enumerable.Range(0, RetreatMaximum(retreat, frame.Context) + 1)
                     .Select(x => $"Retreat {x} troops")],
@@ -208,6 +209,12 @@ public sealed partial class TurnEngine
                 Choose(choose.Option);
                 ContinueTurn();
                 break;
+            case SelectTrashCardAction selectTrash:
+                CommitSelectedTrash(selectTrash);
+                break;
+            case DeclineTrashAction declineTrash:
+                CommitDeclinedTrash(declineTrash);
+                break;
             case DeployAction deploy:
                 var player = Player(deploy.PlayerId);
                 player.Units = player.Units with
@@ -247,7 +254,7 @@ public sealed partial class TurnEngine
         return new(StepStatus.Applied, []);
     }
 
-    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v7", _rulesIdentity, _initialHash,
+    public TrustedTurnSnapshot CaptureTrustedSnapshot() => new(new("dune-turn-snapshot-v8", _rulesIdentity, _initialHash,
         _state.CaptureTrustedSnapshot().Data, [.. _frames], _nextFrameId, _revealing, _deploying,
         _recruited, _oldGarrison, _nextEffectId,
         [.. _used.OrderBy(x => x.PlayerId).ThenBy(x => x.Space.Value, StringComparer.Ordinal)], [.. _history])
@@ -255,7 +262,7 @@ public sealed partial class TurnEngine
 
     public TurnReplay CaptureReplay() => CreateReplay(CaptureTrustedSnapshot().Hash);
 
-    private TurnReplay CreateReplay(string finalStateHash) => new("dune-turn-replay-v7",
+    private TurnReplay CreateReplay(string finalStateHash) => new("dune-turn-replay-v8",
         typeof(TurnEngine).Assembly.GetName().Version!.ToString(),
         System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
         _rulesIdentity, _state.Definition.Fingerprint, _state.ConfigurationIdentity, _state.ContentIdentity,
@@ -286,6 +293,14 @@ public sealed partial class TurnEngine
     {
         if (Decision is { } frame)
         {
+            if (frame.SelectedTrash is { } selection)
+            {
+                foreach (var target in selection.Targets)
+                    yield return new SelectTrashCardAction(id, selection.Id, target.Source, target.Card);
+                if (frame.Effect is SelectedTrashEffect { Optional: true })
+                    yield return new DeclineTrashAction(id, selection.Id);
+                yield break;
+            }
             var count = frame.Effect switch
             {
                 ChoiceEffect choice => choice.Options.Length,
@@ -356,6 +371,7 @@ public sealed partial class TurnEngine
         if (leaderError is not null) return leaderError;
         if (Decision is { } frame)
         {
+            if (frame.Effect is SelectedTrashEffect) return ValidateSelectedTrash(action, frame);
             if (action is not ChooseOptionAction choose)
                 return Illegal("pending-decision", "Resolve the pending decision first.");
             if (frame.Effect is RetreatEffect retreat)
@@ -372,13 +388,13 @@ public sealed partial class TurnEngine
             if (selected is null || !CanPay(Player(frame.Context.PayerId), selected.Cost))
                 return Illegal("option", "This option is unavailable or unaffordable.");
             return ValidateRemaining(selected.Effects.Select(x => (x, frame.Context.RecipientId)), frame.Context.Space,
-                CostPayments(frame.Context.PayerId, selected.Cost), frame.Context.PayerId);
+                CostPayments(frame.Context.PayerId, selected.Cost), frame.Context.PayerId, frame.Context.DecisionOwnerId);
         }
         if (_frames.Count > 0 && action is ResolveEffectAction resolveWork)
         {
             var work = CurrentPending.FirstOrDefault(x => x.Id == resolveWork.EffectId);
             return work is null ? Illegal("effect", "This pending effect is unavailable.") :
-                Preflight([work.Effect], work.Context.RecipientId, work.Context.Space, payer: work.Context.PayerId) ?? ValidateRemaining();
+                Preflight([work.Effect], work.Context.RecipientId, work.Context.Space, payer: work.Context.PayerId, chooser: work.Context.DecisionOwnerId) ?? ValidateRemaining();
         }
         if (_frames.Count > 0 && !IsRevealRoot && !IsPostWinRewardRoot && !_deploying)
             return Illegal("child-effects", "Complete the current frame before continuing suspended work.");
@@ -488,6 +504,8 @@ public sealed partial class TurnEngine
                     ValidateSpecialOperations(Pending.Select(x => (x.Effect, x.Context.RecipientId))
                         .Concat(purchase.AcquireEffects.Select(x => (x, active.Id)))) ??
                     Preflight(purchase.AcquireEffects, active.Id, payments: purchasePayments) ??
+                    ValidateTrashAvailability(Pending.Select(x => (x.Effect, x.Context.RecipientId, x.Context.PayerId, x.Context.Space))
+                        .Concat(purchase.AcquireEffects.Select(x => (x, active.Id, active.Id, (BoardSpaceId?)null)))) ??
                     ValidateResourceBounds(Pending.Select(x => (x.Effect, x.Context.RecipientId, x.Context.PayerId, x.Context.Space))
                         .Concat(purchase.AcquireEffects.Select(x => (x, active.Id, active.Id, (BoardSpaceId?)null))), purchasePayments, selected) ??
                     ValidatePermanentOperations(Pending.Select(x => (x.Effect, x.Context.RecipientId))
@@ -531,11 +549,12 @@ public sealed partial class TurnEngine
     }
 
     private TurnDiagnostic? Preflight(IEnumerable<Effect> effects, int owner, BoardSpaceId? space = null,
-        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? payer = null)
+        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? payer = null, int? chooser = null)
     {
         var materialized = effects.ToImmutableArray();
         // Executable boxes were checked with their actual source/role context before activation.
-        return ValidateSpecialOperations(materialized.Select(x => (x, owner))) ??
+        return ValidateTrashAvailability(materialized.Select(x => (x, owner, payer ?? owner, space)), chooser: chooser) ??
+            ValidateSpecialOperations(materialized.Select(x => (x, owner))) ??
             ValidateAcquisitionStock(materialized.Select(x => (x, owner))) ??
             ValidateResourceBounds(materialized.Select(x => (x, owner)), space, payments, payer) ??
             ValidateInfluenceBounds(materialized.Select(x => (x, owner))) ??
@@ -556,6 +575,7 @@ public sealed partial class TurnEngine
             if (issue is not null) break;
             issue = effect switch
             {
+                SelectedTrashEffect trash => SelectedTrashSupport(trash, owner, card, board, combatRetreat, depth),
                 TrashSelfEffect when !card => Content("effect-context", "Self-trash requires a source card."),
                 HarvestSpiceEffect when !board => Content("effect-context", "Spice harvest requires a board space."),
                 RetreatEffect when !combatRetreat || _rules.Lifecycle?.Participation != CombatParticipationPolicy.OriginalTroops =>
@@ -587,14 +607,14 @@ public sealed partial class TurnEngine
     }
 
     private TurnDiagnostic? ValidateRemaining(IEnumerable<(Effect Effect, int Owner)>? selected = null, BoardSpaceId? sourceSpace = null,
-        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? selectedPayer = null)
+        IEnumerable<(int Payer, ResourceKind Resource, int Amount)>? payments = null, int? selectedPayer = null, int? selectedChooser = null, SelectedCardTarget? removedTrash = null)
     {
         // A selected decision child finishes first, then the active frame, then its suspended parents.
         // Keep explicit Sequence order when projecting signed Influence across a suspended decision.
         var children = new List<Effect>();
         if (selected is not null)
-            children.Add(new PlayerOrderedEffect([.. selected.Select(x => (Effect)new ForPlayerEffect(x.Owner, [x.Effect])
-                { PayerId = selectedPayer ?? x.Owner })]));
+            children.Add(new PlayerOrderedEffect([.. selected.Select(x => (Effect)new ForPlayerEffect(selectedChooser ?? x.Owner, [x.Effect])
+                { PayerId = selectedPayer ?? x.Owner, RecipientId = x.Owner })]));
         foreach (var pendingFrame in _frames.AsEnumerable().Reverse())
         {
             ImmutableArray<Effect> effects = [.. pendingFrame.Remaining.Select(x => (Effect)new ForPlayerEffect(x.Context.DecisionOwnerId, [x.Effect])
@@ -604,7 +624,8 @@ public sealed partial class TurnEngine
         children.AddRange(FutureRewardWork().Select(x => (Effect)new ForPlayerEffect(x.Owner, [x.Effect])));
         (Effect Effect, int Owner)[] work = [(new SequenceEffect([.. children]), 0)];
         var resources = work.Select(x => (x.Effect, x.Owner, 0, sourceSpace ?? Pending.Select(x => x.Context.Space).FirstOrDefault(x => x is not null)));
-        return ValidateSpecialOperations(work) ?? ValidateAcquisitionStock(work) ?? ValidateResourceBounds(resources, payments) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
+        return ValidateTrashAvailability(resources, removedTrash) ??
+            ValidateSpecialOperations(work) ?? ValidateAcquisitionStock(work) ?? ValidateResourceBounds(resources, payments) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
     }
 
     private TurnDiagnostic? ValidatePermanentOperations(IEnumerable<(Effect Effect, int Owner)> work)
@@ -628,6 +649,7 @@ public sealed partial class TurnEngine
                     var key = (owner, effect is SwordmasterEffect);
                     target[key] = target.GetValueOrDefault(key) + 1;
                     break;
+                case SelectedTrashEffect { Optional: false } trash: AccumulatePermanentOperations(trash.OnTrashed, owner, target, includeChoices); break;
                 case SequenceEffect sequence: AccumulatePermanentOperations(sequence.Effects, owner, target, includeChoices); break;
                 case PlayerOrderedEffect ordered: AccumulatePermanentOperations(ordered.Effects, owner, target, includeChoices); break;
                 case ForPlayerEffect player: AccumulatePermanentOperations(player.Effects, player.RecipientId ?? player.PlayerId, target, includeChoices); break;
@@ -766,6 +788,7 @@ public sealed partial class TurnEngine
                 if (effect is ChoiceEffect choice) { yield return (choice, owner, payer, space); continue; }
                 var children = effect switch
                 {
+                    SelectedTrashEffect { Optional: false } trash => trash.OnTrashed,
                     SequenceEffect sequence => sequence.Effects,
                     PlayerOrderedEffect ordered => ordered.Effects,
                     ForPlayerEffect player => player.Effects,
@@ -787,6 +810,7 @@ public sealed partial class TurnEngine
             {
                 var available = effect switch
                 {
+                    SelectedTrashEffect { Optional: false } trash => ChoicesHaveCapacity(trash.OnTrashed, owner, payer, space, amounts, selectedWork, selectedChoices, funds),
                     SequenceEffect sequence => SequenceHasCapacity(sequence.Effects, owner, payer, space, amounts, selectedWork, selectedChoices, funds),
                     PlayerOrderedEffect ordered => ChoicesHaveCapacity(ordered.Effects, owner, payer, space, amounts, selectedWork, selectedChoices, funds),
                     ForPlayerEffect player => ChoicesHaveCapacity(player.Effects, player.RecipientId ?? player.PlayerId,
@@ -852,7 +876,7 @@ public sealed partial class TurnEngine
         bool MaySuspend(Effect effect) => effect switch
         {
             SequenceEffect sequence => sequence.Effects.Any(MaySuspend),
-            ChoiceEffect or OptionalPaymentEffect or ForPlayerEffect or PlayerOrderedEffect or AcquireEffect or SignetEffect => true,
+            ChoiceEffect or OptionalPaymentEffect or SelectedTrashEffect or ForPlayerEffect or PlayerOrderedEffect or AcquireEffect or SignetEffect => true,
             _ => false,
         };
 
@@ -902,6 +926,8 @@ public sealed partial class TurnEngine
                             target[(boundPayer, resource)] = target.GetValueOrDefault((boundPayer, resource)) + amount;
                         MaximumPayments(optional.Effects, optional.RecipientId ?? optional.DecisionOwnerId ?? owner, optionalPayer, target);
                         break;
+                    case SelectedTrashEffect { Optional: false } trash:
+                        MaximumPayments(trash.OnTrashed, owner, payer, target, mandatoryOnly); break;
                     case SequenceEffect sequence: MaximumPayments(sequence.Effects, owner, payer, target, mandatoryOnly); break;
                     case PlayerOrderedEffect ordered: MaximumPayments(ordered.Effects, owner, payer, target, mandatoryOnly); break;
                     case ForPlayerEffect player: MaximumPayments(player.Effects, player.RecipientId ?? player.PlayerId, player.PayerId ?? player.PlayerId, target, mandatoryOnly); break;
@@ -925,6 +951,7 @@ public sealed partial class TurnEngine
                         var key = (owner, gain.Resource);
                         target[key] = target.GetValueOrDefault(key) + gain.Amount;
                         break;
+                    case SelectedTrashEffect { Optional: false } trash: Accumulate(trash.OnTrashed, owner, payer, space, target, includeChoices); break;
                     case SequenceEffect sequence: Accumulate(sequence.Effects, owner, payer, space, target, includeChoices); break;
                     case PlayerOrderedEffect ordered: Accumulate(ordered.Effects, owner, payer, space, target, includeChoices); break;
                     case ForPlayerEffect player: Accumulate(player.Effects, player.RecipientId ?? player.PlayerId, player.PayerId ?? player.PlayerId, space, target, includeChoices); break;
@@ -1018,6 +1045,7 @@ public sealed partial class TurnEngine
                 }
                 var children = effect switch
                 {
+                    SelectedTrashEffect { Optional: false } trash => trash.OnTrashed,
                     SequenceEffect sequence => sequence.Effects,
                     PlayerOrderedEffect ordered => ordered.Effects,
                     ForPlayerEffect player => player.Effects,
@@ -1037,6 +1065,7 @@ public sealed partial class TurnEngine
             {
                 var available = effect switch
                 {
+                    SelectedTrashEffect { Optional: false } trash => ChoicesHaveStock(trash.OnTrashed, owner, counts, required),
                     SequenceEffect sequence => ChoicesHaveStock(sequence.Effects, owner, counts, required),
                     PlayerOrderedEffect ordered => ChoicesHaveStock(ordered.Effects, owner, counts, required),
                     ForPlayerEffect player => ChoicesHaveStock(player.Effects, player.RecipientId ?? player.PlayerId, counts, required),
@@ -1077,6 +1106,9 @@ public sealed partial class TurnEngine
                     totals[reservation.Card] = totals.GetValueOrDefault(reservation.Card) + 1;
                     if (!reservation.AllowEmpty) mandatory.Add(reservation.Card);
                     break;
+                case SelectedTrashEffect { Optional: false } trash:
+                    AccumulateAcquisitionDemand(trash.OnTrashed, owner, totals, mandatory, depth + 1, includeChoices);
+                    break;
                 case SequenceEffect sequence:
                     AccumulateAcquisitionDemand(sequence.Effects, owner, totals, mandatory, depth + 1, includeChoices);
                     break;
@@ -1106,7 +1138,9 @@ public sealed partial class TurnEngine
     }
 
     private TurnDiagnostic? ValidateContext(IEnumerable<Effect> effects, bool cardSource, bool boardSource, int owner,
-        bool combatRetreat = false) => Support(effects.ToImmutableArray(), owner, cardSource, boardSource, combatRetreat);
+        bool combatRetreat = false) => Support(effects.ToImmutableArray(), owner, cardSource, boardSource, combatRetreat) ??
+            ValidateTrashRoles(effects, RootContext(owner, null, null, null, EffectProvenance.Card),
+                cardSource: cardSource, boardSource: boardSource);
 
     private TurnDiagnostic? ValidateWindowAction(GameAction action, DecisionWindowState window)
     {
@@ -1455,6 +1489,9 @@ public sealed partial class TurnEngine
             case PlayerOrderedEffect ordered:
                 PushChild(ordered.Effects, context, EffectGroupMode.PlayerOrdered);
                 break;
+            case SelectedTrashEffect trash:
+                BeginSelectedTrash(trash, context);
+                break;
             case TrashSelfEffect:
                 if (context.SourceCard is { } id)
                 {
@@ -1748,6 +1785,18 @@ public sealed partial class TurnEngine
                  : _frames.Count > 0 && !(window.RewardFrameId is { } rewardRoot && _frames[0].Id == rewardRoot &&
                      _frames[0].Continuation.Kind == ExecutionContinuationKind.ConflictRewards) || window.ResolvingCardId is not null)))
             throw new InvalidOperationException("Decision window state is inconsistent with its phase or suspended work.");
+        foreach (var frame in _frames)
+        {
+            if (frame.Decision is { } decision &&
+                ((decision.Effect is SelectedTrashEffect) != (decision.SelectedTrash is not null) ||
+                 decision.SelectedTrash is { } trash && (trash.Id <= 0 || trash.Id > _nextEffectId ||
+                    trash.Targets.IsDefault || trash.Targets.Select(x => (x.Source, x.Card)).Distinct().Count() != trash.Targets.Length ||
+                    trash.Targets.Select(x => x.Instance).Distinct().Count() != trash.Targets.Length)))
+                throw new InvalidOperationException("Selected trash decision payload is inconsistent with its execution frame.");
+            foreach (var context in frame.Remaining.Select(x => x.Context).Concat(frame.Decision is { } active ? [active.Context] : []))
+                if (context.SelectedTarget is { } target && ValidateOwner(target.OwnerId) is not null)
+                    throw new InvalidOperationException("Selected target provenance has an invalid owner.");
+        }
         var cards = _state.Zones.SelectMany(x => x.Cards).ToArray();
         if (cards.Length != _cardCount || cards.Select(x => x.Id).Distinct().Count() != cards.Length)
             throw new InvalidOperationException("Physical card conservation invariant failed.");
@@ -1943,6 +1992,7 @@ public sealed partial class TurnEngine
         }
         var normalized = OrEmpty(effects).Where(x => x is not null).Select(effect => effect switch
         {
+            SelectedTrashEffect trash => trash with { OnTrashed = Normalize(trash.OnTrashed, depth + 1) },
             ConditionalEffect conditional => conditional with { Effects = Normalize(conditional.Effects, depth + 1) },
             SequenceEffect sequence => sequence with { Effects = Normalize(sequence.Effects, depth + 1) },
             PlayerOrderedEffect ordered => ordered with { Effects = Normalize(ordered.Effects, depth + 1) },

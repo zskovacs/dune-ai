@@ -18,6 +18,7 @@ public sealed record ResourceCost(int Solari = 0, int Spice = 0, int Water = 0);
 [JsonDerivedType(typeof(ChoiceEffect), "choice")]
 [JsonDerivedType(typeof(ForPlayerEffect), "player")]
 [JsonDerivedType(typeof(TrashSelfEffect), "trash-self")]
+[JsonDerivedType(typeof(SelectedTrashEffect), "selected-trash")]
 [JsonDerivedType(typeof(AcquireEffect), "acquire")]
 [JsonDerivedType(typeof(HighCouncilEffect), "council")]
 [JsonDerivedType(typeof(SwordmasterEffect), "swordmaster")]
@@ -56,6 +57,7 @@ public sealed record ForPlayerEffect(int PlayerId, ImmutableArray<Effect> Effect
 public sealed record SequenceEffect(ImmutableArray<Effect> Effects) : Effect;
 public sealed record PlayerOrderedEffect(ImmutableArray<Effect> Effects) : Effect;
 public sealed record TrashSelfEffect : Effect;
+public sealed record SelectedTrashEffect(ImmutableArray<Effect> OnTrashed, bool Optional = true) : Effect;
 public sealed record SignetEffect : Effect;
 public sealed record AcquireEffect(ContentId Card, bool AllowEmpty = false) : Effect;
 public sealed record HighCouncilEffect : Effect;
@@ -96,5 +98,5 @@ public sealed record TurnRuleSet(string Version, ImmutableArray<CardRule> Cards,
 {
     public CombatStrengthRule Strength { get; init; } = new();
     public LifecycleRuleSet? Lifecycle { get; init; }
-    public string SupportVersion { get; init; } = "original-imperium-turn-support-v13";
+    public string SupportVersion { get; init; } = "original-imperium-turn-support-v14";
 }

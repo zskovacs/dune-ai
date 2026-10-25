@@ -175,6 +175,10 @@ public sealed partial class TurnEngine
                     { Effects = [.. conditional.Effects.Select(x => Expand(x, owner, conditionalState, depth + 1, mandatory))] };
                     Merge(state, [state.Copy(), conditionalState]);
                     return conditionalChild;
+                case SelectedTrashEffect { Optional: true }: return effect;
+                case SelectedTrashEffect trash:
+                    CheckUnordered(trash.OnTrashed.Select(x => (x, owner)));
+                    return trash with { OnTrashed = Children(trash.OnTrashed, owner) };
                 case SequenceEffect sequence: return sequence with { Effects = Children(sequence.Effects, owner) };
                 case PlayerOrderedEffect ordered:
                     CheckUnordered(ordered.Effects.Select(x => (x, owner)));
@@ -225,6 +229,7 @@ public sealed partial class TurnEngine
         }
         var children = effect switch
         {
+            SelectedTrashEffect { Optional: false } trash => trash.OnTrashed,
             SequenceEffect sequence => sequence.Effects,
             PlayerOrderedEffect ordered => ordered.Effects,
             ForPlayerEffect player => player.Effects,
@@ -262,6 +267,7 @@ public sealed partial class TurnEngine
         long Demand(Effect effect, int owner) => effect switch
         {
             DrawIntrigueEffect draw => draw.Amount,
+            SelectedTrashEffect { Optional: false } trash => trash.OnTrashed.Sum(x => Demand(x, owner)),
             SequenceEffect sequence => sequence.Effects.Sum(x => Demand(x, owner)),
             PlayerOrderedEffect ordered => ordered.Effects.Sum(x => Demand(x, owner)),
             ForPlayerEffect player => player.Effects.Sum(x => Demand(x, player.RecipientId ?? player.PlayerId)),
@@ -330,7 +336,8 @@ public sealed partial class TurnEngine
             }
         }
         (Effect Effect, int Owner)[] work = [(new SequenceEffect([.. recipients.Select(x => (Effect)new ForPlayerEffect(x.PlayerId, x.Effects))]), 0)];
-        return ValidateSpecialOperations(work) ?? ValidateAcquisitionStock(work) ??
+        return ValidateTrashAvailability(work.Select(x => (x.Effect, x.Owner, x.Owner, (BoardSpaceId?)null))) ??
+            ValidateSpecialOperations(work) ?? ValidateAcquisitionStock(work) ??
             ValidateResourceBounds(work) ?? ValidateInfluenceBounds(work) ?? ValidatePermanentOperations(work);
     }
 
@@ -355,6 +362,7 @@ public sealed partial class TurnEngine
         {
             DrawIntrigueEffect { Amount: > 0 } => true,
             TakeMentatEffect or ControlSpaceEffect or ForPlayerEffect => true,
+            SelectedTrashEffect { Optional: false } trash => Sensitive(trash.OnTrashed, recipient, depth + 1),
             SequenceEffect sequence => Sensitive(sequence.Effects, recipient, depth + 1),
             PlayerOrderedEffect ordered => Sensitive(ordered.Effects, recipient, depth + 1),
             OptionalPaymentEffect optional => optional.DecisionOwnerId is { } chooser && chooser != recipient ||
@@ -494,6 +502,8 @@ public sealed partial class TurnEngine
                     else if (!StrengthFits(Player(owner).Temporary.Swords, Player(owner).Units.TroopsInConflict + deploy.Amount))
                         error ??= Content("resource-bounds", "Defense exceeds Combat strength bounds.");
                     return;
+                case SelectedTrashEffect { Optional: true }: return;
+                case SelectedTrashEffect trash: children = trash.OnTrashed; break;
                 case SequenceEffect sequence: children = sequence.Effects; break;
                 case PlayerOrderedEffect ordered: children = ordered.Effects; break;
                 case ForPlayerEffect player: owner = player.RecipientId ?? player.PlayerId; children = player.Effects; break;
@@ -512,6 +522,7 @@ public sealed partial class TurnEngine
         bool Special(Effect effect, int owner, int depth = 0) => depth > 32 || (effect switch
         {
             ControlSpaceEffect or TakeMentatEffect or DeployFromSupplyEffect => true,
+            SelectedTrashEffect { Optional: false } trash => trash.OnTrashed.Any(x => Special(x, owner, depth + 1)),
             SequenceEffect sequence => sequence.Effects.Any(x => Special(x, owner, depth + 1)),
             PlayerOrderedEffect ordered => ordered.Effects.Any(x => Special(x, owner, depth + 1)),
             ForPlayerEffect player => player.Effects.Any(x => Special(x, player.RecipientId ?? player.PlayerId, depth + 1)),

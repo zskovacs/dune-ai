@@ -48,6 +48,12 @@ public sealed class EffectGraphValidator
                 case SequenceEffect sequence: Visit(sequence.Effects, depth + 1, jsonDepth + 2, path, diagnostics); break;
                 case PlayerOrderedEffect ordered: Visit(ordered.Effects, depth + 1, jsonDepth + 2, path, diagnostics); break;
                 case ForPlayerEffect target: Visit(target.Effects, depth + 1, jsonDepth + 2, path, diagnostics); break;
+                case SelectedTrashEffect trash:
+                    var children = ImmutableArray.CreateBuilder<TurnDiagnostic>();
+                    Visit(trash.OnTrashed, depth + 1, jsonDepth + 2, path, children);
+                    // Decline does not need executable success support; authored shape is always checked.
+                    diagnostics.AddRange(children.Where(x => !trash.Optional || x.Status != StepStatus.Unsupported));
+                    break;
                 case OptionalPaymentEffect optional:
                     Cost(optional.Cost, diagnostics);
                     Visit(optional.Effects, depth + 1, jsonDepth + 2, path, diagnostics);
